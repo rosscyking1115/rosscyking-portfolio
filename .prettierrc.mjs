@@ -1,0 +1,14 @@
+/** @type {import("prettier").Config} */
+const config = {
+  semi: true,
+  singleQuote: false,
+  trailingComma: "all",
+  printWidth: 90,
+  tabWidth: 2,
+  useTabs: false,
+  arrowParens: "always",
+  endOfLine: "lf",
+  plugins: ["prettier-plugin-tailwindcss"],
+};
+
+export default config;

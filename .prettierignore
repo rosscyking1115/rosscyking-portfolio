@@ -1,0 +1,11 @@
+.next
+out
+build
+node_modules
+coverage
+playwright-report
+test-results
+.vercel
+.env*
+pnpm-lock.yaml
+package-lock.json

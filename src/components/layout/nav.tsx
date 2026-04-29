@@ -1,0 +1,118 @@
+"use client";
+
+import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import { Container } from "@/components/layout/container";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/lib/site-config";
+import { cn } from "@/lib/utils";
+
+export function Nav() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  // Close mobile menu on route change.
+  useEffect(() => setOpen(false), [pathname]);
+
+  // Lock body scroll while mobile menu is open.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <Container>
+        <div className="flex h-16 items-center justify-between">
+          <Link
+            href="/"
+            className="font-semibold tracking-tight transition-opacity hover:opacity-80"
+          >
+            {siteConfig.shortName}
+          </Link>
+
+          <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+            {siteConfig.nav.map((item) => {
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "rounded-md px-3 py-2 text-sm transition-colors",
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+            <div className="ml-1">
+              <ThemeToggle />
+            </div>
+          </nav>
+
+          <div className="flex items-center gap-1 md:hidden">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              aria-controls="mobile-menu"
+              onClick={() => setOpen((value) => !value)}
+            >
+              {open ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            </Button>
+          </div>
+        </div>
+      </Container>
+
+      {/* Mobile menu */}
+      <div
+        id="mobile-menu"
+        hidden={!open}
+        className="border-t border-border/60 bg-background md:hidden"
+      >
+        <Container>
+          <nav aria-label="Mobile" className="flex flex-col gap-1 py-4">
+            {siteConfig.nav.map((item) => {
+              const isActive =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "rounded-md px-3 py-3 text-base transition-colors",
+                    isActive
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </Container>
+      </div>
+    </header>
+  );
+}
