@@ -4,6 +4,7 @@ import { Footer } from "@/components/layout/footer";
 import { Nav } from "@/components/layout/nav";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { siteConfig } from "@/lib/site-config";
+import { getThemeFromCookie } from "@/lib/theme-cookie.server";
 
 import "./globals.css";
 
@@ -42,13 +43,27 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Cookie is the only source of truth the server has access to.
+  // - "dark"   → render with .dark class. No FOUC on reload.
+  // - "light"  → render without .dark class. No FOUC on reload.
+  // - "system" → no class server-side; ThemeProvider applies the resolved
+  //              system preference on hydration.
+  const cookieTheme = await getThemeFromCookie();
+  const htmlClassName = cookieTheme === "dark" ? "dark" : "";
+
   return (
-    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={htmlClassName}
+      data-scroll-behavior="smooth"
+      style={{ colorScheme: cookieTheme === "dark" ? "dark" : "light" }}
+      suppressHydrationWarning
+    >
       <body className="flex min-h-screen flex-col">
-        <ThemeProvider>
+        <ThemeProvider initialTheme={cookieTheme}>
           <a href="#main" className="skip-to-content">
             Skip to content
           </a>

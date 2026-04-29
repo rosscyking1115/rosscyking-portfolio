@@ -1,60 +1,40 @@
 "use client";
 
 import { Monitor, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
+import { useTheme, type Theme } from "@/components/layout/theme-provider";
 import { Button } from "@/components/ui/button";
 
-const ORDER = ["light", "dark", "system"] as const;
-type ThemeChoice = (typeof ORDER)[number];
+const ORDER = ["light", "dark", "system"] as const satisfies readonly Theme[];
 
-const ICONS: Record<ThemeChoice, typeof Sun> = {
+const ICONS: Record<Theme, typeof Sun> = {
   light: Sun,
   dark: Moon,
   system: Monitor,
 };
 
-const LABELS: Record<ThemeChoice, string> = {
+const LABELS: Record<Theme, string> = {
   light: "Switch to dark theme",
   dark: "Switch to system theme",
   system: "Switch to light theme",
 };
 
 /**
- * Three-state theme toggle: light → dark → system → light …
- * Cycles in a fixed order so keyboard users always know what's next.
+ * Three-state toggle: light → dark → system → light…
+ * The icon is driven by `theme` (cookie value), not `resolvedTheme`, so it's
+ * the same on server and client — no hydration mismatch, no mounted flag needed.
  */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // Avoid hydration mismatch — read theme only after mount.
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="Theme toggle"
-        className="opacity-0"
-      />
-    );
-  }
-
-  const current: ThemeChoice = ORDER.includes(theme as ThemeChoice)
-    ? (theme as ThemeChoice)
-    : "system";
-  const Icon = ICONS[current];
-  const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
+  const Icon = ICONS[theme];
+  const next = ORDER[(ORDER.indexOf(theme) + 1) % ORDER.length];
 
   return (
     <Button
       variant="ghost"
       size="icon"
-      aria-label={LABELS[current]}
-      title={LABELS[current]}
+      aria-label={LABELS[theme]}
+      title={LABELS[theme]}
       onClick={() => setTheme(next)}
     >
       <Icon aria-hidden="true" />
