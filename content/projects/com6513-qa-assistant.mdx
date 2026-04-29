@@ -1,0 +1,41 @@
+---
+title: Document QA Assistant
+summary: Retrieval-augmented question answering over a document corpus. Embedding store, retriever, generator, and an evaluation harness. Foundation for the security-flavoured RAG project.
+stack: [Python, Transformers, Vector search, RAG]
+role: Coursework + extension
+period: "2026"
+publishedAt: "2026-03-10"
+featured: true
+links:
+  github: https://github.com/rosscyking1115/com6513-qa-assistant
+---
+
+## What it does
+
+Answers natural-language questions against a static document corpus by
+retrieving the most relevant passages and grounding the model's answer in
+those passages.
+
+## Pipeline
+
+1. **Ingest**: chunk documents into ~500-token windows with overlap.
+2. **Embed**: encode with a sentence-transformer model.
+3. **Retrieve**: cosine top-k against the query embedding.
+4. **Generate**: prompt the LLM with question + retrieved passages,
+   ask for an answer with explicit source citations.
+5. **Evaluate**: hand-graded answers against a held-out question set,
+   plus automatic metrics (faithfulness, answer relevance).
+
+## Why I'm extending it
+
+The Phase-2 plan turns this into a public-facing **Security Copilot RAG** —
+the same architecture, but the corpus becomes CVE feeds and a target codebase,
+and the eval harness becomes the centrepiece. Most RAG demos online skip
+evaluation; that's exactly where the interesting engineering lives.
+
+## Lessons so far
+
+- Chunk boundaries matter more than chunk size. Overlap helps.
+- Cosine similarity is fine until it isn't; switching to a small reranker
+  on the top-50 made a measurable jump in answer quality.
+- An evaluation harness you actually run is worth ten you talk about.

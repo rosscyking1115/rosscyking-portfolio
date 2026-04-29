@@ -1,0 +1,46 @@
+---
+title: Speech Speed & Tempo Classification
+summary: Classical ML benchmark on FBANK speech features. Improved speed-classification accuracy from 79.2% to 86.6% via feature standardisation and kNN tuning. Compared kNN, Logistic Regression, Linear SVM, Random Forest with detailed error analysis.
+stack: [Python, scikit-learn, NumPy, FBANK]
+role: Solo project
+period: "2025"
+publishedAt: "2025-12-15"
+featured: false
+links:
+  github: https://github.com/rosscyking1115/speech-speed-tempo-classification
+---
+
+## The task
+
+Classify whether a speech recording has been altered in either _speed_
+(playback rate) or _tempo_ (perceived speech pace, holding pitch fixed),
+using FBANK acoustic features.
+
+## What I tried
+
+Four classical classifiers, head to head:
+
+- k-Nearest Neighbours
+- Logistic Regression
+- Linear SVM
+- Random Forest
+
+Each evaluated with cross-validated accuracy and confusion matrices.
+
+## Result
+
+Speed classification: **79.2% → 86.6%** after two changes — feature
+standardisation (z-scoring per feature) and kNN hyperparameter tuning
+(k swept over odd integers, distance metric grid).
+
+Tempo classification stayed weaker. Error analysis pointed at the cause:
+the temporal-mean pooling step I used to flatten time-varying features
+discarded exactly the timing information tempo classification needs.
+A pure architectural choice, not a hyperparameter problem.
+
+## Why this is on the CV
+
+It's not the flashiest project, but it shows the discipline that
+matters most for an ML role: pick a tractable benchmark, run multiple
+models honestly, look at _why_ one wins, and write up the failure
+modes as carefully as the wins.

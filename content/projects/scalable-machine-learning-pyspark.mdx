@@ -1,0 +1,55 @@
+---
+title: Scalable ML with PySpark on Sheffield HPC
+summary: Distributed data mining and ML pipelines on 1.9M-20M record datasets, run on the University of Sheffield Stanage HPC cluster. Web log mining, traffic prediction, HIGGS classification, MovieLens recommendations.
+stack: [PySpark, Python, Slurm, HPC, Spark MLlib]
+role: Solo project
+period: "2026"
+publishedAt: "2026-04-15"
+featured: true
+links:
+  github: https://github.com/rosscyking1115/scalable-machine-learning-pyspark
+---
+
+## What I built
+
+Four end-to-end distributed ML pipelines on the Stanage HPC cluster, each
+covering a different ML pattern at production scale.
+
+### 1. Web access log mining (1.9M records)
+
+Parsed and aggregated NASA web logs to surface time-of-day access heatmaps
+and resource-popularity rankings. Streaming-friendly transformations using
+PySpark DataFrames so the same code scales to logs orders of magnitude larger.
+
+### 2. Traffic prediction (GLM on 5M+ records)
+
+Built a Generalised Linear Model regression pipeline over a UK Highways traffic
+dataset with proper temporal train/test splits — predicting next-interval
+volume from rolling-window features. Evaluated against a baseline mean
+predictor for honest reporting.
+
+### 3. HIGGS binary classification (11M records)
+
+Compared Logistic Regression, Random Forest, and Gradient Boosted Trees on
+the HIGGS particle-physics dataset. Used cross-validation with
+hyperparameter tuning and ROC-AUC + PR-AUC for evaluation under class
+imbalance.
+
+### 4. MovieLens recommendations (20M ratings)
+
+ALS collaborative filtering plus k-means user-clustering to surface
+genre-preference profiles. Held-out test set evaluation with RMSE and
+top-N retrieval metrics.
+
+## Why this matters
+
+Most ML coursework lives in single-machine notebooks. This project pushed
+the same modelling discipline onto a real distributed-compute environment:
+SLURM job scheduling, partition tuning, memory-aware joins, and writing
+queries that survive when the data doesn't fit on one node.
+
+## What I'd do differently
+
+Rebuild the traffic prediction step with a proper time-series cross-validator
+rather than a single split, and explore Spark Structured Streaming for the
+web-log mining pipeline so it could ingest live logs.
