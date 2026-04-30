@@ -28,6 +28,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
   return (
     <Section
+      headingAs="h1"
       size="lg"
       eyebrow="Selected work"
       heading="Projects"

@@ -27,6 +27,7 @@ export default async function AboutPage() {
     <article>
       {/* Header */}
       <Section
+        headingAs="h1"
         size="lg"
         eyebrow="About"
         heading="Cheng-Yuan (Ross) King"

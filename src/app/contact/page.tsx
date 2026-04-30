@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <Section
+      headingAs="h1"
       size="lg"
       containerSize="md"
       eyebrow="Contact"
