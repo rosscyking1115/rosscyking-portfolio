@@ -39,16 +39,16 @@ Open <http://localhost:3000>.
 
 ## Scripts
 
-| Command                | What it does                              |
-| ---------------------- | ----------------------------------------- |
-| `npm run dev`          | Start the dev server with hot reload      |
-| `npm run build`        | Production build                          |
-| `npm run start`        | Run the production build locally          |
-| `npm run lint`         | ESLint                                    |
-| `npm run lint:fix`     | ESLint with autofix                       |
-| `npm run format`       | Prettier write                            |
-| `npm run format:check` | Prettier check (used in CI)               |
-| `npm run typecheck`    | `tsc --noEmit`                            |
+| Command                | What it does                         |
+| ---------------------- | ------------------------------------ |
+| `npm run dev`          | Start the dev server with hot reload |
+| `npm run build`        | Production build                     |
+| `npm run start`        | Run the production build locally     |
+| `npm run lint`         | ESLint                               |
+| `npm run lint:fix`     | ESLint with autofix                  |
+| `npm run format`       | Prettier write                       |
+| `npm run format:check` | Prettier check (used in CI)          |
+| `npm run typecheck`    | `tsc --noEmit`                       |
 
 ## Folder layout
 

@@ -7,6 +7,7 @@ import { siteConfig } from "@/lib/site-config";
 import { getThemeFromCookie } from "@/lib/theme-cookie.server";
 
 import "./globals.css";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -72,6 +73,7 @@ export default async function RootLayout({
             {children}
           </main>
           <Footer />
+          <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>

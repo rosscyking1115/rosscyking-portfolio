@@ -8,7 +8,7 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-24 border-t border-border/60 py-10 text-sm text-muted-foreground">
+    <footer className="border-border/60 text-muted-foreground mt-24 border-t py-10 text-sm">
       <Container>
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <p>
@@ -22,7 +22,7 @@ export function Footer() {
                 aria-label="GitHub"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+                className="hover:bg-accent hover:text-accent-foreground inline-flex size-9 items-center justify-center rounded-md transition-colors"
               >
                 <Github className="size-4" aria-hidden="true" />
               </Link>
@@ -33,7 +33,7 @@ export function Footer() {
                 aria-label="LinkedIn"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+                className="hover:bg-accent hover:text-accent-foreground inline-flex size-9 items-center justify-center rounded-md transition-colors"
               >
                 <Linkedin className="size-4" aria-hidden="true" />
               </Link>
@@ -42,7 +42,7 @@ export function Footer() {
               <Link
                 href={`mailto:${siteConfig.email}`}
                 aria-label="Email"
-                className="inline-flex size-9 items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
+                className="hover:bg-accent hover:text-accent-foreground inline-flex size-9 items-center justify-center rounded-md transition-colors"
               >
                 <Mail className="size-4" aria-hidden="true" />
               </Link>
