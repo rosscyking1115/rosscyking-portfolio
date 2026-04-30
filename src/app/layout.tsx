@@ -1,13 +1,17 @@
 import type { Metadata, Viewport } from "next";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
+import { Toaster } from "sonner";
 
 import { Footer } from "@/components/layout/footer";
 import { Nav } from "@/components/layout/nav";
 import { ThemeProvider } from "@/components/layout/theme-provider";
+import { personSchema, websiteSchema } from "@/lib/json-ld";
 import { siteConfig } from "@/lib/site-config";
 import { getThemeFromCookie } from "@/lib/theme-cookie.server";
+import { cn } from "@/lib/utils";
 
 import "./globals.css";
-import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -16,8 +20,22 @@ export const metadata: Metadata = {
     template: `%s — ${siteConfig.shortName}`,
   },
   description: siteConfig.description,
+  applicationName: siteConfig.shortName,
   authors: [{ name: siteConfig.name, url: siteConfig.url }],
   creator: siteConfig.name,
+  keywords: [
+    "Machine Learning",
+    "Data Science",
+    "NLP",
+    "Distributed Computing",
+    "PySpark",
+    "LLM",
+    "RAG",
+    "United Kingdom",
+    "Sheffield",
+    "London",
+  ],
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_GB",
@@ -32,7 +50,6 @@ export const metadata: Metadata = {
     description: siteConfig.description,
   },
   robots: { index: true, follow: true },
-  icons: { icon: "/favicon.ico" },
 };
 
 export const viewport: Viewport = {
@@ -47,23 +64,28 @@ export const viewport: Viewport = {
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Cookie is the only source of truth the server has access to.
-  // - "dark"   → render with .dark class. No FOUC on reload.
-  // - "light"  → render without .dark class. No FOUC on reload.
-  // - "system" → no class server-side; ThemeProvider applies the resolved
-  //              system preference on hydration.
   const cookieTheme = await getThemeFromCookie();
-  const htmlClassName = cookieTheme === "dark" ? "dark" : "";
+  const isDark = cookieTheme === "dark";
 
   return (
     <html
       lang="en"
-      className={htmlClassName}
+      className={cn(GeistSans.variable, GeistMono.variable, isDark ? "dark" : "")}
       data-scroll-behavior="smooth"
-      style={{ colorScheme: cookieTheme === "dark" ? "dark" : "light" }}
+      style={{ colorScheme: isDark ? "dark" : "light" }}
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col">
+        {/* JSON-LD structured data — invisible to users, indexed by search engines */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema()) }}
+        />
+
         <ThemeProvider initialTheme={cookieTheme}>
           <a href="#main" className="skip-to-content">
             Skip to content

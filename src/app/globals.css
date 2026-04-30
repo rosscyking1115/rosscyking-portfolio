@@ -94,10 +94,9 @@
   --radius-xl: calc(var(--radius) + 4px);
 
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
-  --font-mono:
-    ui-monospace, SFMono-Regular, "JetBrains Mono", "Fira Code", Menlo, monospace;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 /* ---------- Base layer ---------- */

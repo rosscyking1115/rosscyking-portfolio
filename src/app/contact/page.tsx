@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Contact",
   description:
     "Send a message about ML, data, or AI-security roles in the UK. Replies usually within a couple of days.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

@@ -17,6 +17,7 @@ export const metadata: Metadata = {
   title: "About",
   description:
     "MSc Artificial Intelligence at the University of Sheffield. Background, focus areas, and how to get in touch.",
+  alternates: { canonical: "/about" },
 };
 
 export default async function AboutPage() {

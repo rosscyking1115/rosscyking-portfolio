@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Projects",
   description:
     "Selected work — distributed ML, LLM evaluation, NLP pipelines, and applied data engineering.",
+  alternates: { canonical: "/projects" },
 };
 
 interface ProjectsPageProps {
