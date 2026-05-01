@@ -1,14 +1,14 @@
 import { ImageResponse } from "next/og";
 
-export const size = { width: 512, height: 512 };
+export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 export const runtime = "nodejs";
 
 /**
- * Site favicon and PWA icon.
- * 512×512 — browsers automatically downscale for tab favicons.
+ * Apple touch icon for iOS home-screen and Safari pinned tabs.
+ * Uses a rounded square with subtle inset, the iOS-native look.
  */
-export default function Icon() {
+export default function AppleIcon() {
   return new ImageResponse(
     <div
       style={{
@@ -19,10 +19,10 @@ export default function Icon() {
         justifyContent: "center",
         background: "#0a0a0a",
         color: "#ffffff",
-        fontSize: 240,
+        fontSize: 86,
         fontWeight: 700,
-        letterSpacing: -8,
-        borderRadius: "100%",
+        letterSpacing: -2,
+        borderRadius: 38,
         fontFamily: "system-ui, -apple-system, sans-serif",
       }}
     >
