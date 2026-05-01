@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 export default function ProjectNotFound() {
   return (
     <Section
+      headingAs="h1"
       size="lg"
       eyebrow="404"
       heading="Project not found"

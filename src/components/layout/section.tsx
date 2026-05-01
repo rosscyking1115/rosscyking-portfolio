@@ -8,6 +8,8 @@ interface SectionProps extends ComponentPropsWithoutRef<"section"> {
   containerSize?: "sm" | "md" | "lg";
   eyebrow?: string;
   heading?: string;
+  /** Heading semantic level. Use "h1" once per page; default "h2". */
+  headingAs?: "h1" | "h2";
   description?: string;
 }
 
@@ -17,20 +19,18 @@ const sizeClasses: Record<NonNullable<SectionProps["size"]>, string> = {
   lg: "py-20 sm:py-28",
 };
 
-/**
- * Standard page section with optional eyebrow / heading / description.
- * Use everywhere instead of bare <section> so vertical rhythm stays consistent.
- */
 export function Section({
   size = "md",
   containerSize = "lg",
   eyebrow,
   heading,
+  headingAs = "h2",
   description,
   className,
   children,
   ...props
 }: SectionProps) {
+  const HeadingTag = headingAs;
   return (
     <section className={cn(sizeClasses[size], className)} {...props}>
       <Container size={containerSize}>
@@ -42,9 +42,9 @@ export function Section({
               </p>
             )}
             {heading && (
-              <h2 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+              <HeadingTag className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
                 {heading}
-              </h2>
+              </HeadingTag>
             )}
             {description && (
               <p className="text-muted-foreground mt-3 text-base leading-relaxed text-pretty">
