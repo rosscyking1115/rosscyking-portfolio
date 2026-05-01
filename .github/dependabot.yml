@@ -1,0 +1,76 @@
+version: 2
+
+updates:
+  # ---------- npm ----------
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/London"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "npm"]
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Group related packages so we get fewer, more meaningful PRs.
+    groups:
+      next-react:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+          - "eslint-config-next"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "prettier-plugin-tailwindcss"
+      radix-ui:
+        patterns:
+          - "@radix-ui/*"
+      mdx-pipeline:
+        patterns:
+          - "next-mdx-remote"
+          - "remark-*"
+          - "rehype-*"
+          - "shiki"
+          - "gray-matter"
+          - "reading-time"
+      contact-stack:
+        patterns:
+          - "resend"
+          - "@upstash/*"
+          - "react-hook-form"
+          - "@hookform/resolvers"
+          - "@marsidev/react-turnstile"
+          - "sonner"
+          - "zod"
+      ui-libs:
+        patterns:
+          - "lucide-react"
+          - "motion"
+          - "class-variance-authority"
+          - "clsx"
+          - "tailwind-merge"
+      tooling:
+        patterns:
+          - "eslint*"
+          - "prettier"
+          - "husky"
+          - "lint-staged"
+          - "typescript"
+          - "@types/*"
+        exclude-patterns:
+          - "@types/react"
+          - "@types/react-dom"
+
+  # ---------- GitHub Actions ----------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels: ["dependencies", "ci"]
+    commit-message:
+      prefix: "ci"

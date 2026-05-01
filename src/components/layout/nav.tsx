@@ -15,10 +15,8 @@ export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  // Close mobile menu on route change.
-  useEffect(() => setOpen(false), [pathname]);
-
-  // Lock body scroll while mobile menu is open.
+  // Lock body scroll while the mobile menu is open. This effect only writes
+  // to the DOM (an external system), so it's an allowed effect.
   useEffect(() => {
     if (typeof document === "undefined") return;
     document.body.style.overflow = open ? "hidden" : "";
@@ -27,8 +25,10 @@ export function Nav() {
     };
   }, [open]);
 
+  const closeMenu = () => setOpen(false);
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 border-b backdrop-blur">
       <Container>
         <div className="flex h-16 items-center justify-between">
           <Link
@@ -41,9 +41,7 @@ export function Nav() {
           <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
             {siteConfig.nav.map((item) => {
               const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
+                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
@@ -85,20 +83,21 @@ export function Nav() {
       <div
         id="mobile-menu"
         hidden={!open}
-        className="border-t border-border/60 bg-background md:hidden"
+        className="border-border/60 bg-background border-t md:hidden"
       >
         <Container>
           <nav aria-label="Mobile" className="flex flex-col gap-1 py-4">
             {siteConfig.nav.map((item) => {
               const isActive =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(item.href);
+                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
+                  // Close the menu in the same user action that navigates,
+                  // instead of reacting to pathname change in an effect.
+                  onClick={closeMenu}
                   className={cn(
                     "rounded-md px-3 py-3 text-base transition-colors",
                     isActive

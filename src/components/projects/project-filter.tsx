@@ -72,7 +72,7 @@ function FilterChip({ href, isActive, onNavigate, children }: FilterChipProps) {
         event.preventDefault();
         onNavigate();
       }}
-      aria-pressed={isActive}
+      aria-current={isActive ? "true" : undefined}
       className={cn(
         "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors",
         isActive

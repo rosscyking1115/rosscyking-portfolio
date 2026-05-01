@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Projects",
   description:
     "Selected work — distributed ML, LLM evaluation, NLP pipelines, and applied data engineering.",
+  alternates: { canonical: "/projects" },
 };
 
 interface ProjectsPageProps {
@@ -28,6 +29,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
   return (
     <Section
+      headingAs="h1"
       size="lg"
       eyebrow="Selected work"
       heading="Projects"

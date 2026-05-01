@@ -9,3 +9,6 @@ test-results
 .env*
 pnpm-lock.yaml
 package-lock.json
+
+# Google Search Console verification file — must remain byte-identical.
+public/google*.html
