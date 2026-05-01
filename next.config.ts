@@ -4,30 +4,25 @@ import type { NextConfig } from "next";
  * Security headers reference:
  *   - https://infosec.mozilla.org/guidelines/web_security
  *   - https://owasp.org/www-project-secure-headers/
- *
- * The CSP is intentionally moderately strict — no nonces (so we tolerate
- * inline styles for Motion + inline runtime scripts Next.js emits) but it
- * blocks every external origin we don't explicitly allow. That's enough to
- * earn an A on Mozilla Observatory and is appropriate for a personal site.
- *
- * Routes that need different headers (e.g. /.well-known/security.txt as
- * text/plain) get their own entry below.
  */
 
 const isProd = process.env.NODE_ENV === "production";
 
 // Origins we explicitly allow. Add new ones here, not inline below.
 const TURNSTILE = "https://challenges.cloudflare.com";
+const VERCEL_ANALYTICS = "https://va.vercel-scripts.com";
+const VERCEL_INSIGHTS = "https://vitals.vercel-insights.com";
 
 const baseCspDirectives = [
   "default-src 'self'",
-  // 'unsafe-inline' covers the small inline scripts Next.js emits; switch
-  // to nonces in middleware if we ever want a perfect Observatory score.
-  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"} ${TURNSTILE}`,
+  // 'unsafe-inline' covers Next.js's small inline runtime scripts.
+  // Vercel Analytics injects from va.vercel-scripts.com (script-src).
+  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"} ${TURNSTILE} ${VERCEL_ANALYTICS}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ${isProd ? "" : "ws: wss: "}${TURNSTILE}`,
+  // Vercel Analytics + Speed Insights post telemetry to vitals.vercel-insights.com.
+  `connect-src 'self' ${isProd ? "" : "ws: wss: "}${TURNSTILE} ${VERCEL_ANALYTICS} ${VERCEL_INSIGHTS}`,
   `frame-src 'self' ${TURNSTILE}`,
   "object-src 'none'",
   "base-uri 'self'",
@@ -42,7 +37,6 @@ const csp = baseCspDirectives.join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
-  // Two years, include subdomains, ready for HSTS preload list.
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
@@ -75,7 +69,6 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
       {
-        // security.txt should be served as plain text per RFC 9116.
         source: "/.well-known/security.txt",
         headers: [
           { key: "Content-Type", value: "text/plain; charset=utf-8" },
