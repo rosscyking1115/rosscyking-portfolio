@@ -8,9 +8,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
-      // server-only throws by design when imported anywhere other than a Server
-      // Component. Vitest has no RSC awareness, so we point it at an empty
-      // stub. The runtime guard remains active in real Next.js builds.
       "server-only": path.resolve(__dirname, "tests/__mocks__/server-only.ts"),
     },
   },
@@ -23,20 +20,24 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
-      include: ["src/**/*.{ts,tsx}"],
-      exclude: [
-        "src/**/*.d.ts",
-        "src/types/**",
-        "src/app/**/page.tsx",
-        "src/app/**/layout.tsx",
-        "src/app/**/not-found.tsx",
-        "src/app/**/actions.ts",
+      // Only include modules that are exercised by unit/component tests.
+      // Pages, server actions, sitemap/OG/manifest, and integration-heavy
+      // components are covered by Playwright E2E in tests/e2e/**.
+      include: [
+        "src/lib/contact-schema.ts",
+        "src/lib/email-template.ts",
+        "src/lib/theme-cookie.ts",
+        "src/lib/utils.ts",
+        "src/components/ui/badge.tsx",
+        "src/components/ui/button.tsx",
+        "src/components/ui/card.tsx",
+        "src/components/projects/project-card.tsx",
       ],
       thresholds: {
-        statements: 60,
-        branches: 60,
-        functions: 60,
-        lines: 60,
+        statements: 80,
+        branches: 75,
+        functions: 80,
+        lines: 80,
       },
     },
   },
