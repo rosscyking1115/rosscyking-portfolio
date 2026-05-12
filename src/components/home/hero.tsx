@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
@@ -32,8 +33,7 @@ export function Hero() {
 
       <FadeIn whenInView={false} delay={STAGGER_STEP * 3}>
         <p className="text-muted-foreground mt-6 max-w-2xl text-base leading-relaxed text-pretty sm:text-lg">
-          {siteConfig.description} Currently focused on production-grade RAG systems, LLM
-          evaluation, and scalable distributed pipelines on HPC.
+          {siteConfig.description}
         </p>
       </FadeIn>
 
@@ -43,7 +43,10 @@ export function Hero() {
             <Link href="/projects">View projects</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/contact">Get in touch</Link>
+            <Link href="/cv.pdf" download="Cheng-Yuan-King-CV.pdf">
+              <Download aria-hidden="true" />
+              Download CV
+            </Link>
           </Button>
         </div>
       </FadeIn>

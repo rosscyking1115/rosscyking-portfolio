@@ -11,8 +11,8 @@ export async function FeaturedProjects() {
   return (
     <Section
       eyebrow="Selected work"
-      heading="Things I've built"
-      description="A few projects that show how I approach distributed ML, LLM evaluation, and rigorous benchmarking. Full case studies on the projects page."
+      heading="Selected technical projects"
+      description="Representative projects showing data engineering, scalable ML, LLM evaluation, and reproducible software practice. Full case studies on the projects page."
     >
       <ProjectGrid projects={projects} />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { Github, Linkedin, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -58,7 +58,25 @@ export function Nav() {
                 </Link>
               );
             })}
-            <div className="ml-1">
+            <div className="ml-2 flex items-center gap-1 border-l pl-2">
+              <Link
+                href={siteConfig.links.github}
+                aria-label="GitHub"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-9 items-center justify-center rounded-md transition-colors"
+              >
+                <Github className="size-4" aria-hidden="true" />
+              </Link>
+              <Link
+                href={siteConfig.links.linkedin}
+                aria-label="LinkedIn"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-9 items-center justify-center rounded-md transition-colors"
+              >
+                <Linkedin className="size-4" aria-hidden="true" />
+              </Link>
               <ThemeToggle />
             </div>
           </nav>
@@ -109,6 +127,28 @@ export function Nav() {
                 </Link>
               );
             })}
+            <div className="mt-2 flex items-center gap-1 border-t pt-3">
+              <Link
+                href={siteConfig.links.github}
+                aria-label="GitHub"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={closeMenu}
+                className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-10 items-center justify-center rounded-md transition-colors"
+              >
+                <Github className="size-5" aria-hidden="true" />
+              </Link>
+              <Link
+                href={siteConfig.links.linkedin}
+                aria-label="LinkedIn"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={closeMenu}
+                className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-10 items-center justify-center rounded-md transition-colors"
+              >
+                <Linkedin className="size-5" aria-hidden="true" />
+              </Link>
+            </div>
           </nav>
         </Container>
       </div>

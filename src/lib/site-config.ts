@@ -5,14 +5,14 @@
 export const siteConfig = {
   name: "Cheng-Yuan (Ross) King",
   shortName: "Ross King",
-  role: "Machine Learning Engineer · Data Scientist",
+  role: "Data & ML Engineer · MSc Artificial Intelligence",
   description:
-    "MSc Artificial Intelligence at the University of Sheffield. Applied ML, NLP, and scalable AI systems.",
+    "MSc Artificial Intelligence student at the University of Sheffield with a Computer Science background. I build practical data and ML systems, from SQL/dbt analytics warehouses to distributed PySpark workflows and LLM evaluation on GPU/HPC infrastructure.",
   url: "https://rosscyking.com",
   ogImage: "/og.png",
   email: "rosscyking@gmail.com",
   location: "Sheffield, United Kingdom",
-  availability: "Available from October 2026",
+  availability: "Available for full-time roles from Oct 2026",
   links: {
     github: "https://github.com/rosscyking1115",
     linkedin: "https://www.linkedin.com/in/rosscyking",
