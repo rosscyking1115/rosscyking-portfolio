@@ -5,6 +5,18 @@ export interface SkillGroup {
 
 export const skillGroups: readonly SkillGroup[] = [
   {
+    label: "Data engineering & analytics",
+    items: [
+      "SQL",
+      "dbt",
+      "DuckDB",
+      "Streamlit",
+      "GitHub Actions",
+      "Data testing",
+      "Analytics engineering",
+    ],
+  },
+  {
     label: "Machine learning",
     items: [
       "PyTorch",
@@ -12,6 +24,7 @@ export const skillGroups: readonly SkillGroup[] = [
       "Model evaluation",
       "Cross-validation",
       "Hyperparameter tuning",
+      "Feature engineering",
     ],
   },
   {
@@ -19,19 +32,27 @@ export const skillGroups: readonly SkillGroup[] = [
     items: [
       "Hugging Face Transformers",
       "Qwen / Llama",
-      "RAG",
       "Prompt engineering",
       "Event extraction",
       "Document QA",
+      "LLM evaluation",
+    ],
+  },
+  {
+    label: "Scalable & systems",
+    items: [
+      "PySpark",
+      "Spark MLlib",
+      "Slurm / HPC",
+      "Linux",
+      "Docker",
+      "Git",
+      "GPU computing",
     ],
   },
   {
     label: "Data & analysis",
-    items: ["Python", "pandas", "NumPy", "SQL", "Jupyter", "Statistical analysis"],
-  },
-  {
-    label: "Scalable & systems",
-    items: ["PySpark", "Slurm / HPC", "GPU computing", "CUDA", "Docker", "Git"],
+    items: ["Python", "pandas", "NumPy", "Jupyter", "matplotlib", "Statistical analysis"],
   },
   {
     label: "Languages",

@@ -16,7 +16,7 @@ import { skillGroups } from "@/lib/skills";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "MSc Artificial Intelligence at the University of Sheffield. Background, focus areas, and how to get in touch.",
+    "MSc Artificial Intelligence at the University of Sheffield, focused on Data & ML Engineering. Background, focus areas, and how to get in touch.",
   alternates: { canonical: "/about" },
 };
 
@@ -32,7 +32,7 @@ export default async function AboutPage() {
         size="lg"
         eyebrow="About"
         heading="Cheng-Yuan (Ross) King"
-        description="MSc Artificial Intelligence · Applied ML, NLP, scalable systems"
+        description="MSc Artificial Intelligence · Data & ML Engineering · Scalable Systems"
       >
         <div className="flex flex-wrap items-center gap-3 print:hidden">
           <CvDownload />

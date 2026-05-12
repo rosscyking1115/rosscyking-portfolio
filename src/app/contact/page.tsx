@@ -21,7 +21,7 @@ export default function ContactPage() {
       containerSize="md"
       eyebrow="Contact"
       heading="Get in touch"
-      description="Fill in the form below or send me an email directly. I read everything."
+      description="For roles, collaborations, or project discussions, feel free to contact me by email or through the form below. I aim to reply within a couple of days."
     >
       <div className="text-muted-foreground mb-8 inline-flex items-center gap-2 text-sm">
         <Mail className="size-4" aria-hidden="true" />
