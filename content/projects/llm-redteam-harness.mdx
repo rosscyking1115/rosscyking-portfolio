@@ -1,0 +1,58 @@
+---
+title: LLM Red-Team Evaluation Harness
+summary: Reproducible benchmark measuring how published adversarial prompts perform against 2026-era LLMs and whether prompt-only defences move the needle — with cross-judge validation and bootstrap confidence intervals.
+stack:
+  [
+    Python,
+    Claude Sonnet 4.6,
+    Llama 3.1 8B,
+    Inspect AI,
+    GitHub Actions,
+    pytest,
+    ruff,
+    mypy,
+  ]
+role: Solo project
+period: "2026"
+publishedAt: "2026-05-22"
+featured: false
+links:
+  github: https://github.com/rosscyking1115/llm-redteam-harness
+---
+
+## What I built
+
+A fully reproducible evaluation harness for measuring attack success rate (ASR) of published adversarial prompt corpora against two target models — Claude Sonnet 4.6 (frontier API) and Llama 3.1 8B (local via Ollama) — under composable defence configurations.
+
+The v1 evaluation matrix covers 12 cells: 2 target models × 2 benchmark families (AdvBench direct attacks, AgentDojo static indirect injection) × up to 4 defence stacks.
+
+### Headline finding
+
+Published adversarial prompts succeed between 0% and 4% of the time across all 12 cells. A paranoid prompt-only defence stack does not measurably move that number. The honest interpretation: 2026-era instruction tuning already neutralises these static, published attacks on both a frontier and a small local model.
+
+### What the harness measures
+
+- **Corpus loading** — AdvBench, JailbreakBench, HarmBench, and AgentDojo, each pinned to an upstream commit for reproducibility
+- **Defence stacks** — paranoid system prompt, Constitutional critique-and-revise, Spotlighting, SecAlign-style structured queries (composable, toggled via YAML run configs)
+- **Scoring pipeline** — rule-based pre-screen → LLM judge → independent cross-judge for validation
+- **Statistical rigour** — ASR with 95% percentile-bootstrap confidence intervals, Cohen's κ and Krippendorff's α for inter-judge agreement, real API cost per run
+
+### Cross-judge validation
+
+Every attack-success verdict is scored by one judge model and independently re-scored by a second. Cross-judge κ = +1.00 across all 12 cells on ASR — the metric is well-posed. The harness also discovered that `refusal_rate` is _not_ well-posed: the two judges agree on whether an attack succeeded, but disagree — sometimes worse than chance — on whether a response was a "refusal" in the indirect-injection setting, because there are two things that can be refused. This is documented in METHODOLOGY.md, not quietly omitted.
+
+### Inspect AI compatibility
+
+Any run exports to a UK AI Security Institute Inspect eval log, so results load directly in `inspect view` or via `read_eval_log()`. Cross-judge agreement, confidence intervals, and cost travel in the log metadata.
+
+## Why ASR, not refusal rate
+
+Building a measurement tool that reports how trustworthy its own metrics are was a core design goal. The cross-judge layer is what surfaced the refusal_rate problem. Reporting a metric you know is unreliable — without documenting it — is exactly the kind of methodological noise that makes safety benchmarking literature hard to interpret.
+
+## Ethical design
+
+Only published adversarial prompts are used. Excluded categories (CSAM, weapons-of-mass-destruction synthesis, detailed self-harm methods) are filtered at corpus-load time and verified by a CI test. No raw harmful outputs are committed to the repo. See ETHICS.md for the full policy.
+
+## Limits and future work
+
+The open risk these static benchmarks under-measure is the full agentic loop — interactive, multi-turn tool use with real actions. That is named explicitly as future work in METHODOLOGY.md, not quietly omitted. Next tracks: full AgentDojo agent loop, multi-turn attacks, and expanded model coverage.
