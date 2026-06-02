@@ -1,0 +1,53 @@
+---
+title: "a → b: Privacy-First File Converter"
+summary: A free, fully client-side file converter — image and PDF tools that run entirely in the browser via WebAssembly. Files never leave your device. Live at fromatob.app.
+stack:
+  [
+    TypeScript,
+    Astro 5,
+    React,
+    Tailwind CSS v4,
+    WebAssembly,
+    pdf-lib,
+    pdf.js,
+    mozjpeg,
+    Cloudflare Workers,
+  ]
+role: Solo project
+period: "2026"
+publishedAt: "2026-05-12"
+featured: false
+links:
+  github: https://github.com/rosscyking1115/a-to-b
+  demo: https://fromatob.app
+---
+
+## What I built
+
+A privacy-first file converter that runs entirely in the browser — no upload endpoint, no server-side processing, no accounts, no tracking. Files are converted locally using WebAssembly and the Canvas API, then downloaded directly.
+
+Seven tools are live:
+
+- **Image** — PNG ↔ JPEG ↔ WebP, multi-file batch conversion
+- **PDF Merge** — combine multiple PDFs into one
+- **PDF Split** — one PDF in, one PDF per page out
+- **JPG → PDF** — bundle images into a PDF with selectable page size
+- **PDF → JPG** — render each page as a JPG at a chosen quality
+- **PDF Rotate** — 90° / 180° / 270° on every page
+- **PDF Compress** — three-stage pipeline: mozjpeg image recompression, DPI-aware downsampling, and a qpdf-wasm structural pass. Text stays selectable.
+
+## Why privacy-first matters here
+
+Every free file converter I could find uploads your files to a server you don't control — sometimes keeping them. The privacy claim here is verifiable: open DevTools → Network, drop in a file, and confirm zero outbound requests during conversion. If that ever breaks, the issue tracker is the right place.
+
+## Technical design
+
+**Compression pipeline** runs in a Web Worker so the UI stays responsive on large files. The three stages — mozjpeg recompression via `@jsquash/jpeg`, DPI-aware downsampling, and a `@neslinesli93/qpdf-wasm` structural pass — are composable and independently skippable per file.
+
+**No Word ↔ PDF.** Microsoft Word and Google Docs already handle this perfectly for free; matching their fidelity in-browser would require either a server round-trip or accepting poor output. Doing it badly isn't a feature.
+
+**PWA** — installable and works offline after first load. Hosted as a static asset bundle on Cloudflare Workers.
+
+## Stack
+
+Astro 5 with React islands for interactive tools, TypeScript strict throughout, Tailwind CSS v4 for styling. Vitest for unit tests, Playwright for E2E. CI covers lint, typecheck, build, and tests before every merge.
