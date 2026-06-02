@@ -1,0 +1,69 @@
+---
+title: Internal AI Agent Evaluation Lab
+summary: Synthetic evaluation lab for testing internal AI agent reliability — grounded retrieval, structured extraction, safe refusal, approval-gated tools, and observability — with a public Streamlit dashboard and GitHub Pages report site.
+stack:
+  [
+    Python,
+    FastAPI,
+    Streamlit,
+    Pydantic,
+    pytest,
+    ruff,
+    Docker,
+    GitHub Actions,
+    GitHub Pages,
+  ]
+role: Solo project
+period: "2026"
+publishedAt: "2026-06-02"
+featured: false
+links:
+  github: https://github.com/rosscyking1115/internal-ai-agent-eval-lab
+  demo: https://agent-evaluation-lab.streamlit.app/
+---
+
+## What I built
+
+A public synthetic evaluation lab for testing the reliability of an internal AI agent across six operational dimensions: grounded retrieval, structured extraction, safe refusal, approval-gated tool calls, auditability, and observability.
+
+The project treats the agent as an operational system — not a generic chatbot. All data is fully synthetic (runbooks, tickets, teams, procedures, metrics) so the evaluation can be inspected and extended safely.
+
+## Evaluation scope
+
+The benchmark covers 344 golden cases and 60 red-team cases across a synthetic operations knowledge base of 24 runbook sections and 180 synthetic tickets.
+
+### Retrieval
+
+Five retrievers evaluated at hit rate@3 and citation coverage: baseline keyword, improved lexical, hybrid sparse-semantic, local TF-IDF vector, and a local hashed-embedding store. The hybrid and vector retrievers reach 100% hit rate@3 on the current benchmark. The honest caveat: the local embedding store uses deterministic feature hashing, not a provider-backed model — comparing against a real embedding API is the named next step.
+
+### Structured extraction
+
+Pydantic-validated ticket extraction and routing decisions evaluated for schema validity and routing accuracy. Both reach 100% on the current deterministic benchmark.
+
+### Safety and red-team
+
+60 red-team cases covering: prompt injection from user prompts, prompt injection from retrieved documents, leakage of synthetic system context, weak-evidence requests, excessive-agency attempts, access escalation, and tool misuse. The improved agent achieves 100% safe response rate with a residual risk score of 0.
+
+### Tool governance
+
+Read-only tools throughout, plus approval-gated mock side-effecting calls. 100% block rate on unapproved side effects; 100% of approval events written to the audit log.
+
+### Observability
+
+Trace IDs, audit events, monitoring snapshots, a local span timeline viewer, OTLP/HTTP export preview, and a local collector smoke test. 1,292 OTel-style spans exported in the current run.
+
+## Benchmark transparency
+
+The dataset profile is published alongside the results because high scores on synthetic cases only mean something when the benchmark mix is visible. The current profile: 88 manually authored golden cases (25.6% manual share), 66 expected abstention cases, 39 noise types, 16 task types. The most important gap — templated cases — is documented rather than hidden.
+
+## Delivery
+
+- Public Streamlit dashboard with live benchmark readouts
+- GitHub Pages static report site with the full evaluation report and dataset profile JSON
+- FastAPI service with prediction and retrieval endpoints
+- Docker image and Docker Compose for local full-stack runs
+- CI workflow running lint, tests, deterministic report regeneration, OTLP smoke test, and Docker build on every PR
+
+## Honest limits
+
+The benchmark is synthetic and partly templated — scores are engineering checks, not production performance claims. Structured extraction uses deterministic pattern matching, not LLM extraction. The controlled agent is a local workflow, not a LangGraph state machine. Each of these is documented explicitly rather than presented as equivalent to a production deployment.

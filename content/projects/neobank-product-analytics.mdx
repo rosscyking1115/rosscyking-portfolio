@@ -1,68 +1,84 @@
 ---
-title: Neobank Product Analytics
-summary: End-to-end product analytics case study on a synthetic neobank — dbt metrics layer, A/B experimentation with CUPED, activation decisioning model, geo-lift referral analysis, and a Streamlit product dashboard.
+title: Customer Growth & Pricing Intelligence Platform
+summary: End-to-end synthetic fintech data product — dbt metrics, CUPED A/B experimentation, activation model, geo-lift referral analysis, pricing intelligence, FastAPI service, and a full GCP deployment path with BigQuery, Cloud Run, and Cloud Monitoring.
 stack:
   [
     Python,
     dbt,
     DuckDB,
+    BigQuery,
+    Cloud Run,
+    FastAPI,
     Streamlit,
     Marimo,
     scikit-learn,
-    pandas,
     synthetic control,
     GitHub Actions,
+    GCP,
   ]
 role: Solo project
 period: "2026"
-publishedAt: "2026-05-24"
+publishedAt: "2026-05-31"
 featured: false
 links:
   github: https://github.com/rosscyking1115/neobank-product-analytics
+  demo: https://neobank-appuct-analytics.streamlit.app/
 ---
 
 ## What I built
 
-A full-stack product analytics portfolio project that simulates the end-to-end workflow of a Product Data Scientist in a modern fintech squad — from synthetic data generation through to PM-ready decision memos and a live Streamlit dashboard.
+A synthetic fintech data product that connects customer analytics, experimentation, activation modelling, pricing intelligence, and cloud deployment into one end-to-end workflow — answering the questions a product or growth team would actually ask:
 
-The project is built around a modern fintech stack: DuckDB as the warehouse, dbt for governed metric transformations, Python for modelling and experimentation, and Marimo notebooks for the analytical narrative.
+- Which customers activate, retain, and become higher-value users?
+- Which onboarding treatment should be shipped, monitored, or iterated?
+- Are referral incentives incrementally acquiring customers, or just subsidising signups that would have happened anyway?
+- Which pricing or incentive offers are commercially attractive after guardrails?
+- Can scoring, monitoring, and API surfaces be operated as a small data product rather than a one-off notebook?
 
-### Synthetic data generation
+All data is synthetic. No customer data, internal bank data, or proprietary business metrics are used.
 
-A reproducible generator produces realistic neobank event data — users, transactions, sessions, feature events (Savings Pots, Salary Sorter, referrals), support contacts, experiment assignments, and regional daily signups — at scales from 5,000 (CI) to 50,000 users (portfolio). All raw data is gitignored and re-creatable from configs.
+## Analytics and modelling
 
 ### dbt metrics layer
 
-A trusted metrics layer built in dbt covers:
+A trusted metrics layer in dbt covers D7 activation, W4 retention, feature adoption (Savings Pots, Salary Sorter, referrals), WAU, transaction frequency, CLV proxy, and experiment user metrics. Guardrail metrics track support contact rate, complaint load, fraud flags, crash rate, vulnerable-customer impact, and fair-value signals. 107 dbt tests pass on both local DuckDB and BigQuery.
 
-- **D7 activation** — first card transaction within 7 days of signup
-- **W4 retention** — activated users transacting in week 4
-- **Feature adoption** — Savings Pots, Salary Sorter, referrals, and related product use
-- **WAU and transaction frequency**
-- **CLV proxy** — simulated 12-month net revenue per user
-- **Experiment user metrics** — CUPED-ready pre-experiment covariates
-- **Guardrails** — support contact rate, complaint load, fraud flags, crash rate, vulnerable-customer impact, and fair-value signals
+### A/B experimentation (personalised onboarding)
 
-### A/B experimentation (personalised onboarding test)
-
-Full experiment analysis with: sample-ratio mismatch (SRM) check, CUPED variance reduction, guardrail metrics, power analysis, heterogeneous treatment effects, and a structured launch recommendation memo. CUPED is implemented from first principles rather than via a library.
-
-### Activation decisioning model
-
-A calibrated binary classifier for D7 activation, with: proper train/test split, calibration curve, SHAP explainability, segment-level fairness checks, and a model card documenting customer-outcome guardrails. Designed to the standard expected of a model that could influence product targeting.
+Full analysis: sample-ratio mismatch (SRM) check, CUPED variance reduction implemented from first principles, guardrail metrics, power analysis, heterogeneous treatment effects, and a PM-ready launch recommendation memo.
 
 ### Regional referral incrementality (geo-lift)
 
-Estimates whether a referral incentive programme drove incremental signups in treated regions — not just correlated ones. Methods: difference-in-differences with parallel trends tests, synthetic control, spillover checks, placebo regressions, and embedded ground-truth recovery to validate the estimator against known lift.
+Causal estimation of whether a referral incentive drove incremental signups — not just correlated ones. Methods: difference-in-differences with parallel trends tests, synthetic control, spillover checks, placebo regressions, and embedded ground-truth recovery to validate the estimator against known lift.
 
-### Delivery layer
+### Activation decisioning model
 
-A Streamlit dashboard reads dbt marts from DuckDB and displays product health, onboarding A/B results, and referral geo incrementality. If no database exists on first load, it auto-generates a 5,000-user demo dataset and builds the dbt marts — zero-setup for reviewers. One-page decision memos for both the A/B test and the geo experiment are written for a product manager audience.
+Calibrated binary classifier for D7 activation with: train/test split, calibration curve, SHAP explainability, segment-level fairness checks, and a model card documenting customer-outcome guardrails.
 
-## Why this project exists
+### Pricing intelligence
 
-This was built to demonstrate the full scope of a product data scientist role — not just modelling, but the surrounding rigour: governed metrics, experiment design, causal thinking, guardrails, and communication. Each chapter has an honest limits section documenting what the synthetic setup can and cannot show.
+Offer economics workflow covering recommendation guardrails, scenario runs, and sensitivity analysis. Compares margin, expected conversion, support risk, and fairness guardrails before any rollout decision.
 
-## Stack choices
+## Production-style deployment
 
-DuckDB was chosen over a hosted warehouse because it keeps the project fully local and reproducible without cloud credentials. dbt enforces a clean interface between raw data and analytics — the same discipline a real team would expect. Marimo notebooks are used for the analytical narrative because they re-run top-to-bottom without hidden state.
+The project goes beyond local development — the GCP path has been exercised and documented:
+
+- **Cloud Storage** raw landing path loaded into BigQuery
+- **BigQuery** raw tables verified against export manifest; dbt graph run on BigQuery with 107 passing checks
+- **Cloud Run Jobs** deployed for activation scoring and score monitoring
+- **Cloud Run API** (private) deployed and smoke-tested via authenticated `/health`
+- **Cloud Scheduler** configured for daily scoring and monitoring runs
+- **Cloud Monitoring** alert policies created for job failures and API errors
+- **Budget alert** and Cloud Storage lifecycle policy configured for cost control
+
+## Delivery surfaces
+
+- Public Streamlit dashboard (Streamlit Community Cloud) for product health, experiments, pricing, and monitoring
+- FastAPI service with activation, churn, upsell, offer recommendation, and pricing scenario contracts
+- Operations runbook covering release gates, drift checks, realised-label calibration, rollback triggers, and GCP triage
+- Docker and Docker Compose for local full-stack reproduction
+- CI running lint, tests, deterministic report regeneration, and monitoring snapshot workflow
+
+## Honest limits
+
+This is a synthetic portfolio case study. A real regulated-financial-services deployment would require stronger API protection (API Gateway, IAP, JWT), formal data governance with row/column-level controls, keyless CI/CD via GitHub OIDC, a model registry for reproducible training and shadow deployments, and formal Consumer Duty, model-risk, and audit controls before any live customer decisioning. These gaps are documented in the repo, not left implicit.
