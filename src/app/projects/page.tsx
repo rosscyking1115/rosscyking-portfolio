@@ -8,7 +8,7 @@ import { getAllStacks, getProjectMeta } from "@/lib/projects";
 export const metadata: Metadata = {
   title: "Projects",
   description:
-    "Selected work — distributed ML, LLM evaluation, NLP pipelines, and applied data engineering.",
+    "Selected work — AI safety evaluation, LLM red-teaming, RAG benchmarking, NLP pipelines, and reproducible evaluation infrastructure.",
   alternates: { canonical: "/projects" },
 };
 
