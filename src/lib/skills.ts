@@ -5,7 +5,7 @@ export interface SkillGroup {
 
 export const skillGroups: readonly SkillGroup[] = [
   {
-    label: "GenAI & NLP",
+    label: "AI Safety & Eval",
     items: [
       "RAG evaluation",
       "LLM evaluation",
@@ -14,6 +14,10 @@ export const skillGroups: readonly SkillGroup[] = [
       "Red-team testing",
       "Guardrail checks",
       "Hugging Face Transformers",
+      "Safe refusal evaluation",
+      "Adversarial testing",
+      "Safety classifier evaluation",
+      "OpenTelemetry / OTel tracing",
     ],
   },
   {
