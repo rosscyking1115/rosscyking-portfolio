@@ -7,10 +7,15 @@ export interface ProjectMeta {
   period: string;
   publishedAt: string; // ISO date — used for sorting, not display
   featured?: boolean;
+  /** Manual ordering for the homepage featured grid (ascending). Falls back to publishedAt. */
+  featuredOrder?: number;
+  /** Headline numbers rendered as an inline metric strip on the detail page. */
+  metrics?: { value: string; label: string }[];
   links?: {
     github?: string;
     demo?: string;
     paper?: string;
+    report?: string;
   };
 }
 

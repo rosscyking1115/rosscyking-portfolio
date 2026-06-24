@@ -1,11 +1,12 @@
 ---
-title: LLM Event Extraction Baseline
-summary: Zero-shot event extraction with Qwen2.5-7B-Instruct on MAVEN and WikiEvents. Compares unconstrained vs constrained-label prompting across trigger detection, type prediction, and argument extraction. A100 GPU inference via Hugging Face.
-stack: [Python, Qwen2.5-7B, Hugging Face, PyTorch, A100]
-role: Solo project
+title: LLM Event Extraction on GPU/HPC
+summary: "Team NLP project building a zero-shot LLM event extraction baseline with Qwen2.5-7B-Instruct on MAVEN and WikiEvents. Compares unconstrained vs constrained-label prompting, with float16 inference on NVIDIA A100-SXM4-80GB via Hugging Face Transformers and Slurm, evaluated on valid JSON rate, trigger accuracy, type accuracy, combined accuracy, and structured errors."
+stack: [Python, Qwen2.5-7B, Hugging Face, PyTorch, Slurm, A100 GPU/HPC]
+role: Academic team project
 period: "2026"
 publishedAt: "2026-06-07"
-featured: false
+featured: true
+featuredOrder: 4
 links:
   github: https://github.com/rosscyking1115/event-extraction-llm-baseline
 ---
@@ -46,6 +47,12 @@ events the source sentence didn't license.
 
 This is a _baseline_, not state of the art — the point was to make the
 fine-tuning experiments that come next interpretable.
+
+## Why it matters
+
+It shows academic NLP grounding, GPU/HPC workflow experience (float16
+inference on A100 via Slurm), and structured LLM evaluation beyond
+portfolio-only projects.
 
 ## What I'd do differently
 
