@@ -21,10 +21,7 @@ export function ProjectFilter({ stacks, active }: ProjectFilterProps) {
 
   return (
     <ul
-      className={cn(
-        "mb-10 flex flex-wrap gap-1.5 transition-opacity",
-        isPending && "opacity-60",
-      )}
+      className={cn("flex flex-wrap gap-2 transition-opacity", isPending && "opacity-60")}
       aria-label="Filter projects by tech stack"
     >
       <li>
@@ -74,10 +71,10 @@ function FilterChip({ href, isActive, onNavigate, children }: FilterChipProps) {
       }}
       aria-current={isActive ? "true" : undefined}
       className={cn(
-        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors",
         isActive
-          ? "border-foreground bg-foreground text-background"
-          : "border-border text-muted-foreground hover:border-foreground/60 hover:text-foreground",
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-background text-muted-foreground hover:text-foreground",
       )}
     >
       {children}

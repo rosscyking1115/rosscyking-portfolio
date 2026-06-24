@@ -1,6 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { Space_Grotesk } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+
+// Display face for headings — shares visual DNA with Space Mono, so the type
+// system quietly reads as "measurement". Body stays Geist Sans, data Geist Mono.
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
@@ -26,16 +36,20 @@ export const metadata: Metadata = {
   authors: [{ name: siteConfig.name, url: siteConfig.url }],
   creator: siteConfig.name,
   keywords: [
-    "Data Engineering",
-    "Machine Learning Engineering",
-    "Analytics Engineering",
-    "PySpark",
-    "dbt",
-    "DuckDB",
-    "SQL",
+    "AI Safety",
+    "GenAI Evaluation",
     "LLM Evaluation",
-    "Hugging Face",
-    "HPC",
+    "RAG Evaluation",
+    "AI-agent reliability",
+    "Red-team testing",
+    "Applied AI",
+    "Data Science",
+    "Python",
+    "FastAPI",
+    "Streamlit",
+    "Docker",
+    "GitHub Actions",
+    "MSc Artificial Intelligence",
     "University of Sheffield",
     "United Kingdom",
     "London",
@@ -75,7 +89,12 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={cn(GeistSans.variable, GeistMono.variable, isDark ? "dark" : "")}
+      className={cn(
+        GeistSans.variable,
+        GeistMono.variable,
+        spaceGrotesk.variable,
+        isDark ? "dark" : "",
+      )}
       data-scroll-behavior="smooth"
       style={{ colorScheme: isDark ? "dark" : "light" }}
       suppressHydrationWarning
