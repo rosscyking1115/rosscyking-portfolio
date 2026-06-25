@@ -17,10 +17,14 @@ export function personSchema() {
     description: siteConfig.description,
     sameAs: [siteConfig.links.github, siteConfig.links.linkedin],
     knowsAbout: [
+      "AI Safety",
+      "GenAI Evaluation",
+      "LLM Evaluation",
+      "RAG Evaluation",
+      "Red-team testing",
       "Machine Learning",
       "Natural Language Processing",
       "Data Science",
-      "Distributed Computing",
       "Python",
     ],
     address: {

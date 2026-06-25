@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { Send } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -56,7 +57,18 @@ export function ContactForm() {
   };
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form
+      noValidate
+      onSubmit={handleSubmit(onSubmit)}
+      className="border-border bg-background rounded-lg border p-6 shadow-xs sm:p-8"
+    >
+      <h2 className="font-display text-xl font-semibold tracking-tight">
+        Send a message
+      </h2>
+      <p className="text-muted-foreground mt-1 text-sm">
+        Or just email me directly — whatever&rsquo;s easier.
+      </p>
+
       {/* Honeypot — invisible to humans, irresistible to dumb bots */}
       <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
         <label>
@@ -65,10 +77,11 @@ export function ContactForm() {
         </label>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-5 sm:grid-cols-2">
         <Field id="name" label="Name" error={errors.name?.message} required>
           <Input
             id="name"
+            placeholder="Jane Recruiter"
             autoComplete="name"
             aria-invalid={Boolean(errors.name)}
             {...register("name")}
@@ -80,33 +93,42 @@ export function ContactForm() {
             id="email"
             type="email"
             inputMode="email"
+            placeholder="jane@company.com"
             autoComplete="email"
             aria-invalid={Boolean(errors.email)}
             {...register("email")}
           />
         </Field>
+
+        <Field
+          id="company"
+          label="Company"
+          hint="Optional"
+          error={errors.company?.message}
+          wide
+        >
+          <Input
+            id="company"
+            placeholder="Acme AI"
+            autoComplete="organization"
+            aria-invalid={Boolean(errors.company)}
+            {...register("company")}
+          />
+        </Field>
+
+        <Field id="message" label="Message" error={errors.message?.message} required wide>
+          <Textarea
+            id="message"
+            rows={4}
+            placeholder="A line about the role and team…"
+            aria-invalid={Boolean(errors.message)}
+            {...register("message")}
+          />
+        </Field>
       </div>
 
-      <Field id="company" label="Company" hint="Optional" error={errors.company?.message}>
-        <Input
-          id="company"
-          autoComplete="organization"
-          aria-invalid={Boolean(errors.company)}
-          {...register("company")}
-        />
-      </Field>
-
-      <Field id="message" label="Message" error={errors.message?.message} required>
-        <Textarea
-          id="message"
-          rows={6}
-          aria-invalid={Boolean(errors.message)}
-          {...register("message")}
-        />
-      </Field>
-
       {TURNSTILE_SITE_KEY && (
-        <div>
+        <div className="mt-5">
           <Turnstile
             siteKey={TURNSTILE_SITE_KEY}
             onSuccess={setTurnstileToken}
@@ -117,13 +139,18 @@ export function ContactForm() {
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={isPending}>
-          {isPending ? "Sending…" : "Send message"}
+          {isPending ? (
+            "Sending…"
+          ) : (
+            <>
+              Send message
+              <Send aria-hidden="true" />
+            </>
+          )}
         </Button>
-        <p className="text-muted-foreground text-xs">
-          I read every message and aim to reply within a couple of days.
-        </p>
+        <p className="text-muted-foreground text-xs">No newsletter. No follow-up spam.</p>
       </div>
     </form>
   );
@@ -135,12 +162,14 @@ interface FieldProps {
   error?: string;
   hint?: string;
   required?: boolean;
+  /** Span both columns of the form grid. */
+  wide?: boolean;
   children: React.ReactNode;
 }
 
-function Field({ id, label, error, hint, required, children }: FieldProps) {
+function Field({ id, label, error, hint, required, wide, children }: FieldProps) {
   return (
-    <div className="space-y-1.5">
+    <div className={`flex flex-col gap-1.5 ${wide ? "sm:col-span-2" : ""}`}>
       <div className="flex items-baseline justify-between gap-2">
         <Label htmlFor={id}>
           {label}

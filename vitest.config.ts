@@ -30,8 +30,6 @@ export default defineConfig({
         "src/lib/utils.ts",
         "src/components/ui/badge.tsx",
         "src/components/ui/button.tsx",
-        "src/components/ui/card.tsx",
-        "src/components/projects/project-card.tsx",
       ],
       thresholds: {
         statements: 80,

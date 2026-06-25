@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import { compileMDX } from "next-mdx-remote/rsc";
-import { Mail } from "lucide-react";
-import Link from "next/link";
 
-import { CvDownload } from "@/components/about/cv-download";
 import { ExperienceTimeline } from "@/components/about/experience-timeline";
-import { Section } from "@/components/layout/section";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Container } from "@/components/layout/container";
+import { IndexMark } from "@/components/layout/index-mark";
 import { getAboutContent } from "@/lib/about";
 import { education, languages } from "@/lib/experience";
 import { siteConfig } from "@/lib/site-config";
@@ -16,83 +12,80 @@ import { skillGroups } from "@/lib/skills";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "MSc Artificial Intelligence at the University of Sheffield, focused on empirical AI safety and evaluation. Background, projects, and how to get in touch.",
+    "MSc Artificial Intelligence at the University of Sheffield, building AI evaluation systems and data products across AI safety, GenAI evaluation, and applied data science. Background, projects, and how to get in touch.",
   alternates: { canonical: "/about" },
 };
+
+// Languages live in their own sidebar block, so drop that group from the toolbox.
+const toolboxGroups = skillGroups.filter((group) => group.label !== "Languages");
 
 export default async function AboutPage() {
   const source = await getAboutContent();
   const { content } = await compileMDX({ source });
 
   return (
-    <article>
-      {/* Header */}
-      <Section
-        headingAs="h1"
-        size="lg"
-        eyebrow="About"
-        heading="Cheng-Yuan (Ross) King"
-        description="MSc Artificial Intelligence · Empirical AI Safety & Evaluation"
-      >
-        <div className="flex flex-wrap items-center gap-3 print:hidden">
-          <CvDownload />
-          <Button asChild variant="outline">
-            <Link href={`mailto:${siteConfig.email}`}>
-              <Mail aria-hidden="true" />
-              Email me
-            </Link>
-          </Button>
+    <Container className="py-12 sm:py-16">
+      <div className="grid gap-12 lg:grid-cols-[1fr_18rem]">
+        {/* Bio + education */}
+        <div className="max-w-prose">
+          <IndexMark mark="About" label={siteConfig.name} />
+          <h1 className="font-display mt-4 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+            I make AI reliability something you can measure.
+          </h1>
+
+          <div className="text-muted-foreground [&_a]:text-primary [&_strong]:text-foreground mt-6 text-lg leading-relaxed [&_a]:underline [&_a]:underline-offset-2 [&_strong]:font-semibold [&>p+p]:mt-4">
+            {content}
+          </div>
+
+          <div className="ruler my-12" aria-hidden="true" />
+
+          <IndexMark mark="01" label="Education" />
+          <ExperienceTimeline items={education} />
         </div>
-      </Section>
 
-      {/* Bio */}
-      <Section size="md" containerSize="md">
-        <div className="prose prose-neutral dark:prose-invert prose-a:underline prose-a:underline-offset-4 max-w-none">
-          {content}
-        </div>
-      </Section>
-
-      {/* Education */}
-      <Section size="md" containerSize="md" heading="Education">
-        <ExperienceTimeline items={education} />
-      </Section>
-
-      {/* Skills */}
-      <Section size="md" containerSize="md" heading="Toolbox">
-        <dl className="grid gap-8 sm:grid-cols-2">
-          {skillGroups.map((group) => (
-            <div key={group.label}>
-              <dt className="text-foreground mb-3 text-sm font-semibold">
-                {group.label}
-              </dt>
-              <dd>
-                <ul className="flex flex-wrap gap-1.5">
-                  {group.items.map((item) => (
-                    <li key={item}>
-                      <Badge variant="outline">{item}</Badge>
-                    </li>
-                  ))}
-                </ul>
-              </dd>
+        {/* Toolbox + languages */}
+        <aside className="lg:sticky lg:top-24 lg:self-start">
+          <div className="border-border rounded-lg border p-6">
+            <IndexMark mark="02" label="Toolbox" />
+            <div className="mt-5 space-y-5">
+              {toolboxGroups.map((group) => (
+                <div key={group.label}>
+                  <div className="text-primary font-mono text-[11px] tracking-wider uppercase">
+                    {group.label}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {group.items.map((item) => (
+                      <span
+                        key={item}
+                        className="border-border bg-background rounded border px-2 py-0.5 text-xs"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </dl>
-      </Section>
 
-      {/* Languages */}
-      <Section size="md" containerSize="md" heading="Languages">
-        <ul className="flex flex-wrap gap-2">
-          {languages.map((language) => (
-            <li
-              key={language.name}
-              className="border-border inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm"
-            >
-              <span className="font-medium">{language.name}</span>
-              <span className="text-muted-foreground">{language.level}</span>
-            </li>
-          ))}
-        </ul>
-      </Section>
-    </article>
+            <div className="bg-border my-6 h-px w-full" />
+
+            <IndexMark mark="03" label="Languages" />
+            <ul className="mt-4 space-y-2.5 text-sm">
+              {languages.map((language) => (
+                <li
+                  key={language.name}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <span>{language.name}</span>
+                  <span className="text-muted-foreground font-mono text-xs">
+                    {language.level}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </Container>
   );
 }

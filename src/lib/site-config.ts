@@ -5,9 +5,9 @@
 export const siteConfig = {
   name: "Cheng-Yuan (Ross) King",
   shortName: "Ross King",
-  role: "AI Safety & Evaluation · MSc Artificial Intelligence",
+  role: "MSc Artificial Intelligence · AI Safety, GenAI Evaluation & Applied Data Science",
   description:
-    "MSc Artificial Intelligence candidate at the University of Sheffield. I build empirical AI safety systems — AI-agent evaluation, red-team testing, safety classifiers, RAG benchmarks, and reproducible Python workflows — with a focus on measuring model behaviour and failure modes.",
+    "MSc Artificial Intelligence candidate at the University of Sheffield. I build practical, reproducible AI evaluation systems and data products, with recent work on AI-agent reliability, RAG grounding, red-team testing, safety classifiers, model evaluation, and production-style Python workflows.",
   url: "https://rosscyking.com",
   ogImage: "/og.png",
   email: "rosscyking@gmail.com",
