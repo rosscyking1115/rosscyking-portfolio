@@ -12,7 +12,7 @@ import { skillGroups } from "@/lib/skills";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "MSc Artificial Intelligence at the University of Sheffield, building AI evaluation systems and data products across AI safety, GenAI evaluation, and applied data science. Background, projects, and how to get in touch.",
+    "MSc Artificial Intelligence at the University of Sheffield, building AI evaluation systems and data products across AI safety, evaluation, and data science.",
   alternates: { canonical: "/about" },
 };
 

@@ -28,10 +28,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: `${siteConfig.shortName} — ${siteConfig.role}`,
+    default: `${siteConfig.shortName} — ${siteConfig.titleTagline}`,
     template: `%s — ${siteConfig.shortName}`,
   },
-  description: siteConfig.description,
+  description: siteConfig.metaDescription,
   applicationName: siteConfig.shortName,
   authors: [{ name: siteConfig.name, url: siteConfig.url }],
   creator: siteConfig.name,
@@ -60,13 +60,13 @@ export const metadata: Metadata = {
     locale: "en_GB",
     url: siteConfig.url,
     siteName: siteConfig.shortName,
-    title: `${siteConfig.shortName} — ${siteConfig.role}`,
-    description: siteConfig.description,
+    title: `${siteConfig.shortName} — ${siteConfig.titleTagline}`,
+    description: siteConfig.metaDescription,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${siteConfig.shortName} — ${siteConfig.role}`,
-    description: siteConfig.description,
+    title: `${siteConfig.shortName} — ${siteConfig.titleTagline}`,
+    description: siteConfig.metaDescription,
   },
   robots: { index: true, follow: true },
 };
@@ -75,8 +75,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    { media: "(prefers-color-scheme: light)", color: "#fafafb" },
+    { media: "(prefers-color-scheme: dark)", color: "#151619" },
   ],
 };
 
