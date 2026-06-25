@@ -8,8 +8,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Don't crawl the contact form Server Action endpoint or 404s.
-        disallow: ["/api/", "/_next/"],
+        // Keep /_next/ crawlable so Googlebot can fetch the JS/CSS it needs to
+        // render the page. Only block any future API endpoints.
+        disallow: ["/api/"],
       },
     ],
     sitemap: `${siteConfig.url}/sitemap.xml`,

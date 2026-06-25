@@ -15,6 +15,14 @@ interface ProjectPageProps {
   params: Promise<{ slug: string }>;
 }
 
+/** Trim a project summary to a search-friendly meta description (~155 chars). */
+function toMetaDescription(text: string, max = 155): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  return `${slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd()}…`;
+}
+
 export async function generateStaticParams() {
   const projects = await getAllProjects();
   return projects.map((project) => ({ slug: project.slug }));
@@ -24,14 +32,15 @@ export async function generateMetadata({ params }: ProjectPageProps): Promise<Me
   const { slug } = await params;
   const project = await getProjectBySlug(slug);
   if (!project) return {};
+  const description = toMetaDescription(project.summary);
   return {
     title: project.title,
-    description: project.summary,
+    description,
     alternates: { canonical: `/projects/${project.slug}` },
     openGraph: {
       type: "article",
       title: project.title,
-      description: project.summary,
+      description,
     },
   };
 }

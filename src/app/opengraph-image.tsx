@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 import { siteConfig } from "@/lib/site-config";
 
-export const alt = `${siteConfig.name} — ${siteConfig.role}`;
+export const alt = `${siteConfig.name} — ${siteConfig.titleTagline}`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const runtime = "nodejs";
@@ -17,12 +17,12 @@ export default function OpenGraphImage() {
         flexDirection: "column",
         justifyContent: "space-between",
         padding: "72px",
-        background: "#0a0a0a",
-        color: "#ffffff",
+        background: "#151619",
+        color: "#e7e8ea",
         fontFamily: "system-ui, -apple-system, sans-serif",
       }}
     >
-      <div style={{ display: "flex", fontSize: 28, opacity: 0.7 }}>
+      <div style={{ display: "flex", fontSize: 28, opacity: 0.6 }}>
         {siteConfig.url.replace(/^https?:\/\//, "")}
       </div>
 
@@ -42,10 +42,10 @@ export default function OpenGraphImage() {
           style={{
             display: "flex",
             fontSize: 36,
-            opacity: 0.85,
+            color: "#8fa9c2",
           }}
         >
-          {siteConfig.role}
+          {siteConfig.titleTagline}
         </div>
       </div>
 
