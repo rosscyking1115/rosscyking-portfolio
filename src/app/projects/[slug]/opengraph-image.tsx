@@ -27,12 +27,12 @@ export default async function ProjectOgImage({ params }: OgProps) {
         flexDirection: "column",
         justifyContent: "space-between",
         padding: "72px",
-        background: "#0a0a0a",
-        color: "#ffffff",
+        background: "#151619",
+        color: "#e7e8ea",
         fontFamily: "system-ui, -apple-system, sans-serif",
       }}
     >
-      <div style={{ display: "flex", fontSize: 24, opacity: 0.7 }}>
+      <div style={{ display: "flex", fontSize: 24, color: "#8fa9c2" }}>
         {siteConfig.shortName} · Projects
       </div>
 

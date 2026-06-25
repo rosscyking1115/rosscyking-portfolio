@@ -11,12 +11,12 @@ import { siteConfig } from "@/lib/site-config";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${siteConfig.shortName} — ${siteConfig.role}`,
+    name: `${siteConfig.shortName} — ${siteConfig.titleTagline}`,
     short_name: siteConfig.shortName,
-    description: siteConfig.description,
+    description: siteConfig.metaDescription,
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#0a0a0a",
+    background_color: "#fafafb",
+    theme_color: "#151619",
   };
 }
