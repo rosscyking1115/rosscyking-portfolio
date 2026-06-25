@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { compileMDX } from "next-mdx-remote/rsc";
-import { ArrowLeft, ArrowRight, ExternalLink, Github, ScrollText } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText, Github, ScrollText } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import rehypePrettyCode from "rehype-pretty-code";
@@ -60,43 +60,54 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     },
   });
 
+  const all = await getAllProjects();
+  const number = String(all.findIndex((p) => p.slug === slug) + 1).padStart(2, "0");
   const { prev, next } = await getAdjacentProjects(slug);
 
   return (
     <article>
-      <Container className="py-12 sm:py-16" size="md">
+      <Container className="py-12 sm:py-16" size="sm">
         <Link
           href="/projects"
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
         >
-          <ArrowLeft className="size-3.5" aria-hidden="true" />
+          <ArrowLeft className="size-4" aria-hidden="true" />
           All projects
         </Link>
 
         <header className="mt-6">
-          <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
-            {project.period}
-            {project.role ? ` · ${project.role}` : null} · {project.readingTime}
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs">
+            <span className="text-primary">[ {number} ]</span>
+            <span>{project.period}</span>
+            {project.role ? (
+              <>
+                <span className="bg-border h-3 w-px" aria-hidden="true" />
+                <span>{project.role}</span>
+              </>
+            ) : null}
+            <span className="bg-border h-3 w-px" aria-hidden="true" />
+            <span>{project.readingTime}</span>
+          </div>
+
+          <h1 className="font-display mt-4 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl">
             {project.title}
           </h1>
-          <p className="text-muted-foreground mt-4 text-lg text-pretty">
+          <p className="text-muted-foreground mt-4 text-lg leading-relaxed text-pretty">
             {project.summary}
           </p>
 
           <ul className="mt-5 flex flex-wrap gap-1.5">
             {project.stack.map((tech) => (
               <li key={tech}>
-                <Badge variant="muted">{tech}</Badge>
+                <Badge variant="tag">{tech}</Badge>
               </li>
             ))}
           </ul>
 
           {project.links && (
-            <div className="mt-6 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-wrap gap-2.5">
               {project.links.github && (
-                <Button asChild variant="outline" size="sm">
+                <Button asChild size="sm">
                   <Link
                     href={project.links.github}
                     target="_blank"
@@ -119,6 +130,18 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                   </Link>
                 </Button>
               )}
+              {project.links.report && (
+                <Button asChild variant="outline" size="sm">
+                  <Link
+                    href={project.links.report}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <FileText aria-hidden="true" />
+                    Report
+                  </Link>
+                </Button>
+              )}
               {project.links.paper && (
                 <Button asChild variant="outline" size="sm">
                   <Link
@@ -135,23 +158,36 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           )}
         </header>
 
-        <div className="prose prose-neutral dark:prose-invert prose-headings:tracking-tight prose-h2:text-2xl prose-h3:text-xl prose-a:underline prose-a:underline-offset-4 prose-pre:rounded-lg prose-pre:border prose-pre:border-border prose-pre:bg-muted/40 mt-10 max-w-none">
-          {content}
-        </div>
+        <div className="ruler my-10" aria-hidden="true" />
+
+        {project.metrics && project.metrics.length > 0 && (
+          <div className="bg-border border-border grid grid-cols-3 gap-px overflow-hidden rounded-lg border">
+            {project.metrics.map((metric) => (
+              <div key={metric.label} className="bg-background p-4 text-center">
+                <div className="font-mono text-2xl font-medium">{metric.value}</div>
+                <div className="text-muted-foreground mt-1 font-mono text-[11px] tracking-wider uppercase">
+                  {metric.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="doc mt-10">{content}</div>
 
         <nav
           aria-label="Project navigation"
-          className="border-border mt-16 grid gap-3 border-t pt-8 sm:grid-cols-2"
+          className="border-border mt-14 grid gap-3 border-t pt-8 sm:grid-cols-2"
         >
           {prev ? (
             <Link
               href={`/projects/${prev.slug}`}
-              className="border-border hover:border-foreground/40 flex flex-col rounded-lg border p-4 transition-colors"
+              className="border-border hover:border-foreground/20 flex flex-col rounded-lg border p-4 transition-[border-color,box-shadow] duration-150 hover:shadow-xs"
             >
-              <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
-                <ArrowLeft className="size-3" aria-hidden="true" /> Newer
+              <span className="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
+                ← Previous
               </span>
-              <span className="mt-1 font-medium">{prev.title}</span>
+              <span className="font-display mt-1 font-semibold">{prev.title}</span>
             </Link>
           ) : (
             <span aria-hidden="true" />
@@ -159,12 +195,12 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
           {next ? (
             <Link
               href={`/projects/${next.slug}`}
-              className="border-border hover:border-foreground/40 flex flex-col rounded-lg border p-4 text-right transition-colors sm:items-end"
+              className="border-border hover:border-foreground/20 flex flex-col rounded-lg border p-4 text-right transition-[border-color,box-shadow] duration-150 hover:shadow-xs sm:items-end"
             >
-              <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs">
-                Older <ArrowRight className="size-3" aria-hidden="true" />
+              <span className="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
+                Next →
               </span>
-              <span className="mt-1 font-medium">{next.title}</span>
+              <span className="font-display mt-1 font-semibold">{next.title}</span>
             </Link>
           ) : null}
         </nav>

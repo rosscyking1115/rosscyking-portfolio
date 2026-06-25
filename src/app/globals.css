@@ -3,59 +3,63 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ---------- Design tokens (light) ---------- */
+/* ---------- Design tokens (light) ----------
+ * Redesign palette: cool neutral greys + one ultra-desaturated steel-blue.
+ * The chromatic accent maps onto --primary (buttons, links, focus ring, the
+ * registration index marks). shadcn's --accent stays a subtle hover surface.
+ */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: #fafafb;
+  --foreground: #1c1e22;
 
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.4 0 0);
+  --muted: #f0f1f3;
+  --muted-foreground: #5c6068;
 
-  --border: oklch(0.92 0 0);
-  --input: oklch(0.92 0 0);
-  --ring: oklch(0.6 0 0);
+  --border: #e2e3e7;
+  --input: #e2e3e7;
+  --ring: #3d5a73;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card: #fafafb;
+  --card-foreground: #1c1e22;
 
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #3d5a73;
+  --primary-foreground: #fafafb;
 
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary: #f0f1f3;
+  --secondary-foreground: #1c1e22;
 
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent: #f0f1f3;
+  --accent-foreground: #1c1e22;
 
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.985 0 0);
 
-  --radius: 0.625rem;
+  --radius: 0.5rem;
 }
 
 /* ---------- Design tokens (dark) ---------- */
 .dark {
-  --background: oklch(0.13 0 0);
-  --foreground: oklch(0.985 0 0);
+  --background: #151619;
+  --foreground: #e7e8ea;
 
-  --muted: oklch(0.22 0 0);
-  --muted-foreground: oklch(0.7 0 0);
+  --muted: #212327;
+  --muted-foreground: #9ca0a8;
 
-  --border: oklch(0.27 0 0);
-  --input: oklch(0.27 0 0);
-  --ring: oklch(0.55 0 0);
+  --border: #2e3035;
+  --input: #2e3035;
+  --ring: #8fa9c2;
 
-  --card: oklch(0.16 0 0);
-  --card-foreground: oklch(0.985 0 0);
+  --card: #151619;
+  --card-foreground: #e7e8ea;
 
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: #8fa9c2;
+  --primary-foreground: #151619;
 
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
+  --secondary: #212327;
+  --secondary-foreground: #e7e8ea;
 
-  --accent: oklch(0.22 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent: #212327;
+  --accent-foreground: #e7e8ea;
 
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.985 0 0);
@@ -97,6 +101,13 @@
     var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-display:
+    var(--font-space-grotesk), var(--font-geist-sans), ui-sans-serif, system-ui,
+    sans-serif;
+
+  /* Near-flat elevation ramp. Resting cards use shadow-xs; hover uses shadow-lift. */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-lift: 0 6px 20px -8px rgb(0 0 0 / 0.12);
 }
 
 /* ---------- Base layer ---------- */
@@ -139,6 +150,161 @@
 
 .skip-to-content {
   @apply bg-foreground text-background sr-only absolute top-2 left-2 z-50 rounded-md px-3 py-2 text-sm focus:not-sr-only;
+}
+
+/* Registration "ruler" divider — part of the index-mark signature. A row of
+   hairline ticks; purely decorative, so it carries no semantic weight. */
+.ruler {
+  height: 12px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--border) 0,
+    var(--border) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+}
+
+/* ---------- Long-form project write-up (.doc) ----------
+ * Replaces the typography plugin for project bodies so headings, lists, code,
+ * and tables follow the redesign exactly. Each <h2> is auto-numbered with a
+ * mono "01" registration mark via a CSS counter — no MDX component needed. */
+.doc {
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  counter-reset: doc-h2;
+}
+.doc > * + * {
+  margin-top: 1.25em;
+}
+.doc > :first-child {
+  margin-top: 0;
+}
+.doc h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin-top: 2.5em;
+  scroll-margin-top: 5rem;
+  counter-increment: doc-h2;
+}
+.doc h2::before {
+  content: counter(doc-h2, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--primary);
+  margin-right: 0.6em;
+  vertical-align: 0.18em;
+}
+.doc h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.2rem;
+  line-height: 1.3;
+  margin-top: 1.8em;
+}
+.doc a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+.doc strong {
+  font-weight: 600;
+}
+.doc ul {
+  list-style: none;
+  padding-left: 0;
+}
+.doc ul > li {
+  position: relative;
+  padding-left: 1.4em;
+}
+.doc ul > li + li,
+.doc ol > li + li {
+  margin-top: 0.5em;
+}
+.doc ul > li::before {
+  content: "";
+  position: absolute;
+  left: 0.1em;
+  top: 0.7em;
+  width: 6px;
+  height: 1px;
+  background: var(--primary);
+}
+.doc ol {
+  list-style: decimal;
+  padding-left: 1.25em;
+}
+.doc ol > li {
+  padding-left: 0.3em;
+}
+.doc ol > li::marker {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--muted-foreground);
+}
+.doc blockquote {
+  border-left: 2px solid var(--primary);
+  padding-left: 1.1em;
+  color: var(--muted-foreground);
+  font-style: normal;
+}
+.doc code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.doc pre {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.doc pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+}
+.doc figure {
+  margin: 0;
+}
+.doc figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  margin-top: 0.6em;
+}
+.doc table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.doc thead th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.doc tbody td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
 }
 
 /* ---------- Print styles ---------- */

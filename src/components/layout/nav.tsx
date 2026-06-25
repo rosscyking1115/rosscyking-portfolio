@@ -33,7 +33,7 @@ export function Nav() {
         <div className="flex h-16 items-center justify-between">
           <Link
             href="/"
-            className="font-semibold tracking-tight transition-opacity hover:opacity-80"
+            className="font-display text-base font-bold tracking-tight transition-opacity hover:opacity-80"
           >
             {siteConfig.shortName}
           </Link>
@@ -58,25 +58,10 @@ export function Nav() {
                 </Link>
               );
             })}
-            <div className="ml-2 flex items-center gap-1 border-l pl-2">
-              <Link
-                href={siteConfig.links.github}
-                aria-label="GitHub"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-9 items-center justify-center rounded-md transition-colors"
-              >
-                <Github className="size-4" aria-hidden="true" />
-              </Link>
-              <Link
-                href={siteConfig.links.linkedin}
-                aria-label="LinkedIn"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-muted-foreground hover:bg-accent hover:text-foreground inline-flex size-9 items-center justify-center rounded-md transition-colors"
-              >
-                <Linkedin className="size-4" aria-hidden="true" />
-              </Link>
+            <div className="border-border ml-2 flex items-center gap-2 border-l pl-3">
+              <Button asChild size="sm">
+                <Link href="/contact">Get in touch</Link>
+              </Button>
               <ThemeToggle />
             </div>
           </nav>

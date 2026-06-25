@@ -1,0 +1,72 @@
+---
+title: Marketing Effectiveness Lab
+summary: "Marketing effectiveness platform for a UK fashion ecommerce scenario, covering MMM, incrementality evidence, source diagnostics, Bayesian modelling, and budget optimisation. Includes adstock, saturation, contribution, ROI, response curves, uncertainty intervals, a lift-test evidence workflow, and a Streamlit executive dashboard."
+stack:
+  [
+    Python,
+    pandas,
+    NumPy,
+    statsmodels,
+    Plotly,
+    Streamlit,
+    MMM,
+    Bayesian inference,
+    GitHub Actions,
+    pytest,
+  ]
+role: Solo project
+period: "2026"
+publishedAt: "2026-06-08"
+featured: true
+featuredOrder: 3
+links:
+  github: https://github.com/rosscyking1115/marketing-effectiveness-lab
+  demo: https://marketing-effectiveness-lab.streamlit.app/
+  report: https://rosscyking1115.github.io/marketing-effectiveness-lab/
+---
+
+## Problem
+
+A UK fashion ecommerce team wants to know which marketing channels actually
+drive incremental revenue — not just which channels happen to correlate with
+sales — and how to allocate next quarter's budget under realistic constraints.
+That means turning noisy, multi-source marketing data into cautious,
+explainable investment recommendations that survive stakeholder scrutiny.
+
+## What I built
+
+A portfolio marketing effectiveness platform that runs the full workflow a
+commercial or marketing data scientist is expected to own:
+
+- **Data contracts** for weekly marketing, ecommerce, web analytics, paid
+  media, CRM, affiliate, influencer, and external-control exports, with source
+  diagnostics for coverage, missing channels, and modelling readiness.
+- **Marketing mix modelling (MMM)** with adstock and saturation transforms,
+  channel contribution, ROI, and response curves.
+- **A lightweight Bayesian posterior layer** that reports uncertainty
+  intervals instead of single-point ROI claims.
+- **Incrementality calibration** — a lift-test evidence workflow that uploads
+  experiment results, governs them, and folds them back in as
+  experiment-informed priors.
+- **Budget optimisation** — profit-aware scenario planning and constrained
+  allocation, with an executive summary that carries the stakeholder caveats.
+
+All data is synthetic. The platform is intentionally transparent about its
+assumptions rather than presented as a deployed production system.
+
+## Evaluation / evidence
+
+- Time-aware holdout validation on the baseline econometrics, so model fit is
+  judged out-of-sample rather than in-sample.
+- Uncertainty intervals on contribution and ROI, so recommendations come with
+  a confidence range.
+- A recommendation-readiness scoring gate before any budget recommendation is
+  presented for stakeholder review.
+- A machine-readable model-run manifest for reproducibility and run-to-run
+  comparison.
+
+## Why it matters
+
+It shows business-facing modelling end to end: turning noisy marketing data
+into cautious, explainable investment and budget-allocation recommendations,
+with the uncertainty and governance a real decision would demand.

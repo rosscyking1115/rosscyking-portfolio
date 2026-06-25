@@ -7,13 +7,13 @@ test.describe("home page", () => {
     await page.goto("/");
 
     await expect(
-      page.getByRole("heading", { level: 1, name: /Cheng-Yuan/ }),
+      page.getByRole("heading", { level: 1, name: /measurable systems/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { level: 2, name: /Selected technical projects/ }),
+      page.getByRole("heading", { level: 2, name: /Four projects/i }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { level: 2, name: /What I work with/ }),
+      page.getByRole("heading", { level: 2, name: /How I work/i }),
     ).toBeVisible();
   });
 

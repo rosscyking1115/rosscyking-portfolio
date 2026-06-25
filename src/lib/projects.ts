@@ -19,11 +19,17 @@ const frontMatterSchema = z.object({
   period: z.string().min(1),
   publishedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
   featured: z.boolean().optional(),
+  featuredOrder: z.number().optional(),
+  /** Optional headline numbers shown as an inline metric strip on the detail page. */
+  metrics: z
+    .array(z.object({ value: z.string().min(1), label: z.string().min(1) }))
+    .optional(),
   links: z
     .object({
       github: z.string().url().optional(),
       demo: z.string().url().optional(),
       paper: z.string().url().optional(),
+      report: z.string().url().optional(),
     })
     .optional(),
 });
@@ -77,9 +83,16 @@ export async function getProjectBySlug(slug: string): Promise<LoadedProject | nu
   return all.find((p) => p.slug === slug) ?? null;
 }
 
-export async function getFeaturedProjects(): Promise<ProjectMeta[]> {
-  const all = await getProjectMeta();
-  return all.filter((p) => p.featured);
+export async function getFeaturedProjects(): Promise<LoadedProject[]> {
+  const all = await loadAll();
+  return all
+    .filter((p) => p.featured)
+    .sort((a, b) => {
+      const orderA = a.featuredOrder ?? Number.MAX_SAFE_INTEGER;
+      const orderB = b.featuredOrder ?? Number.MAX_SAFE_INTEGER;
+      if (orderA !== orderB) return orderA - orderB;
+      return b.publishedAt.localeCompare(a.publishedAt);
+    });
 }
 
 export async function getAllStacks(): Promise<string[]> {
