@@ -9,7 +9,7 @@ test.describe("contact page", () => {
     await page.goto("/contact");
 
     await expect(
-      page.getByRole("heading", { level: 1, name: /Get in touch/ }),
+      page.getByRole("heading", { level: 1, name: /Let.s talk/i }),
     ).toBeVisible();
 
     await page.getByRole("button", { name: /Send message/ }).click();
