@@ -8,9 +8,9 @@ test.describe("projects gallery", () => {
 
     await expect(page.getByRole("heading", { level: 1, name: /Projects/ })).toBeVisible();
 
-    // Click the PySpark filter chip
-    await page.getByRole("link", { name: "PySpark" }).first().click();
-    await expect(page).toHaveURL(/\?stack=PySpark/);
+    // Click the Python filter chip (a curated, multi-project stack tag).
+    await page.getByRole("link", { name: "Python", exact: true }).first().click();
+    await expect(page).toHaveURL(/\?stack=Python/);
 
     // Reset to all projects
     await page.getByRole("link", { name: "All", exact: true }).click();

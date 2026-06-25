@@ -11,6 +11,10 @@ interface A11yOptions {
 }
 
 export async function expectNoA11yViolations(page: Page, opts: A11yOptions = {}) {
+  // Settle entrance animations so contrast is measured on final colors, not on
+  // text caught mid-fade. FadeIn renders content fully under reduced motion.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+
   let builder = new AxeBuilder({ page }).withTags([
     "wcag2a",
     "wcag2aa",

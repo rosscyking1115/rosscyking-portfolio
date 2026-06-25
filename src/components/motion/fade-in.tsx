@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "motion/react";
+import { motion, useReducedMotion, type Variants } from "motion/react";
 import type { ComponentPropsWithoutRef } from "react";
 
 interface FadeInProps extends ComponentPropsWithoutRef<typeof motion.div> {
@@ -17,8 +17,10 @@ const variants: Variants = {
 
 /**
  * Tiny entrance wrapper. Defaults to viewport-triggered animation so cards
- * down the page reveal as the user scrolls. Honours prefers-reduced-motion
- * via the global rule in globals.css (motion library also respects it).
+ * down the page reveal as the user scrolls. When the user prefers reduced
+ * motion, the content renders immediately at full opacity — no transform, no
+ * fade — so motion is never load-bearing and the entrance can't briefly drop
+ * text below its contrast threshold.
  */
 export function FadeIn({
   delay = 0,
@@ -26,6 +28,12 @@ export function FadeIn({
   children,
   ...props
 }: FadeInProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <motion.div {...props}>{children}</motion.div>;
+  }
+
   return (
     <motion.div
       variants={variants}
