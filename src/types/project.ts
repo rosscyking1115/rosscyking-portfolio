@@ -9,6 +9,8 @@ export interface ProjectMeta {
   featured?: boolean;
   /** Manual ordering for the homepage featured grid (ascending). Falls back to publishedAt. */
   featuredOrder?: number;
+  /** Work-in-progress: visible in dev, excluded from production builds. */
+  draft?: boolean;
   /** Headline numbers rendered as an inline metric strip on the detail page. */
   metrics?: { value: string; label: string }[];
   links?: {
