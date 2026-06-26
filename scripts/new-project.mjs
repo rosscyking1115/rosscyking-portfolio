@@ -3,15 +3,19 @@
 import { access, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const slug = process.argv[2];
+const input = process.argv[2];
 
-if (!slug) {
+if (!input) {
   console.error("Usage: npm run new:project -- <slug>   (slug is kebab-case)");
   process.exit(1);
 }
 
+// path.basename strips any directory components (a barrier against path
+// traversal); the regex then enforces a plain kebab-case slug.
+const slug = path.basename(input);
+
 if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-  console.error(`Invalid slug "${slug}". Use kebab-case: lowercase, digits, hyphens.`);
+  console.error(`Invalid slug "${input}". Use kebab-case: lowercase, digits, hyphens.`);
   process.exit(1);
 }
 
