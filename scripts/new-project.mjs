@@ -1,6 +1,6 @@
 // Scaffold a new project write-up: `npm run new:project -- <slug>`
 // Writes content/projects/<slug>.mdx as a draft (visible in dev, hidden in prod).
-import { access, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const input = process.argv[2];
@@ -20,14 +20,6 @@ if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
 }
 
 const filePath = path.join(process.cwd(), "content", "projects", `${slug}.mdx`);
-
-try {
-  await access(filePath);
-  console.error(`Already exists: content/projects/${slug}.mdx`);
-  process.exit(1);
-} catch {
-  // doesn't exist — good, continue
-}
 
 const today = new Date().toISOString().slice(0, 10);
 const year = new Date().getFullYear();
@@ -64,7 +56,17 @@ Describe the project — the problem, what you built, and the approach.
 What it demonstrates, and who should care.
 `;
 
-await writeFile(filePath, template, "utf8");
+try {
+  // "wx" creates and writes atomically, failing if the file already exists —
+  // no separate existence check, so no time-of-check/time-of-use race.
+  await writeFile(filePath, template, { encoding: "utf8", flag: "wx" });
+} catch (err) {
+  if (err.code === "EEXIST") {
+    console.error(`Already exists: content/projects/${slug}.mdx`);
+    process.exit(1);
+  }
+  throw err;
+}
 
 console.log(`✓ Created content/projects/${slug}.mdx (draft)`);
 console.log(`  Edit it, then delete \`draft: true\` to publish.`);
