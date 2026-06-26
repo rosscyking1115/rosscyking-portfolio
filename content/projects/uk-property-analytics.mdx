@@ -1,29 +1,37 @@
 ---
-title: UK Property Analytics Warehouse
-summary: End-to-end analytics engineering on 4.99M UK Land Registry property transactions. dbt + DuckDB warehouse with staging, intermediate, fact, dimension, and reporting layers, 88 data tests, CI, docs, and a Streamlit dashboard.
+title: UK Housing Decision Support
+summary: "An explainable UK neighbourhood decision-support tool for renters and movers — in progress — built on a Land Registry analytics-engineering foundation: a dbt + DuckDB warehouse over 4.99M Price Paid transactions, staging → marts layering, 88 data tests, CI, column-level lineage docs, and a Streamlit dashboard."
 stack: [SQL, dbt, DuckDB, Streamlit, GitHub Actions, Python]
 role: Solo project
 period: "2026"
 publishedAt: "2026-06-04"
 featured: false
 links:
-  github: https://github.com/rosscyking1115/uk-property-analytics
+  github: https://github.com/rosscyking1115/uk-housing-decision-support
+  demo: https://ross-uk-property-analytics.streamlit.app/
+  report: https://rosscyking1115.github.io/uk-housing-decision-support/
 ---
 
-## What I built
+## What I'm building
 
-An analytics-engineering project on 4.99M UK Land Registry property
-transactions: a dbt + DuckDB warehouse layered staging → intermediate →
-facts and dimensions → reporting marts, with 88 dbt tests, GitHub Actions
-CI, generated docs with full column-level lineage, and a Streamlit
-dashboard for exploration.
+An explainable neighbourhood decision-support tool for renters and movers,
+evolving from a Land Registry analytics-engineering project. The
+analytics-engineering foundation is built and tested; the renter/mover
+decision-support layer on top of it is in progress.
+
+The foundation is a dbt + DuckDB warehouse on **4.99M UK Land Registry Price
+Paid transactions** (England & Wales, 2021–2025): layered staging →
+intermediate → facts and dimensions → reporting marts, with 88 dbt tests,
+GitHub Actions CI, generated docs with full column-level lineage, and a
+Streamlit dashboard for exploration.
 
 ## Why this matters
 
-Most ML coursework lives in single-machine notebooks. This project covers
-the _other_ half of every UK data role: writing SQL that scales, modelling
-data into facts and dimensions, testing every model, documenting every
-column, and shipping a dashboard a non-engineer can actually use.
+Most ML coursework lives in single-machine notebooks. This is the _other_ half
+of a data role — modelling data into facts and dimensions, testing every model,
+documenting every column, and shipping something a non-engineer can use — and
+it's the layer a trustworthy decision-support tool has to sit on: official data,
+explainable transforms, tests at every step.
 
 ## Architecture
 
@@ -43,46 +51,34 @@ HM Land Registry CSV (4.99M rows)
 
 ## Data layers
 
-- **Staging** — type casting, renaming, light cleanup. One model per
-  source table. No business logic.
+- **Staging** — type casting, renaming, light cleanup. One model per source
+  table. No business logic.
 - **Intermediate** — joined-and-enriched models that derived columns and
   reference data depend on.
-- **Marts (core)** — dimensions (`dim_*`) and facts (`fct_*`) modelled
-  for clean analytical querying. Grain is documented on every mart.
-- **Marts (analytics)** — reporting models (`rpt_*`) that pre-compute
-  the common analytical questions for the dashboard.
+- **Marts (core)** — dimensions (`dim_*`) and facts (`fct_*`) modelled for clean
+  analytical querying. Grain is documented on every mart.
+- **Marts (analytics)** — reporting models (`rpt_*`) that pre-compute the common
+  questions for the dashboard.
 
 ## Tests
 
-88 dbt tests across three layers:
-
-- **Generic** — `not_null`, `unique`, `accepted_values`, `relationships`
-  on every staging and mart model.
-- **Custom singular** — business invariants ("no negative prices",
-  "no future transactions", "every postcode resolves to a region").
-- **`dbt-expectations`** — distribution checks on key numeric columns.
-
-## What the dashboard answers
-
-- Year-on-year price change by region.
-- New-build premium over existing stock over time.
-- Top postcodes by transaction volume.
-- Property-type mix shift since 1995.
-- Tenure split (freehold vs leasehold) by region.
+88 dbt tests across three layers: generic (`not_null`, `unique`,
+`accepted_values`, `relationships`), custom singular business invariants ("no
+negative prices", "no future transactions", "every postcode resolves to a
+region"), and `dbt-expectations` distribution checks on key numeric columns.
 
 ## Engineering practices
 
-- **CI** — every PR runs `dbt build` against a small sample in under
-  90 seconds; sqlfluff lints the SQL.
-- **Docs** — `dbt docs generate` published to GitHub Pages on every
-  push to `main`.
-- **Reproducibility** — fully buildable from a fresh clone in under
-  five minutes; pinned package versions; no manual setup steps.
+- **CI** — every PR runs `dbt build` plus the data tests and sqlfluff lint;
+  branch protection requires the check to pass before merging.
+- **Docs** — `dbt docs generate` published to GitHub Pages on every push to
+  `main`, with full lineage and a column catalogue.
+- **Reproducibility** — buildable from a fresh clone in minutes; pinned package
+  versions; no manual setup steps.
 
-## What I'd do differently
+## Where it's heading
 
-Add an SCD2 snapshot on postcode-region mapping (boundaries change
-occasionally). Migrate the warehouse from DuckDB to Snowflake or
-BigQuery once volume justifies it — the dbt models would port without
-change. Orchestrate the refresh with Dagster instead of a GitHub
-Actions cron, so I get asset-based modelling out of the box.
+Turning the warehouse into an explainable, area-level decision-support layer for
+renters and movers — affordability, price trend, and neighbourhood signals over
+official data, with every number traceable back to a tested model rather than a
+black box. That decision-support layer is the work in progress.
