@@ -20,6 +20,8 @@ const frontMatterSchema = z.object({
   publishedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
   featured: z.boolean().optional(),
   featuredOrder: z.number().optional(),
+  /** Work-in-progress: visible in `next dev`, hidden from production builds. */
+  draft: z.boolean().optional(),
   /** Optional headline numbers shown as an inline metric strip on the detail page. */
   metrics: z
     .array(z.object({ value: z.string().min(1), label: z.string().min(1) }))
@@ -64,9 +66,15 @@ async function loadAll(): Promise<LoadedProject[]> {
     }),
   );
 
-  loaded.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-  cache = loaded;
-  return loaded;
+  // Drafts are authored and previewed in `next dev` but never published.
+  const visible =
+    process.env.NODE_ENV === "production"
+      ? loaded.filter((project) => !project.draft)
+      : loaded;
+
+  visible.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
+  cache = visible;
+  return visible;
 }
 
 export async function getAllProjects(): Promise<LoadedProject[]> {
