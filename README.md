@@ -42,6 +42,7 @@ Open <http://localhost:3000>.
 | Command                | What it does                         |
 | ---------------------- | ------------------------------------ |
 | `npm run dev`          | Start the dev server with hot reload |
+| `npm run new:project`  | Scaffold a new project write-up      |
 | `npm run build`        | Production build                     |
 | `npm run start`        | Run the production build locally     |
 | `npm run lint`         | ESLint                               |
@@ -58,6 +59,36 @@ Open <http://localhost:3000>.
 (a sign the repo was renamed — update `links.github` to the canonical name).
 A weekly **Link check** GitHub Action runs the same check and opens a tracking
 issue when something breaks — it never blocks a deploy.
+
+## Adding a project
+
+Projects are content, not code — one MDX file per project in `content/projects/`.
+Everything else (the projects list, the detail page, the sitemap, the per-project
+OG image, the stack filter, and the `01–N` numbering) updates automatically.
+
+```bash
+# 1. Scaffold a draft (slug is kebab-case)
+npm run new:project -- my-new-project
+
+# 2. Edit content/projects/my-new-project.mdx, preview at /projects/my-new-project
+npm run dev
+
+# 3. When ready, delete `draft: true` from the front matter to publish.
+```
+
+Front matter is validated at build time (zod). Key fields:
+
+| Field                       | Required | Notes                                                                 |
+| --------------------------- | -------- | --------------------------------------------------------------------- |
+| `title`, `summary`          | yes      | `summary` doubles as the SEO description (auto-trimmed to ~155 chars) |
+| `stack`                     | yes      | array of tech tags; tags shared by ≥2 projects appear in the filter   |
+| `period`, `publishedAt`     | yes      | `publishedAt` (`YYYY-MM-DD`) drives ordering                          |
+| `draft`                     | no       | `true` = visible in `npm run dev`, hidden from production             |
+| `featured`, `featuredOrder` | no       | feature on the home page; lower order = higher up                     |
+| `metrics`                   | no       | up to 3 `{ value, label }` pairs → inline metric strip                |
+| `links`                     | no       | `github` / `demo` / `report` / `paper` buttons                        |
+
+Updating a project is just editing its file. To remove one, delete the file.
 
 ## Folder layout
 
