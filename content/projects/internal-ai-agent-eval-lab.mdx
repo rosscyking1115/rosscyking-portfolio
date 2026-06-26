@@ -1,6 +1,6 @@
 ---
-title: Agent Safety & Reliability Evaluation Lab
-summary: "Public evaluation lab for AI-agent reliability across RAG grounding, safe refusal, prompt-injection resistance, approval-gated tool use, auditability, and observability. Includes 358 synthetic golden cases, 60 red-team cases, compact TechQA/WixQA public RAG validation tracks, safety classifier/prevalence evaluation, release gates, failure analysis, FastAPI endpoints, a Streamlit dashboard, GitHub Pages/PDF reports, Docker/Compose, tests, and CI."
+title: Agent Release Safety Gates
+summary: "Release-readiness gates for AI agents: replay known incidents, apply policy-as-code gates, and produce ship / warn / block evidence before an agent, prompt, model, or tool-policy change ships. Built on a synthetic evaluation lab — 358 golden cases, 60 red-team cases, TechQA/WixQA public RAG validation, safety-classifier and tool-governance checks — as the evidence layer, with FastAPI endpoints, a Streamlit dashboard, GitHub Pages/PDF reports, Docker, and CI."
 stack:
   [
     Python,
@@ -21,63 +21,59 @@ featuredOrder: 1
 metrics:
   - { value: "358", label: "golden cases" }
   - { value: "60", label: "red-team cases" }
-  - { value: "240", label: "public RAG cases" }
+  - { value: "8", label: "incidents replayed" }
 links:
-  github: https://github.com/rosscyking1115/internal-ai-agent-eval-lab
+  github: https://github.com/rosscyking1115/agent-release-gates
   demo: https://agent-evaluation-lab.streamlit.app/
-  report: https://rosscyking1115.github.io/internal-ai-agent-eval-lab/
+  report: https://rosscyking1115.github.io/agent-release-gates/
 ---
 
 ## What I built
 
-A public synthetic evaluation lab for testing the reliability of an internal AI agent across six operational dimensions: grounded retrieval, structured extraction, safe refusal, approval-gated tool calls, auditability, and observability.
+A release-readiness system for AI-agent changes. Before a changed agent, prompt, model, or tool policy ships, it **replays known incidents, applies policy-as-code gates, and produces ship / warn / block evidence** — so a regression becomes a failed gate, not a production incident.
 
-The project treats the agent as an operational system — not a generic chatbot. All data is fully synthetic (runbooks, tickets, teams, procedures, metrics) so the evaluation can be inspected and extended safely.
+The project grew out of a public synthetic evaluation lab, which is now the benchmark and evidence layer underneath the gates. All data is fully synthetic (runbooks, tickets, teams, procedures, metrics) so the whole thing can be inspected and extended safely.
 
 ## Why it matters
 
-It shows how internal AI agents can be tested before deployment: whether they cite evidence, refuse unsafe requests, block risky tool actions, and surface failures clearly enough for human review.
+Agent changes are hard to sign off by eye. This turns "is it safe to ship?" into something measurable: does the change stay grounded, refuse unsafe requests, gate risky tool calls, leave an audit trail, and pass replay of past incidents? The output is a reproducible evidence artifact a reviewer can act on.
 
-## What it found
+## Incident replay (the first gate)
 
-The improved workflow raises grounding and safe-response behaviour compared with the baseline, while the safety module makes the trade-off explicit — showing how threshold choice changes review load, unsafe-request detection, and release readiness.
+The first module turns redacted synthetic incidents into regression fixtures. **8 seeded incidents are replayed on every change with a 100% closure rate and 0 replay must-not violations**, each producing a release gate decision and an incident memo. Policy-as-code gates then turn the evaluation evidence into a single ship / warn / block call.
 
-## Evaluation scope
+## Evaluation evidence (the layer underneath)
 
-The benchmark covers 358 synthetic golden cases and 60 red-team cases across a synthetic operations knowledge base of 24 runbook sections and 180 synthetic tickets. Two compact public RAG tracks — 160 TechQA and 80 WixQA cases — are evaluated separately to test the retrieval harness beyond self-contained synthetic data.
+The controlled benchmark covers 358 synthetic golden cases and 60 red-team cases across 24 runbook sections and 180 synthetic tickets. Two compact public RAG tracks — 160 TechQA and 80 WixQA cases — are evaluated separately to test the retrieval harness beyond self-contained synthetic data.
 
 ### Retrieval
 
-Five retrievers evaluated at hit rate@3 and citation coverage: baseline keyword, improved lexical, hybrid sparse-semantic, local TF-IDF vector, and a local hashed-embedding store. The hybrid and vector retrievers reach 100% hit rate@3 on the current benchmark. The honest caveat: the local embedding store uses deterministic feature hashing, not a provider-backed model — comparing against a real embedding API is the named next step.
-
-### Structured extraction
-
-Pydantic-validated ticket extraction and routing decisions evaluated for schema validity and routing accuracy. Both reach 100% on the current deterministic benchmark.
+Five retrievers evaluated at hit rate@3 and citation coverage. The hybrid and local vector retrievers reach 100% hit rate@3 on the current benchmark. The honest caveat: the local embedding store uses deterministic feature hashing, not a provider-backed model — comparing against a real embedding API is the named next step.
 
 ### Safety and red-team
 
-60 red-team cases covering: prompt injection from user prompts, prompt injection from retrieved documents, leakage of synthetic system context, weak-evidence requests, excessive-agency attempts, access escalation, and tool misuse. The improved agent achieves 100% safe response rate with a residual risk score of 0.
+60 red-team cases covering prompt injection (from user prompts and from retrieved documents), context leakage, weak-evidence requests, excessive-agency attempts, access escalation, and tool misuse. The safety classifier reaches 90.91% recall with 0 high-severity false negatives on the current challenge set.
 
 ### Tool governance
 
-Read-only tools throughout, plus approval-gated mock side-effecting calls. 100% block rate on unapproved side effects; 100% of approval events written to the audit log.
+Read-only tools throughout, plus approval-gated mock side-effecting calls: 100% block rate on unapproved side effects, and 100% of approval events written to the audit log.
 
 ### Observability
 
-Trace IDs, audit events, monitoring snapshots, a local span timeline viewer, OTLP/HTTP export preview, and a local collector smoke test. 1,292 OTel-style spans exported in the current run.
+Trace IDs, audit events, monitoring snapshots, a local span timeline viewer, and an OTLP/HTTP export preview — enough trace and audit evidence for a change to be reviewed, not just trusted.
 
 ## Benchmark transparency
 
-The dataset profile is published alongside the results because high scores on synthetic cases only mean something when the benchmark mix is visible. The current profile: 102 manually authored golden cases (28.5% manual share), 70 expected abstention cases, 46 noise types, 22 task types. The most important gap — templated cases — is documented rather than hidden.
+The dataset profile is published alongside the results because high scores on synthetic cases only mean something when the benchmark mix is visible: 102 manually authored golden cases (28.5% manual share), 70 expected abstention cases, 46 noise types, 22 task types. The most important gap — templated cases — is documented rather than hidden.
 
 ## Delivery
 
-- Public Streamlit dashboard with live benchmark readouts
-- GitHub Pages static report site with the full evaluation report and dataset profile JSON
+- Public Streamlit dashboard with live benchmark and gate readouts
+- GitHub Pages report site with the full evaluation report, PDF, and dataset profile
 - FastAPI service with prediction and retrieval endpoints
-- Docker image and Docker Compose for local full-stack runs
-- CI workflow running lint, tests, deterministic report regeneration, OTLP smoke test, and Docker build on every PR
+- Docker / Compose for local full-stack runs
+- CI running lint, tests, deterministic report regeneration, and Docker build on every PR
 
 ## Honest limits
 
-The benchmark is synthetic and partly templated — scores are engineering checks, not production performance claims. Structured extraction uses deterministic pattern matching, not LLM extraction. The controlled agent is a local workflow, not a LangGraph state machine. Each of these is documented explicitly rather than presented as equivalent to a production deployment.
+The benchmark is synthetic and partly templated — scores are engineering checks, not production performance claims. Structured extraction uses deterministic pattern matching, not LLM extraction. Each limit is documented in the repo rather than presented as equivalent to a production deployment.
