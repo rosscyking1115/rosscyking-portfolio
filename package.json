@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "new:project": "node scripts/new-project.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
