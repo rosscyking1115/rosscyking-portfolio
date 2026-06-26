@@ -50,6 +50,15 @@ Open <http://localhost:3000>.
 | `npm run format`       | Prettier write                       |
 | `npm run format:check` | Prettier check (used in CI)          |
 | `npm run typecheck`    | `tsc --noEmit`                       |
+| `npm run check:links`  | Check project links for rot          |
+
+### Keeping links fresh
+
+`npm run check:links` probes every project's `github` / `demo` / `report` /
+`paper` link and reports dead links, plus GitHub repos that now **redirect**
+(a sign the repo was renamed — update `links.github` to the canonical name).
+A weekly **Link check** GitHub Action runs the same check and opens a tracking
+issue when something breaks — it never blocks a deploy.
 
 ## Adding a project
 

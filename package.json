@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
+    "check:links": "node scripts/check-links.mjs",
     "prepare": "husky",
     "test": "vitest run",
     "test:watch": "vitest",
