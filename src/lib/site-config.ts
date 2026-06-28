@@ -5,15 +5,15 @@
 export const siteConfig = {
   name: "Cheng-Yuan (Ross) King",
   shortName: "Ross King",
-  role: "MSc Artificial Intelligence · AI Safety, GenAI Evaluation & Applied Data Science",
+  role: "MSc Artificial Intelligence · Applied AI, Data Science & Evaluation",
   // Long-form hero/bio copy. Shown on the page; NOT used as the SEO meta tags.
   description:
-    "MSc Artificial Intelligence candidate at the University of Sheffield. I build practical, reproducible AI evaluation systems and data products, with recent work on AI-agent reliability, RAG grounding, red-team testing, safety classifiers, model evaluation, and production-style Python workflows.",
+    "MSc Artificial Intelligence candidate at the University of Sheffield. I build applied AI and data-science systems across GenAI evaluation, fintech analytics, marketing effectiveness, and production-style Python — from AI-agent reliability and RAG/LLM benchmarks to dashboards and decision-support tools.",
   // SEO surface: kept short so titles/descriptions don't truncate in search.
-  // Title renders as "<shortName> — <titleTagline>" (~54 chars).
-  titleTagline: "AI Safety, GenAI Evaluation & Data Science",
+  // Title renders as "<shortName> — <titleTagline>" (~50 chars).
+  titleTagline: "Applied AI, Data Science & Evaluation",
   metaDescription:
-    "MSc Artificial Intelligence candidate building AI-agent safety evaluation, RAG/LLM benchmarks, red-team testing, and production-style Python data products.",
+    "MSc Artificial Intelligence candidate building applied AI and data products across GenAI evaluation, fintech analytics, marketing effectiveness, and Python.",
   url: "https://rosscyking.com",
   ogImage: "/og.png",
   email: "rosscyking@gmail.com",

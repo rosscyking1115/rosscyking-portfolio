@@ -15,7 +15,7 @@ import { skillGroups } from "@/lib/skills";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "MSc Artificial Intelligence at the University of Sheffield, building AI evaluation systems and data products across AI safety, evaluation, and data science.",
+    "MSc Artificial Intelligence at the University of Sheffield, building applied AI and data products across data science, product and marketing analytics, fintech, and GenAI evaluation.",
   alternates: { canonical: "/about" },
 };
 
@@ -41,7 +41,7 @@ export default async function AboutPage() {
         <div className="max-w-prose">
           <IndexMark mark="About" label={siteConfig.name} />
           <h1 className="font-display mt-4 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-            I make AI reliability something you can measure.
+            I make data and AI products you can measure and trust.
           </h1>
 
           <div className="text-muted-foreground [&_a]:text-primary [&_strong]:text-foreground mt-6 text-lg leading-relaxed [&_a]:underline [&_a]:underline-offset-2 [&_strong]:font-semibold [&>p+p]:mt-4">
