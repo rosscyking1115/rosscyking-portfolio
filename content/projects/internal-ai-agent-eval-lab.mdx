@@ -1,18 +1,7 @@
 ---
 title: Agent Release Safety Gates
-summary: "Release-readiness gates for AI agents: replay known incidents, apply policy-as-code gates, and produce ship / warn / block evidence before an agent, prompt, model, or tool-policy change ships. Built on a synthetic evaluation lab — 358 golden cases, 60 red-team cases, TechQA/WixQA public RAG validation, safety-classifier and tool-governance checks — as the evidence layer, with FastAPI endpoints, a Streamlit dashboard, GitHub Pages/PDF reports, Docker, and CI."
-stack:
-  [
-    Python,
-    FastAPI,
-    Streamlit,
-    Pydantic,
-    pytest,
-    ruff,
-    Docker,
-    GitHub Actions,
-    GitHub Pages,
-  ]
+summary: "An installable release-gate for AI agents (pip install agent-release-gates): replay known incidents, apply policy-as-code gates, and produce ship / warn / block evidence — as a CLI that fails CI, a UK AISI Inspect eval, or a runner pointed at your own agent's traces. Backed by a synthetic evaluation lab: 358 golden cases, 60 red-team cases, TechQA/WixQA public RAG validation, safety-classifier and tool-governance checks, and six baseline-vs-intervention safety studies."
+stack: [Python, Inspect AI, FastAPI, Streamlit, Pydantic, pytest, Docker, GitHub Actions]
 role: Solo project
 period: "2026"
 publishedAt: "2026-06-09"
@@ -30,50 +19,51 @@ links:
 
 ## What I built
 
-A release-readiness system for AI-agent changes. Before a changed agent, prompt, model, or tool policy ships, it **replays known incidents, applies policy-as-code gates, and produces ship / warn / block evidence** — so a regression becomes a failed gate, not a production incident.
+A release-readiness gate for AI-agent changes, published as a pip-installable package. Before a changed agent, prompt, model, or tool policy ships, it **replays known incidents, applies policy-as-code gates, and produces a single ship / warn / block decision** with the evidence behind it.
 
-The project grew out of a public synthetic evaluation lab, which is now the benchmark and evidence layer underneath the gates. All data is fully synthetic (runbooks, tickets, teams, procedures, metrics) so the whole thing can be inspected and extended safely.
+```bash
+pip install agent-release-gates
 
-## Why it matters
+# Run the deterministic gate — exits non-zero on a blocking failure, so it
+# drops straight into CI.
+agent-safety release-gate --policy config/incident_release_policy.json
+```
 
-Agent changes are hard to sign off by eye. This turns "is it safe to ship?" into something measurable: does the change stay grounded, refuse unsafe requests, gate risky tool calls, leave an audit trail, and pass replay of past incidents? The output is a reproducible evidence artifact a reviewer can act on.
+The core install is lean (just `pydantic`); the FastAPI evidence service and Streamlit reviewer dashboard are opt-in extras. The incident-replay suite also runs as a **UK AI Security Institute Inspect** eval.
+
+## Evaluate your own agent
+
+It isn't tied to my synthetic agent. Export a real agent's results — generic logs or LangChain/LangSmith-style traces — and score them against the gates, or drive a live LLM through the replay against any OpenAI-compatible endpoint. The project ships candidate-results exporters and schemas so an external agent can be gated the same way.
+
+## How it works
+
+```
+incidents ──▶ replay matrix ──▶ policy gates ──▶ ship / warn / block ──▶ evidence + memo
+(synthetic)   (deterministic)   (policy-as-code)    (CLI exit code)      (report / audit)
+```
 
 ## Incident replay (the first gate)
 
-The first module turns redacted synthetic incidents into regression fixtures. **8 seeded incidents are replayed on every change with a 100% closure rate and 0 replay must-not violations**, each producing a release gate decision and an incident memo. Policy-as-code gates then turn the evaluation evidence into a single ship / warn / block call.
+The first module turns redacted synthetic incidents into regression fixtures. **8 seeded incidents are replayed on every change with a 100% closure rate and 0 replay must-not violations**, each producing a release-gate decision and an incident memo.
 
 ## Evaluation evidence (the layer underneath)
 
-The controlled benchmark covers 358 synthetic golden cases and 60 red-team cases across 24 runbook sections and 180 synthetic tickets. Two compact public RAG tracks — 160 TechQA and 80 WixQA cases — are evaluated separately to test the retrieval harness beyond self-contained synthetic data.
+The controlled benchmark covers 358 synthetic golden cases and 60 red-team cases across 24 runbook sections and 180 synthetic tickets, plus compact public RAG tracks (160 TechQA, 80 WixQA) evaluated separately. Headline results: 100% retrieval hit rate@3, a safety classifier at 90.91% recall with 0 high-severity false negatives, and 100% block + audit rate on unapproved side-effecting tool calls.
 
-### Retrieval
+On top of the benchmark sit **six baseline-vs-intervention safety studies** — instruction hierarchy, action-risk gates, safety-classifier review policy, RAG grounding, memory/context pollution, and goal conflict — and reviewed OpenAI and Anthropic judge-calibration runs.
 
-Five retrievers evaluated at hit rate@3 and citation coverage. The hybrid and local vector retrievers reach 100% hit rate@3 on the current benchmark. The honest caveat: the local embedding store uses deterministic feature hashing, not a provider-backed model — comparing against a real embedding API is the named next step.
+## Key finding
 
-### Safety and red-team
-
-60 red-team cases covering prompt injection (from user prompts and from retrieved documents), context leakage, weak-evidence requests, excessive-agency attempts, access escalation, and tool misuse. The safety classifier reaches 90.91% recall with 0 high-severity false negatives on the current challenge set.
-
-### Tool governance
-
-Read-only tools throughout, plus approval-gated mock side-effecting calls: 100% block rate on unapproved side effects, and 100% of approval events written to the audit log.
-
-### Observability
-
-Trace IDs, audit events, monitoring snapshots, a local span timeline viewer, and an OTLP/HTTP export preview — enough trace and audit evidence for a change to be reviewed, not just trusted.
-
-## Benchmark transparency
-
-The dataset profile is published alongside the results because high scores on synthetic cases only mean something when the benchmark mix is visible: 102 manually authored golden cases (28.5% manual share), 70 expected abstention cases, 46 noise types, 22 task types. The most important gap — templated cases — is documented rather than hidden.
+Safety scores aren't meaningful on their own. The lab reports over-review cost, benign auto-blocks, weak-evidence handling, and unsafe misses _beside_ the headline numbers — so a "safe" result that quietly buries the team in review is visible, not hidden.
 
 ## Delivery
 
-- Public Streamlit dashboard with live benchmark and gate readouts
-- GitHub Pages report site with the full evaluation report, PDF, and dataset profile
-- FastAPI service with prediction and retrieval endpoints
-- Docker / Compose for local full-stack runs
-- CI running lint, tests, deterministic report regeneration, and Docker build on every PR
+- pip-installable package + an `agent-safety` CLI with CI-friendly exit codes
+- UK AISI **Inspect** eval for the incident-replay suite
+- Candidate-results exporters (generic logs + LangChain/LangSmith traces)
+- FastAPI evidence service and Streamlit dashboard (opt-in extras)
+- GitHub Pages report + PDF, Docker / Compose, and CI running lint, tests, deterministic report regeneration, and an OpenTelemetry smoke test
 
 ## Honest limits
 
-The benchmark is synthetic and partly templated — scores are engineering checks, not production performance claims. Structured extraction uses deterministic pattern matching, not LLM extraction. Each limit is documented in the repo rather than presented as equivalent to a production deployment.
+The benchmark is synthetic and still partly templated; the public TechQA/WixQA tracks use compact samples, not the full datasets. Human-review labels are currently simulated workflow labels — independent reviewer labels are prepared but not yet published — and the hosted-model evidence is judge-calibration, not a broad multi-model agent comparison. Each limit is documented in the repo rather than presented as a production claim.
