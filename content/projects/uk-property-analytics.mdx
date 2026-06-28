@@ -1,84 +1,52 @@
 ---
 title: UK Housing Decision Support
-summary: "An explainable UK neighbourhood decision-support tool for renters and movers — in progress — built on a Land Registry analytics-engineering foundation: a dbt + DuckDB warehouse over 4.99M Price Paid transactions, staging → marts layering, 88 data tests, CI, column-level lineage docs, and a Streamlit dashboard."
-stack: [SQL, dbt, DuckDB, Streamlit, GitHub Actions, Python]
+summary: "An explainable UK neighbourhood decision-support tool for renters and movers (MVP feature-complete): nine national open-data signals — sale-market context, geography, rent/affordability, EPC energy, crime, planning, flood, and amenity access — feed a per-MSOA scoring engine that re-ranks live as a household shifts its priorities, served by a Streamlit decision app and a FastAPI backend on a tested dbt + DuckDB spine with 189 data tests."
+stack: [SQL, dbt, DuckDB, Streamlit, FastAPI, GitHub Actions, Python]
 role: Solo project
 period: "2026"
 publishedAt: "2026-06-04"
 featured: false
+metrics:
+  - { value: "9", label: "open-data signals" }
+  - { value: "7,264", label: "MSOAs scored" }
+  - { value: "189", label: "data tests" }
 links:
   github: https://github.com/rosscyking1115/uk-housing-decision-support
   demo: https://ross-uk-property-analytics.streamlit.app/
   report: https://rosscyking1115.github.io/uk-housing-decision-support/
 ---
 
-## What I'm building
+## What I built
 
-An explainable neighbourhood decision-support tool for renters and movers,
-evolving from a Land Registry analytics-engineering project. The
-analytics-engineering foundation is built and tested; the renter/mover
-decision-support layer on top of it is in progress.
+An explainable decision-support tool for renters and movers. Given a household's income, budget, commute target, and risk tolerance, it ranks neighbourhoods (MSOA grain) as transparent trade-offs — not a price predictor and not a glossy listings site, but an honest decision layer over fragmented official UK data. It evolved from a Land Registry analytics-engineering project into a feature-complete MVP.
 
-The foundation is a dbt + DuckDB warehouse on **4.99M UK Land Registry Price
-Paid transactions** (England & Wales, 2021–2025): layered staging →
-intermediate → facts and dimensions → reporting marts, with 88 dbt tests,
-GitHub Actions CI, generated docs with full column-level lineage, and a
-Streamlit dashboard for exploration.
+## The nine signals
 
-## Why this matters
+Nine real national open-data signals per MSOA, across all 7,264 England & Wales areas:
 
-Most ML coursework lives in single-machine notebooks. This is the _other_ half
-of a data role — modelling data into facts and dimensions, testing every model,
-documenting every column, and shipping something a non-engineer can use — and
-it's the layer a trustworthy decision-support tool has to sit on: official data,
-explainable transforms, tests at every step.
+- **Sale-market context** — 4.99M Land Registry transactions (2021–2025)
+- **Geography** — ONSPD postcode→MSOA bridge (2.73M postcodes, 99.999% coverage)
+- **Rent & affordability** — ONS PIPR rent vs an income scenario
+- **EPC energy** — 23.5M England & Wales certificates → per-area median band
+- **Crime** — 17.1M police street-crimes as a rate (an indicator, never a "safe/unsafe" label)
+- **Flood & planning** — point-in-polygon over 2.7M postcode centroids
+- **Amenity access** — 437k OpenStreetMap amenities (supermarket, school, GP, park, station)
 
-## Architecture
+Each external source is fixture-default for fast, reproducible CI, with a real-data toggle for production builds.
 
-```
-HM Land Registry CSV (4.99M rows)
-        │
-        ▼
-   raw_landreg  ──▶  staging  ──▶  intermediate  ──▶  dim_* / fct_*  ──▶  rpt_*
-                       │              │                   │
-                       ▼              ▼                   ▼
-                 stg_landreg__   int_transactions    fct_transactions
-                  transactions    __enriched          dim_postcode
-                                                      dim_property_type
-                                                      dim_date
-                                                      dim_tenure
-```
+## Explainable scoring
 
-## Data layers
+A per-MSOA engine (`rpt_neighbourhood_score`) computes five component scores — affordability, safety, energy, flood, and convenience (0–100 percentile) — and a weighted overall score that **re-ranks live when the user shifts the weights**, with per-area confidence derived from data coverage and a plain-language "why this area" summary.
 
-- **Staging** — type casting, renaming, light cleanup. One model per source
-  table. No business logic.
-- **Intermediate** — joined-and-enriched models that derived columns and
-  reference data depend on.
-- **Marts (core)** — dimensions (`dim_*`) and facts (`fct_*`) modelled for clean
-  analytical querying. Grain is documented on every mart.
-- **Marts (analytics)** — reporting models (`rpt_*`) that pre-compute the common
-  questions for the dashboard.
+## The product
 
-## Tests
+- A renter-facing **Streamlit decision app**: set income / budget / priorities → a live-reranked shortlist, a per-area trade-off receipt, side-by-side compare, a **listing checker** (postcode + asking price → area + price-vs-local), and sources & caveats on every recommendation.
+- A **FastAPI backend** (`resolve` / `search` / `listing-check` / `meta` over the decision marts) with OpenAPI docs, a Dockerfile, and a Fly.io deploy config — the keystone for a future website and mobile app.
 
-88 dbt tests across three layers: generic (`not_null`, `unique`,
-`accepted_values`, `relationships`), custom singular business invariants ("no
-negative prices", "no future transactions", "every postcode resolves to a
-region"), and `dbt-expectations` distribution checks on key numeric columns.
+## The spine
 
-## Engineering practices
+A dbt-core + DuckDB warehouse (the whole five-year warehouse fits in ~200 MB), **189 data tests** plus a source-freshness check, GitHub Pages lineage docs, and CI that runs unit tests, Streamlit smoke tests, `dbt build`, and sqlfluff lint on every PR.
 
-- **CI** — every PR runs `dbt build` plus the data tests and sqlfluff lint;
-  branch protection requires the check to pass before merging.
-- **Docs** — `dbt docs generate` published to GitHub Pages on every push to
-  `main`, with full lineage and a column catalogue.
-- **Reproducibility** — buildable from a fresh clone in minutes; pinned package
-  versions; no manual setup steps.
+## Honest limits
 
-## Where it's heading
-
-Turning the warehouse into an explainable, area-level decision-support layer for
-renters and movers — affordability, price trend, and neighbourhood signals over
-official data, with every number traceable back to a tested model rather than a
-black box. That decision-support layer is the work in progress.
+Indicators, never verdicts — crime and similar signals are surfaced as rates with caveats, not a "safe/unsafe" judgement. Door-to-door commute _time_ is the one remaining MVP signal (station proximity is already covered). The live Streamlit link is still the legacy market-study dashboard; the new renter-facing app reads a committed DuckDB extract and isn't yet on a public URL.
