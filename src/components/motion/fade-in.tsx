@@ -30,18 +30,21 @@ export function FadeIn({
 }: FadeInProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  if (shouldReduceMotion) {
-    return <motion.div {...props}>{children}</motion.div>;
-  }
-
+  // One element across both modes (no branch swap that could strand a stale
+  // opacity:0 from SSR). Reduced motion skips the hidden initial and animates
+  // instantly, so content is always at full opacity straight away.
   return (
     <motion.div
       variants={variants}
-      initial="hidden"
-      {...(whenInView
+      initial={shouldReduceMotion ? false : "hidden"}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0 }
+          : { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay }
+      }
+      {...(whenInView && !shouldReduceMotion
         ? { whileInView: "show", viewport: { once: true, margin: "-80px" } }
         : { animate: "show" })}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay }}
       {...props}
     >
       {children}

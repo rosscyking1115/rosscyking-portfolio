@@ -7,7 +7,11 @@ import { FadeIn, STAGGER_STEP } from "@/components/motion/fade-in";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site-config";
 
-const ROLES = ["AI Safety", "GenAI Evaluation", "Applied Data Science"] as const;
+const ROLES = [
+  "Data Science",
+  "Product & Marketing Analytics",
+  "GenAI Evaluation",
+] as const;
 
 export function Hero() {
   return (
@@ -29,7 +33,7 @@ export function Hero() {
 
         <FadeIn whenInView={false} delay={STAGGER_STEP * 2}>
           <h1 className="font-display mt-4 text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-            I turn ambiguous AI behaviour into{" "}
+            I turn ambiguous data and AI problems into{" "}
             <span className="text-primary">measurable systems.</span>
           </h1>
         </FadeIn>
