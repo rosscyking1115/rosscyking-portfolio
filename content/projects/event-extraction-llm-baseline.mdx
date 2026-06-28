@@ -1,6 +1,6 @@
 ---
 title: LLM Event Extraction on GPU/HPC
-summary: "Team NLP project building a zero-shot LLM event extraction baseline with Qwen2.5-7B-Instruct on MAVEN and WikiEvents. Compares unconstrained vs constrained-label prompting, with float16 inference on NVIDIA A100-SXM4-80GB via Hugging Face Transformers and Slurm, evaluated on valid JSON rate, trigger accuracy, type accuracy, combined accuracy, and structured errors."
+summary: "Establishes an honest zero-shot baseline for event extraction so later fine-tuned models have something credible to beat — comparing constrained vs unconstrained prompting on a 7B open-weights LLM (Qwen2.5) across MAVEN and WikiEvents, scored on output validity and accuracy with a failure-mode taxonomy, run on A100 GPU/HPC via Hugging Face and Slurm."
 stack: [Python, Qwen2.5-7B, Hugging Face, PyTorch, Slurm, A100 GPU/HPC]
 role: Academic team project
 period: "2026"
