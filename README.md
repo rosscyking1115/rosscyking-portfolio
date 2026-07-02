@@ -15,11 +15,11 @@ axe-core. Hardened security headers and rate-limited API routes.
 - **Components**: shadcn-style on `@radix-ui/*` primitives, copied into `src/components/ui`
 - **Animation**: `motion` (formerly Framer Motion)
 - **Icons**: `lucide-react`
-- **Forms**: `react-hook-form` + `zod` _(Phase 4)_
-- **Email**: Resend _(Phase 4)_
-- **Bot protection**: Cloudflare Turnstile _(Phase 4)_
-- **Rate limiting**: Upstash Ratelimit + Redis _(Phase 4)_
-- **Tests**: Vitest, Testing Library, Playwright, axe-core _(Phase 6)_
+- **Forms**: `react-hook-form` + `zod`
+- **Email**: Resend
+- **Bot protection**: Cloudflare Turnstile
+- **Rate limiting**: Upstash Ratelimit + Redis
+- **Tests**: Vitest, Testing Library, Playwright, axe-core
 - **CI**: GitHub Actions
 
 ## Getting started
@@ -51,6 +51,8 @@ Open <http://localhost:3000>.
 | `npm run format:check` | Prettier check (used in CI)          |
 | `npm run typecheck`    | `tsc --noEmit`                       |
 | `npm run check:links`  | Check project links for rot          |
+| `npm run test`         | Vitest unit + component tests        |
+| `npm run test:e2e`     | Playwright E2E + axe a11y tests      |
 
 ### Keeping links fresh
 
@@ -97,16 +99,20 @@ src/
 ├─ app/                 # Next.js App Router pages, API routes, layout
 │  ├─ globals.css       # Tailwind v4 directives + CSS-variable design tokens
 │  ├─ layout.tsx        # Root layout: ThemeProvider, Nav, Footer
-│  └─ page.tsx          # Home (placeholder until Phase 1)
+│  └─ page.tsx          # Home
 ├─ components/
+│  ├─ home/             # Hero, featured projects, skills cluster
+│  ├─ about/            # Experience timeline, CV download
+│  ├─ contact/          # Contact form
+│  ├─ projects/         # Stack filter
+│  ├─ motion/           # FadeIn entrance wrapper (reduced-motion safe)
 │  ├─ layout/           # Container, Nav, Footer, ThemeProvider, ThemeToggle
-│  └─ ui/               # shadcn-style primitives (Button, etc.)
-├─ lib/
-│  ├─ env.ts            # zod-validated environment variables
-│  ├─ site-config.ts    # Site name, links, nav items
-│  └─ utils.ts          # `cn` helper (clsx + tailwind-merge)
-content/                # MDX content (Phase 2: projects, Phase 3: about)
+│  └─ ui/               # shadcn-style primitives (Button, Badge, Input, …)
+├─ lib/                 # projects loader (zod), site-config, skills,
+│                       # experience, certifications, contact schema, env
+content/                # MDX content (projects/, about.mdx)
 public/                 # Static assets (CV, OG images, favicons)
+scripts/                # new-project scaffold, link checker
 .github/workflows/      # CI pipelines
 ```
 
@@ -115,21 +121,6 @@ public/                 # Static assets (CV, OG images, favicons)
 Tokens live in `src/app/globals.css` as CSS variables under `:root` (light) and
 `.dark` (dark), then mapped into Tailwind's theme via `@theme inline`. Edit the
 variable values to retheme the entire site without touching components.
-
-## Build phases
-
-This site is being built in eight short phases. The full plan is in
-`Portfolio_Build_Plan.md` (one folder up).
-
-- **Phase 0** ✅ Foundation — Next.js, Tailwind, theme, layout shell, CI
-- **Phase 1** Home page + design system
-- **Phase 2** Projects gallery + MDX pipeline
-- **Phase 3** About page + CV download
-- **Phase 4** Contact form + Resend backend
-- **Phase 5** Security hardening (CSP, HSTS, Dependabot)
-- **Phase 6** Testing — Vitest + Playwright + axe
-- **Phase 7** SEO, performance, accessibility polish
-- **Phase 8** Domain + analytics + monitoring
 
 ## Deployment
 
