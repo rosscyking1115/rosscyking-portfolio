@@ -22,6 +22,16 @@ const frontMatterSchema = z.object({
   featuredOrder: z.number().optional(),
   /** Work-in-progress: visible in `next dev`, hidden from production builds. */
   draft: z.boolean().optional(),
+  /**
+   * Live-demo screenshot for the featured showcase, e.g.
+   * "/projects/screenshots/<slug>.png". Captured via `npm run shots`.
+   */
+  screenshot: z.string().startsWith("/").optional(),
+  /**
+   * Terminal-readout lines shown in the featured showcase when a project has
+   * no UI to screenshot (e.g. an HPC/CLI project). Keep to 3-4 short lines.
+   */
+  terminal: z.array(z.string().min(1)).max(5).optional(),
   /** Optional headline numbers shown as an inline metric strip on the detail page. */
   metrics: z
     .array(z.object({ value: z.string().min(1), label: z.string().min(1) }))
