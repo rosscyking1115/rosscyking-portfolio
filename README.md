@@ -51,6 +51,7 @@ Open <http://localhost:3000>.
 | `npm run format:check` | Prettier check (used in CI)          |
 | `npm run typecheck`    | `tsc --noEmit`                       |
 | `npm run check:links`  | Check project links for rot          |
+| `npm run shots`        | Capture live-demo screenshots        |
 | `npm run test`         | Vitest unit + component tests        |
 | `npm run test:e2e`     | Playwright E2E + axe a11y tests      |
 
@@ -89,6 +90,13 @@ Front matter is validated at build time (zod). Key fields:
 | `featured`, `featuredOrder` | no       | feature on the home page; lower order = higher up                     |
 | `metrics`                   | no       | up to 3 `{ value, label }` pairs → inline metric strip                |
 | `links`                     | no       | `github` / `demo` / `report` / `paper` buttons                        |
+| `screenshot`                | no       | demo screenshot for the featured showcase (`npm run shots`)           |
+| `terminal`                  | no       | showcase readout lines for projects with no UI to screenshot          |
+
+Featured-showcase screenshots live in `public/projects/screenshots/` and are
+committed — re-run `npm run shots -- <slug-fragment>` when a demo's UI changes.
+The "Now building" strip on the home page is data, not content: edit
+`src/lib/now-building.ts`.
 
 Updating a project is just editing its file. To remove one, delete the file.
 

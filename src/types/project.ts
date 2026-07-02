@@ -11,6 +11,10 @@ export interface ProjectMeta {
   featuredOrder?: number;
   /** Work-in-progress: visible in dev, excluded from production builds. */
   draft?: boolean;
+  /** Live-demo screenshot under /public, shown in the featured showcase. */
+  screenshot?: string;
+  /** Terminal-readout lines for showcase cards with no UI to screenshot. */
+  terminal?: string[];
   /** Headline numbers rendered as an inline metric strip on the detail page. */
   metrics?: { value: string; label: string }[];
   links?: {
