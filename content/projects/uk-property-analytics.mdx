@@ -2,6 +2,7 @@
 title: UK Housing Decision Support
 summary: "An explainable UK neighbourhood decision-support tool for renters and movers (MVP feature-complete): nine national open-data signals — sale-market context, geography, rent/affordability, EPC energy, crime, planning, flood, and amenity access — feed a per-MSOA scoring engine that re-ranks live as a household shifts its priorities, served by a Streamlit decision app and a FastAPI backend on a tested dbt + DuckDB spine with 189 data tests."
 stack: [SQL, dbt, DuckDB, Streamlit, FastAPI, GitHub Actions, Python]
+screenshot: /projects/screenshots/uk-property-analytics.png
 role: Solo project
 period: "2026"
 publishedAt: "2026-06-04"
@@ -12,7 +13,6 @@ metrics:
   - { value: "189", label: "data tests" }
 links:
   github: https://github.com/rosscyking1115/uk-housing-decision-support
-  demo: https://ross-uk-property-analytics.streamlit.app/
   report: https://rosscyking1115.github.io/uk-housing-decision-support/
 ---
 
@@ -49,4 +49,4 @@ A dbt-core + DuckDB warehouse (the whole five-year warehouse fits in ~200 MB), *
 
 ## Honest limits
 
-Indicators, never verdicts — crime and similar signals are surfaced as rates with caveats, not a "safe/unsafe" judgement. Door-to-door commute _time_ is the one remaining MVP signal (station proximity is already covered). The live Streamlit link is still the legacy market-study dashboard; the new renter-facing app reads a committed DuckDB extract and isn't yet on a public URL.
+Indicators, never verdicts — crime and similar signals are surfaced as rates with caveats, not a "safe/unsafe" judgement. Door-to-door commute _time_ is the one remaining MVP signal (station proximity is already covered). The legacy market-study dashboard has been retired; the new renter-facing app reads a committed DuckDB extract and isn't yet on a public URL, so the evidence lives in the report link for now.
