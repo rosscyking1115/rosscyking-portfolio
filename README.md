@@ -135,6 +135,12 @@ variable values to retheme the entire site without touching components.
 Push to `main` on GitHub. Vercel deploys automatically. Pull requests get
 preview URLs.
 
+If a merge to `main` doesn't produce a new **production** deployment (Vercel
+occasionally misses a push webhook after a busy run of deploys), don't rely on
+the dashboard "Redeploy" button alone — it can rebuild the previous commit
+rather than the new `main` HEAD. Push a fresh commit to `main` to re-trigger a
+clean build from the latest commit.
+
 ## License
 
 Private. Do not redistribute.
