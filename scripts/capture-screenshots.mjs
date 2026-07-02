@@ -43,11 +43,12 @@ const TARGETS = [
     streamlit: false,
   },
   {
-    // Dismiss the first-visit region picker by choosing the UK edition.
+    // First visit shows a region picker, then a 3-step onboarding tour —
+    // choose the UK edition, then skip the tour, for a clean page.
     slug: "cited-market-brief-agent",
     url: "https://cited-market-brief-agent.vercel.app",
     streamlit: false,
-    clickText: "United Kingdom",
+    clickSequence: ["United Kingdom", "Skip"],
   },
   {
     slug: "fromatob-file-converter",
@@ -90,10 +91,14 @@ async function capture(browser, target) {
       await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
       await page.waitForTimeout(1_500);
     }
-    if (target.clickText) {
-      await page.getByText(target.clickText, { exact: true }).first().click();
-      await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
-      await page.waitForTimeout(2_000);
+    for (const label of target.clickSequence ?? []) {
+      // Each click dismisses an onboarding overlay; some render after a beat,
+      // so wait for the control before clicking and ignore any that don't show.
+      const control = page.getByText(label, { exact: true }).first();
+      if (await control.isVisible({ timeout: 8_000 }).catch(() => false)) {
+        await control.click();
+        await page.waitForTimeout(1_500);
+      }
     }
     const file = path.join(OUT_DIR, `${target.slug}.png`);
     await page.screenshot({ path: file });
