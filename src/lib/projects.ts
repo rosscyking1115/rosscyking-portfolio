@@ -42,6 +42,7 @@ const frontMatterSchema = z.object({
       demo: z.string().url().optional(),
       paper: z.string().url().optional(),
       report: z.string().url().optional(),
+      pypi: z.string().url().optional(),
     })
     .optional(),
 });

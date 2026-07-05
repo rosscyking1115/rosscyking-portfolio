@@ -62,6 +62,20 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react", "motion"],
   },
 
+  // Project pages that were renamed keep their old URLs working.
+  async redirects() {
+    const slugMoves = [
+      ["internal-ai-agent-eval-lab", "agent-release-gates"],
+      ["llm-redteam-harness", "redteam-foundry"],
+      ["uk-property-analytics", "movein"],
+    ];
+    return slugMoves.map(([from, to]) => ({
+      source: `/projects/${from}`,
+      destination: `/projects/${to}`,
+      permanent: true,
+    }));
+  },
+
   async headers() {
     return [
       {

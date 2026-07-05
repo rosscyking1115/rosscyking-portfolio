@@ -22,6 +22,7 @@ export interface ProjectMeta {
     demo?: string;
     paper?: string;
     report?: string;
+    pypi?: string;
   };
 }
 

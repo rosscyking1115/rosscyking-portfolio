@@ -21,7 +21,7 @@ const VIEWPORT = { width: 1600, height: 1000 };
 /** slug -> demo URL. `streamlit: true` enables wake-up + embed handling. */
 const TARGETS = [
   {
-    slug: "internal-ai-agent-eval-lab",
+    slug: "agent-release-gates",
     url: "https://agent-release-gates.streamlit.app/?embed=true",
     streamlit: true,
   },
@@ -36,10 +36,9 @@ const TARGETS = [
     streamlit: true,
   },
   {
-    // The legacy Streamlit dashboard was retired; the GitHub Pages report is
-    // the public visual until the renter-facing app gets a public URL.
-    slug: "uk-property-analytics",
-    url: "https://rosscyking1115.github.io/uk-housing-decision-support/",
+    // MoveIn — the shipped Next.js website (repo: uk-housing-decision-support).
+    slug: "movein",
+    url: "https://uk-housing-decision-support.vercel.app",
     streamlit: false,
   },
   {
@@ -71,13 +70,22 @@ async function wakeStreamlit(page) {
   }
   // Community Cloud serves the app inside an iframe (…/~/+/). Wait for the
   // Streamlit root to render real content inside that frame.
-  await page
-    .frameLocator('iframe[src*="/~/"]')
+  const app = page.frameLocator('iframe[src*="/~/"]');
+  await app
     .locator('[data-testid="stAppViewContainer"]')
     .waitFor({ state: "visible", timeout: 300_000 });
-  // Charts and dataframes stream in after the container mounts.
+  // The container mounts before the script finishes — charts, metrics, and
+  // dataframes stream in after. Wait for actual rendered content (a chart,
+  // metric, or table) so we don't shoot a half-painted page.
+  await app
+    .locator(
+      '[data-testid="stPlotlyChart"], [data-testid="stVegaLiteChart"], [data-testid="stMetric"], [data-testid="stDataFrame"], [data-testid="stArrowVegaLiteChart"]',
+    )
+    .first()
+    .waitFor({ state: "visible", timeout: 180_000 });
+  // Let the "running" status widget clear and charts finish drawing.
   await page.waitForLoadState("networkidle", { timeout: 60_000 }).catch(() => {});
-  await page.waitForTimeout(4_000);
+  await page.waitForTimeout(8_000);
 }
 
 async function capture(browser, target) {
