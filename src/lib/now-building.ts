@@ -18,6 +18,7 @@ export const nowBuilding: readonly NowBuildingEntry[] = [
   },
   {
     name: "cashflow-risk",
-    blurb: "Cash-flow risk modelling — early days",
+    blurb:
+      "Late-payment cash-runway risk tool for UK SMEs — 13-week forecast, invoice/customer risk ranking, and a plain-English weekly action brief. Multi-tenant RBAC, STRIDE threat model, DPIA.",
   },
 ] as const;

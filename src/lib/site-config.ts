@@ -3,7 +3,7 @@
  * Update values here rather than hard-coding them in components.
  */
 export const siteConfig = {
-  name: "Cheng-Yuan (Ross) King",
+  name: "Cheng-Yuan King",
   shortName: "Ross King",
   role: "MSc Artificial Intelligence · Applied AI, Data Science & Evaluation",
   // Long-form hero/bio copy. Shown on the page; NOT used as the SEO meta tags.
