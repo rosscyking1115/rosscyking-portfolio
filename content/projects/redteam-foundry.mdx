@@ -1,6 +1,6 @@
 ---
-title: LLM Red-Team Evaluation Harness
-summary: Reproducible benchmark measuring how published adversarial prompts perform against 2026-era LLMs and whether prompt-only defences move the needle — with cross-judge validation and bootstrap confidence intervals.
+title: redteam-foundry
+summary: "Adversarial benchmark foundry for LLM safety (pip install redteam-foundry): attack-corpus audits, defence-impact measurement, staleness scoring, and over-refusal tests against 2026-era LLMs — with cross-judge validation and bootstrap confidence intervals."
 stack:
   [
     Python,
@@ -22,11 +22,16 @@ metrics:
   - { value: "+1.00", label: "cross-judge κ" }
 links:
   github: https://github.com/rosscyking1115/redteam-foundry
+  pypi: https://pypi.org/project/redteam-foundry/
 ---
 
 ## What I built
 
-A fully reproducible evaluation harness for measuring attack success rate (ASR) of published adversarial prompt corpora against two target models — Claude Sonnet 4.6 (frontier API) and Llama 3.1 8B (local via Ollama) — under composable defence configurations.
+A fully reproducible evaluation harness for measuring attack success rate (ASR) of published adversarial prompt corpora against two target models — Claude Sonnet 4.6 (frontier API) and Llama 3.1 8B (local via Ollama) — under composable defence configurations. It ships as an installable package:
+
+```bash
+pip install redteam-foundry
+```
 
 The v1 evaluation matrix covers 12 cells: 2 target models × 2 benchmark families (AdvBench direct attacks, AgentDojo static indirect injection) × up to 4 defence stacks.
 

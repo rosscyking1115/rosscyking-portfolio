@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { compileMDX } from "next-mdx-remote/rsc";
-import { ArrowLeft, ExternalLink, FileText, Github, ScrollText } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  FileText,
+  Github,
+  Package,
+  ScrollText,
+} from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import rehypePrettyCode from "rehype-pretty-code";
@@ -160,6 +167,18 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                   >
                     <ScrollText aria-hidden="true" />
                     Paper
+                  </Link>
+                </Button>
+              )}
+              {project.links.pypi && (
+                <Button asChild variant="outline" size="sm">
+                  <Link
+                    href={project.links.pypi}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Package aria-hidden="true" />
+                    PyPI
                   </Link>
                 </Button>
               )}

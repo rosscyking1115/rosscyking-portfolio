@@ -9,7 +9,7 @@ test.describe("about page", () => {
     // The page's single h1 is the positioning statement; the name sits in the
     // registration mark above it.
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-    await expect(page.getByText("Cheng-Yuan (Ross) King").first()).toBeVisible();
+    await expect(page.getByText("Cheng-Yuan King").first()).toBeVisible();
     await expect(page.getByText("Education", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "MSc Artificial Intelligence" }),
