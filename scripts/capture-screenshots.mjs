@@ -18,8 +18,19 @@ import { chromium } from "@playwright/test";
 const OUT_DIR = path.join(process.cwd(), "public/projects/screenshots");
 const VIEWPORT = { width: 1600, height: 1000 };
 
-/** slug -> demo URL. `streamlit: true` enables wake-up + embed handling. */
+/**
+ * slug -> demo URL. `streamlit: true` enables wake-up + embed handling.
+ * `out` overrides the default output path (repo-relative) — used for shots
+ * that belong in docs/ rather than the served public/ assets.
+ */
 const TARGETS = [
+  {
+    // The live site itself — embedded at the top of the README.
+    slug: "site-home",
+    url: "https://rosscyking.com",
+    streamlit: false,
+    out: "docs/site-home.png",
+  },
   {
     slug: "agent-release-gates",
     url: "https://agent-release-gates.streamlit.app/?embed=true",
@@ -108,7 +119,10 @@ async function capture(browser, target) {
         await page.waitForTimeout(1_500);
       }
     }
-    const file = path.join(OUT_DIR, `${target.slug}.png`);
+    const file = target.out
+      ? path.join(process.cwd(), target.out)
+      : path.join(OUT_DIR, `${target.slug}.png`);
+    await mkdir(path.dirname(file), { recursive: true });
     await page.screenshot({ path: file });
     console.log(`    saved ${path.relative(process.cwd(), file)}`);
     return true;
