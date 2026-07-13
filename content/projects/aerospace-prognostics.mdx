@@ -1,0 +1,67 @@
+---
+title: Aerospace Prognostics
+summary: "Deployable end-to-end PHM MLOps, not another leaderboard notebook: NASA C-MAPSS turbofan RUL and ESA spacecraft-telemetry anomaly detection carried through their real evaluation protocols, wrapped in a FastAPI serving API, an operator console, signed release evidence (model card, SBOM, provenance), drift monitoring, and 453 tests. The evaluation layer proved general enough to extract as telemeval, a standalone library on PyPI with a Zenodo DOI."
+stack: [Python, FastAPI, Streamlit, Docker, GitHub Actions, pytest, PyPI]
+screenshot: /projects/screenshots/aerospace-prognostics.jpg
+role: Solo project
+period: "2026"
+publishedAt: "2026-07-09"
+featured: false
+metrics:
+  - { value: "453", label: "tests passing" }
+  - { value: "0.42", label: "event-wise recall (corrected)" }
+  - { value: "2", label: "benchmark tracks" }
+links:
+  github: https://github.com/rosscyking1115/aerospace-prognostics
+  pypi: https://pypi.org/project/telemeval/
+---
+
+## What it is
+
+Most predictive-maintenance repos are a notebook and a leaderboard score. This
+one is an **operations system**: a FastAPI inference service, a Streamlit
+operator console, signed release evidence (model card, SBOM, provenance), and
+drift monitoring — around models trained and evaluated under honest,
+documented protocols. The engineering envelope is the point; the models are
+held to it.
+
+## Two benchmark tracks
+
+- **C-MAPSS turbofan RUL** — the familiar baseline anyone can cross-check:
+  sequence models, diagnostics, and calibrated prediction artifacts.
+- **ESA-ADB spacecraft anomaly detection** — a far less picked-over benchmark,
+  run through its real event-wise protocol (plus SMAP/MSL plumbing).
+
+## The leakage audit — and the corrected number
+
+The first ESA-ADB run reported recall 0.24. Auditing the evaluation showed the
+chronological split was counting training-window events — which have no
+test-window predictions — as missed, deflating recall. Restricting scoring to
+test-window events (the correct protocol) gives the honest **0.42**, and the
+corrected number is the one reported, with the audit written up. Every
+artifact records its protocol deviations and is stamped _"event-wise detection
+only — not a full ESA-ADB leaderboard claim."_
+
+## telemeval — the extracted library
+
+The anomaly-evaluation layer (including the leakage guard born from that
+audit) proved general enough to extract: **telemeval** is now a standalone
+Apache-2.0 library on PyPI with a Zenodo DOI for leakage-safe, event-wise and
+affiliation-based evaluation of spacecraft-telemetry anomaly detection — and
+this repository is its reference pipeline, consuming it as a dependency.
+
+## Delivery
+
+FastAPI inference service, Streamlit review console, Docker Compose stack,
+and CI running ruff, pytest, a dependency audit, SBOM generation, and
+serving-image smoke tests. Release evidence covers model inspection,
+validation, benchmark, model card, SBOM, release bundle, promotion report,
+and provenance.
+
+## Honest limits
+
+A reference implementation of end-to-end PHM MLOps under MIT — not a product
+launch track (productization docs are frozen as archived context). The hosted
+review console is token-gated rather than public, so the visual here is the
+console itself rather than a click-through demo. Raw telemetry and generated
+model artifacts stay out of Git.

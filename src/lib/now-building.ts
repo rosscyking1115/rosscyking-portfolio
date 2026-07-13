@@ -10,15 +10,6 @@ export interface NowBuildingEntry {
   blurb: string;
 }
 
-export const nowBuilding: readonly NowBuildingEntry[] = [
-  {
-    name: "aerospace-prognostics",
-    blurb:
-      "Aerospace PHM pipeline — remaining-useful-life prediction and spacecraft anomaly detection",
-  },
-  {
-    name: "cashflow-risk",
-    blurb:
-      "Late-payment cash-runway risk tool for UK SMEs — 13-week forecast, invoice/customer risk ranking, and a plain-English weekly action brief. Multi-tenant RBAC, STRIDE threat model, DPIA.",
-  },
-] as const;
+// Empty for now — aerospace-prognostics and cashflow-risk both shipped and
+// have full project pages. The strip hides itself while this is empty.
+export const nowBuilding: readonly NowBuildingEntry[] = [] as const;

@@ -62,18 +62,33 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react", "motion"],
   },
 
-  // Project pages that were renamed keep their old URLs working.
+  // Project pages that were renamed keep their old URLs working; pages that
+  // were retired land on the projects index instead of a 404.
   async redirects() {
     const slugMoves = [
       ["internal-ai-agent-eval-lab", "agent-release-gates"],
       ["llm-redteam-harness", "redteam-foundry"],
       ["uk-property-analytics", "movein"],
     ];
-    return slugMoves.map(([from, to]) => ({
-      source: `/projects/${from}`,
-      destination: `/projects/${to}`,
-      permanent: true,
-    }));
+    const retired = [
+      "com6513-qa-assistant",
+      "event-extraction-llm-baseline",
+      "fromatob-file-converter",
+      "scalable-machine-learning-pyspark",
+      "speech-speed-tempo-classification",
+    ];
+    return [
+      ...slugMoves.map(([from, to]) => ({
+        source: `/projects/${from}`,
+        destination: `/projects/${to}`,
+        permanent: true,
+      })),
+      ...retired.map((from) => ({
+        source: `/projects/${from}`,
+        destination: "/projects",
+        permanent: true,
+      })),
+    ];
   },
 
   async headers() {

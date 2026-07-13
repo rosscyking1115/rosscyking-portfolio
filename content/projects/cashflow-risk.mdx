@@ -1,0 +1,64 @@
+---
+title: Cashflow Risk Intelligence
+summary: "Which of a UK small business's unpaid invoices could break its cash runway, when the risk appears, and what to do this week: from an invoice CSV it forecasts a 13-week runway, ranks invoices by expected cash at risk with a plain-English reason on every score, enriches customer risk with Companies House filings, and writes the week's action brief — behind tested multi-tenant RBAC, a STRIDE threat model, and a DPIA."
+stack: [Python, FastAPI, PostgreSQL, Next.js, TypeScript, MLflow, GitHub Actions]
+screenshot: /projects/screenshots/cashflow-risk.png
+role: Solo project
+period: "2026"
+publishedAt: "2026-07-04"
+featured: false
+metrics:
+  - { value: "13-week", label: "runway forecast" }
+  - { value: "150+", label: "tests" }
+  - { value: "STRIDE", label: "threat model + DPIA" }
+links:
+  github: https://github.com/rosscyking1115/cashflow-risk
+  demo: https://cashflow-web-sidu.onrender.com/
+---
+
+## The problem
+
+Late payment is the classic small-business killer: the danger isn't one bad
+invoice, it's not seeing _when_ unpaid invoices collide with the cash runway.
+This project models that end to end — forecast the 13-week runway, rank the
+invoices by expected cash at risk (late-payment probability × amount), and
+turn it into a deterministic weekly chase list.
+
+## Applied data science, done honestly
+
+- **Leakage-safe as-of feature store** and a pinned late-payment label with
+  censoring.
+- **A rolling-origin, group-aware backtest** with the right metrics for a
+  rare, ranked problem: PR-AUC against prevalence, top-decile precision, and
+  calibration.
+- **A rules → logistic → gradient-boosted bake-off** tracked in MLflow — and
+  on the synthetic data the fitted models **tie the rules baseline**. The
+  evaluation explains why: a latent "health-oracle" ceiling shows the
+  predictive signal is a macro factor unobservable at prediction time without
+  leakage. The tie is reported, not hidden.
+- **An anti-circular synthetic data generator** — the latent mechanism the
+  model never sees — so the demo data can't flatter the model.
+
+## Security as a build-time requirement
+
+Confidential financial data is treated as a first-class constraint, with
+several controls enforced by tests: multi-tenant isolation and RBAC with
+cross-tenant refusal (tested), a STRIDE threat model, a DPIA and privacy
+notice, PII-scrubbed error reporting (asserted by a test), CSV-injection-safe
+exports, an append-only audit log, retention auto-purge, and self-serve data
+export/delete. Raw uploads are never stored — only derived results.
+
+## Delivery
+
+A pure-Python analytics engine behind a FastAPI service, PostgreSQL
+system-of-record with migrations, a Next.js dashboard, and CI running ruff,
+strict mypy, pytest, a migration-apply-and-drift check, and the Next build —
+with SHA-pinned actions. The live demo opens on a synthetic dataset with no
+sign-in (free-tier host; first load can take ~30s).
+
+## Honest limits
+
+A reference project, not a commercial product: no real customer data, and the
+phased product roadmap and production-pivot plans are frozen as a record of
+the planning and threat-modelling. Model performance claims are scoped to the
+synthetic benchmark — that's the point of reporting the tie.
