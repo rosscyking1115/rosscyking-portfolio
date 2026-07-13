@@ -1,66 +1,74 @@
 ---
 title: MoveIn
-summary: "Explainable where-to-live decision tool for England & Wales — nine official open-data signals rolled to MSOA grain (7,264 areas), served by a tested dbt + DuckDB engine through a public API and a website with a page for every area."
-stack: [dbt, DuckDB, FastAPI, "Fly.io", Next.js, Vercel, GitHub Actions, Python]
+summary: "Explainable where-to-live decision support for England & Wales — a tested dbt + DuckDB engine turns seven official open-data sources into five transparent 0–100 indicators across 7,264 neighbourhoods, every score shown beside the raw figure it came from, served through a public FastAPI and a Next.js site with ~7k programmatic area pages. 197 dbt data tests, Dagster-orchestrated monthly refresh, published lineage docs."
+stack: [dbt, DuckDB, Dagster, FastAPI, "Fly.io", Next.js, Vercel, GitHub Actions, Python]
 screenshot: /projects/screenshots/movein.png
 role: Solo project
 period: "2026"
-publishedAt: "2026-06-04"
+publishedAt: "2026-07-11"
 featured: true
-featuredOrder: 3
+featuredOrder: 2
 metrics:
-  - { value: "9", label: "open-data signals" }
+  - { value: "7", label: "open-data sources" }
   - { value: "7,264", label: "MSOAs scored" }
-  - { value: "189", label: "data tests" }
+  - { value: "197", label: "dbt data tests" }
 links:
   github: https://github.com/rosscyking1115/uk-housing-decision-support
   demo: https://uk-housing-decision-support.vercel.app
+  report: https://rosscyking1115.github.io/uk-housing-decision-support/
 ---
 
 ## What I built
 
-MoveIn is an explainable decision-support tool for renters and movers. Given a
-household's income, budget, commute target, and risk tolerance, it ranks
-neighbourhoods (MSOA grain) as transparent trade-offs — not a price predictor
-and not a glossy listings site, but an honest decision layer over fragmented
-official UK data. It evolved from a Land Registry analytics-engineering project
-into a shipped product with a public API and a website.
+MoveIn reads a neighbourhood from official open data and lays it out like a
+surveyor's trade-off receipt — five indicators, each beside the figure it came
+from. It shows the evidence; it never tells you a place is "good" or "safe".
 
-_MoveIn is the product; `uk-housing-decision-support` is the repository._
+_MoveIn is the web app; `uk-housing-decision-support` is the repository. The
+"where to live" framing is the vehicle — the substance is the pipeline, the
+dimensional and decision modelling, the tests, and the explainability layer._
 
-## The nine signals
+## The data engine
 
-Nine real national open-data signals per MSOA, across all 7,264 England & Wales areas:
+Seven official open-data sources, rolled to MSOA grain across all 7,264
+England & Wales neighbourhoods:
 
 - **Sale-market context** — 4.99M Land Registry transactions (2021–2025)
-- **Geography** — ONSPD postcode→MSOA bridge (2.73M postcodes, 99.999% coverage)
-- **Rent & affordability** — ONS PIPR rent vs an income scenario
-- **EPC energy** — 23.5M England & Wales certificates → per-area median band
-- **Crime** — 17.1M police street-crimes as a rate (an indicator, never a "safe/unsafe" label)
-- **Flood & planning** — point-in-polygon over 2.7M postcode centroids
-- **Amenity access** — 437k OpenStreetMap amenities (supermarket, school, GP, park, station)
+- **Geography** — ONSPD bridge, 2.73M postcodes (99.999% coverage)
+- **Rent & affordability** — ONS PIPR, including per-bedroom rents
+- **Energy** — 23.5M EPC certificates → per-area median band
+- **Crime** — 17.1M police street crimes as a rate (an indicator, never a verdict)
+- **Flood & planning** — spatial point-in-polygon; flood band + constraint count
+- **Convenience** — 437k OpenStreetMap amenities, nearest + walkable count
 
-Each external source is fixture-default for fast, reproducible CI, with a real-data toggle for production builds.
+Sources → staging → intermediate → marts, tested at every layer: **197 dbt
+data tests + 2 dbt unit tests**, with lineage and column-level docs published
+to GitHub Pages on every push. Each source is fixture-default for fast,
+reproducible CI with a real-data toggle for production builds.
 
-## Explainable scoring
+## Explainable scoring — readable top to bottom
 
-A per-MSOA engine (`rpt_neighbourhood_score`) computes five component scores — affordability, safety, energy, flood, and convenience (0–100 percentile) — and a weighted overall score that **re-ranks live when the user shifts the weights**, with per-area confidence derived from data coverage and a plain-language "why this area" summary.
+The score is one SQL transformation (`rpt_neighbourhood_score`), not a black
+box: median-anchored, winsorised normalisation to 0–100 (so magnitude
+survives, unlike a pure percentile rank); an overall score as a weighted
+_geometric_ mean so one excellent pillar can't mask a poor one; missing
+indicators dropped — never zeroed — lowering the area's confidence level
+instead of silently penalising it; and every score shipped beside its raw
+figure with a generated "why this area" sentence.
 
-## The product
+## Orchestration and delivery
 
-- A **Next.js website on Vercel** with a page for every scored area (~7k
-  programmatic pages): set income / budget / priorities → a live-reranked
-  shortlist, a per-area trade-off receipt, side-by-side compare, and sources
-  & caveats on every recommendation.
-- A **public FastAPI service on Fly.io** (`resolve` / `search` /
-  `listing-check` / `meta` over the decision marts) with OpenAPI docs at
-  [`/docs`](https://uk-housing-decision-support-api.fly.dev/docs) — the same
-  engine the website reads, open for anyone to query.
-
-## The spine
-
-A dbt-core + DuckDB warehouse (the whole five-year warehouse fits in ~200 MB), **189 data tests** plus a source-freshness check, and branch-protected GitHub Actions CI that runs unit tests, `dbt build`, and sqlfluff lint on every PR before anything reaches the API or website.
+Land Registry data refreshes monthly, so the refresh is a **Dagster asset
+graph**: ingestion (with a pre-dbt data-quality gate) → dbt → a slim
+`decision.duckdb` extract. A thin **FastAPI service** (Fly.io) serves that
+extract publicly with OpenAPI docs, and the **Next.js site** (Vercel) — search,
+compare, listing checker, ~7k programmatic area/town/region/rent pages — is
+just one HTTP client of it. Scoring logic lives in exactly one place.
 
 ## Honest limits
 
-Indicators, never verdicts — crime and similar signals are surfaced as rates with caveats, not a "safe/unsafe" judgement. Door-to-door commute _time_ is the one remaining signal on the roadmap (station proximity is already covered). The data refreshes on a cadence, not in real time, so a brand-new listing or a very recent planning decision may lag the official source.
+A reference analytics-engineering project, not a product — the UK area-data
+space is already well served, and the repo says so up front. Indicators, never
+verdicts. Door-to-door commute time is the one remaining planned signal
+(station proximity is covered), and the data refreshes on a monthly cadence,
+not in real time.

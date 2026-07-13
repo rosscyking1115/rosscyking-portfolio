@@ -20,13 +20,13 @@ test.describe("projects gallery", () => {
   test("project detail page renders MDX content", async ({ page }) => {
     await page.goto("/projects");
 
-    // Click into the Scalable ML project specifically — selector targets the
+    // Click into the cycle-hire project specifically — selector targets the
     // h3-level project card title, not a nav or filter link.
-    await page.getByRole("link", { name: /Scalable ML/i }).click();
+    await page.getByRole("link", { name: /Cycle-Hire/i }).click();
 
-    await expect(page).toHaveURL(/\/projects\/scalable-machine-learning-pyspark/);
+    await expect(page).toHaveURL(/\/projects\/tfl-data-engineering/);
     await expect(
-      page.getByRole("heading", { level: 1, name: /Scalable ML/i }),
+      page.getByRole("heading", { level: 1, name: /Cycle-Hire/i }),
     ).toBeVisible();
     // The MDX body's first heading should render as h2.
     await expect(page.getByRole("heading", { level: 2 }).first()).toBeVisible();

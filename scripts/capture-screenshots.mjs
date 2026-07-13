@@ -32,6 +32,24 @@ const TARGETS = [
     out: "docs/site-home.png",
   },
   {
+    slug: "tfl-data-engineering",
+    url: "https://tfl-data-engineering.streamlit.app/?embed=true",
+    streamlit: true,
+  },
+  {
+    // After Midnight — the shipped Next.js planner (repo: community-energy-flex).
+    slug: "community-energy-flex",
+    url: "https://after-midnight-beta.vercel.app/",
+    streamlit: false,
+  },
+  {
+    // Render free tier sleeps — give the first load extra settle time.
+    slug: "cashflow-risk",
+    url: "https://cashflow-web-sidu.onrender.com/",
+    streamlit: false,
+    settleMs: 45_000,
+  },
+  {
     slug: "agent-release-gates",
     url: "https://agent-release-gates.streamlit.app/?embed=true",
     streamlit: true,
@@ -54,11 +72,6 @@ const TARGETS = [
     url: "https://cited-market-brief-agent.vercel.app",
     streamlit: false,
     clickSequence: ["United Kingdom", "Skip"],
-  },
-  {
-    slug: "fromatob-file-converter",
-    url: "https://fromatob.app",
-    streamlit: false,
   },
 ];
 
@@ -103,7 +116,7 @@ async function capture(browser, target) {
       await wakeStreamlit(page);
     } else {
       await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
-      await page.waitForTimeout(1_500);
+      await page.waitForTimeout(target.settleMs ?? 1_500);
     }
     for (const label of target.clickSequence ?? []) {
       // Each click dismisses an onboarding overlay; some render after a beat,

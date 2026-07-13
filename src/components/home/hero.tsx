@@ -7,11 +7,7 @@ import { FadeIn, STAGGER_STEP } from "@/components/motion/fade-in";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site-config";
 
-const ROLES = [
-  "Data Science",
-  "Product & Marketing Analytics",
-  "GenAI Evaluation",
-] as const;
+const ROLES = ["Data Engineering", "ML Engineering", "AI Safety & Evaluation"] as const;
 
 export function Hero() {
   return (

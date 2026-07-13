@@ -1,0 +1,73 @@
+---
+title: After Midnight
+summary: "Works out when to run flexible electricity loads — a wash, an EV charge — to cut cost and carbon from live UK grid data, and shows the working: an LP/MILP optimiser behind a typed FastAPI contract, a Next.js planner, and a forecast-vs-actual retro that checks whether yesterday's plan actually saved. On average 95% of forecast savings were realised; the case-study community centre saves ~£149 and ~179 kg CO₂ a year just by shifting when things run."
+stack:
+  [
+    Python,
+    FastAPI,
+    Pydantic,
+    Next.js,
+    TypeScript,
+    dbt,
+    Snowflake,
+    Power BI,
+    "Fly.io",
+    Vercel,
+  ]
+screenshot: /projects/screenshots/community-energy-flex.png
+role: Solo project
+period: "2026"
+publishedAt: "2026-07-10"
+featured: true
+featuredOrder: 3
+metrics:
+  - { value: "153", label: "tests passing" }
+  - { value: "95%", label: "forecast savings realised" }
+  - { value: "~£149/yr", label: "case-study saving" }
+links:
+  github: https://github.com/rosscyking1115/community-energy-flex
+  demo: https://after-midnight-beta.vercel.app/
+---
+
+## What it does
+
+**After Midnight** is the web app; `community-energy-flex` is the repository.
+It doesn't just show "carbon is low at 02:00" — it says _"run the washing
+machine 02:30–04:00, charge the EV 01:30–04:30, expected saving £0.12 and
+0.14 kg CO₂, high confidence"_, with the assumptions and caveats attached.
+
+## Why it exists (stated honestly)
+
+A learning / personal-utility build, not a product — Octopus already publishes
+a free greener-nights forecast, and free sites do this on the same public
+data. That's stated up front in the repo. The value is the engineering on
+display: a complete data path from live public APIs → a warehouse → an
+optimiser → a typed API → a front end.
+
+## The engineering
+
+- **An LP/MILP optimiser** schedules flexible loads against live UK grid
+  carbon and price data, per region and tariff.
+- **Contract-first, typed end to end** — pydantic models → OpenAPI → generated
+  TypeScript, so the API and the front end can't silently drift. The
+  [API is public and keyless](https://community-energy-flex-api.fly.dev/docs) —
+  you can `curl /v1/optimise` directly.
+- **Graceful degradation by design** — every live feed is TTL-cached with a
+  last-good / sample fallback, so an upstream outage never takes the app down.
+- **A dbt/Snowflake warehouse layer with Power BI reporting** behind the
+  analytical views.
+
+## It closes the loop
+
+Most planners stop at the forecast. This one keeps score: a forecast-vs-actual
+**retro** measures whether yesterday's plan _actually_ saved, using realised
+grid data. In the demo period the worst day still saved, the average realised
+95% of forecast — and when the grid came in ~8% dirtier than forecast, the
+plan still realised 108% of its forecast carbon saving.
+
+## Honest limits
+
+Planning advice only — it does not control appliances, guarantee savings, or
+replace supplier advice. Savings are small per-household by design; the
+worked example (a community centre with four flexible loads) is where shifting
+adds up to ~£149 and ~179 kg CO₂ a year.

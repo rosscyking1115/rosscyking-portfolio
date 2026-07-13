@@ -1,0 +1,74 @@
+---
+title: London Cycle-Hire Analytics Platform
+summary: "Answers one question well: when London's transport is disrupted, how much extra demand lands on the bikes, and where? A 41.4M-journey PySpark backfill unified across five drifting schema eras, a tested dbt star schema, a LightGBM station-level forecast, and a free always-on live layer refreshed daily by GitHub Actions into committed Parquet — no warehouse to keep alive. Headline: strike days run 1.2×–2.6× normal cycling demand."
+stack:
+  [
+    Python,
+    PySpark,
+    dbt,
+    DuckDB,
+    Parquet,
+    Snowflake,
+    LightGBM,
+    MLflow,
+    Streamlit,
+    GitHub Actions,
+  ]
+screenshot: /projects/screenshots/tfl-data-engineering.png
+role: Solo project
+period: "2026"
+publishedAt: "2026-07-12"
+featured: true
+featuredOrder: 1
+metrics:
+  - { value: "41.4M", label: "journeys unified" }
+  - { value: "1.2–2.6×", label: "strike-day demand" }
+  - { value: "53", label: "dbt data tests" }
+links:
+  github: https://github.com/rosscyking1115/tfl-data-engineering
+  demo: https://tfl-data-engineering.streamlit.app/
+---
+
+## The problem
+
+Transport for London publishes every cycle-hire journey since 2012 — roughly
+189M trips across 482 files, with schemas that drift wildly between years.
+Nobody can answer "what does a tube strike actually do to bike demand, per
+station?" from the raw archive. This platform unifies it into a clean, tested
+analytical layer and answers exactly that.
+
+## What I built
+
+- **A Spark-scale backfill** — 41.4M journeys (2022–2026) unified across five
+  distinct file schemas (columns renamed, dropped, and re-ordered between
+  eras), with per-file reconciliation proving no rows are silently lost.
+- **A tested dimensional model** — a dbt star schema (`fact_journey`,
+  `dim_station`, `dim_date`) with 53 data tests, including cross-era
+  station-identity conforming.
+- **Disruption intelligence** — a weather-adjusted baseline isolates the strike
+  effect (disruption days run 1.33× median demand, 1.2×–2.6× across events),
+  so ordinary weather is never mistaken for the strike.
+- **A learned forecast, not just a median** — a LightGBM model predicts
+  station-level daily demand and, by predicting with the disruption flag off,
+  supplies a counterfactual "normal" baseline ~21% more accurate than the
+  median it replaces (held-out 2026, tracked in MLflow).
+- **A live, durable runtime** — a daily GitHub Actions job refreshes line
+  status and dock occupancy into committed Parquet; the app reads it via
+  DuckDB. No warehouse, no server, nothing to keep paying for.
+- **Ask it in English** — an in-app assistant with keyless exact "quick
+  answers" plus an optional bring-your-own-key Claude chat over curated,
+  read-only tools.
+
+## The Spark ↔ Python boundary
+
+The right tool for each job, documented as an ADR: Spark for the multi-era
+historical backfill where schema drift and volume justify it; plain Python for
+the kilobyte-sized daily API pulls where Spark would be theatre. Knowing when
+_not_ to use the big tool is the point.
+
+## Honest limits
+
+TfL publishes journey data in bulk with a ~1–2 month lag, so the workflow
+deliberately separates historical quantification from live monitoring — it
+never claims real-time trip prediction (recorded as an ADR). The live demo
+runs on Streamlit's free tier and can take ~30s to wake.
