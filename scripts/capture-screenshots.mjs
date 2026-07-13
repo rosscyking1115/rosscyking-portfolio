@@ -42,11 +42,6 @@ const TARGETS = [
     streamlit: true,
   },
   {
-    slug: "marketing-effectiveness-lab",
-    url: "https://marketing-effectiveness-lab.streamlit.app/?embed=true",
-    streamlit: true,
-  },
-  {
     // MoveIn — the shipped Next.js website (repo: uk-housing-decision-support).
     slug: "movein",
     url: "https://uk-housing-decision-support.vercel.app",
