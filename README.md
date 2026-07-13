@@ -1,5 +1,9 @@
 # rosscyking-portfolio
 
+**▶ Live site:** <https://rosscyking.com>
+
+[![rosscyking.com — home](docs/site-home.png)](https://rosscyking.com)
+
 Personal portfolio for Cheng-Yuan (Ross) King — built with Next.js 16, React 19,
 TypeScript, Tailwind CSS v4, and shadcn-style components on Radix primitives.
 
