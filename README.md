@@ -142,8 +142,9 @@ preview URLs.
 If a merge to `main` doesn't produce a new **production** deployment (Vercel
 occasionally misses a push webhook after a busy run of deploys), don't rely on
 the dashboard "Redeploy" button alone — it can rebuild the previous commit
-rather than the new `main` HEAD. Push a fresh commit to `main` to re-trigger a
-clean build from the latest commit.
+rather than the new `main` HEAD. Since `main` is branch-protected (no direct
+pushes), re-trigger by merging a small follow-up PR so a fresh push event
+lands on `main`.
 
 ## License
 
