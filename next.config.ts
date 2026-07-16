@@ -68,7 +68,8 @@ const nextConfig: NextConfig = {
     const slugMoves = [
       ["internal-ai-agent-eval-lab", "agent-release-gates"],
       ["llm-redteam-harness", "redteam-foundry"],
-      ["uk-property-analytics", "movein"],
+      ["uk-property-analytics", "england-wales-housing-decision-support"],
+      ["movein", "england-wales-housing-decision-support"],
     ];
     const retired = [
       "com6513-qa-assistant",
