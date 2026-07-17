@@ -31,12 +31,12 @@ links:
 
 ## What it does
 
-**After Midnight** is the web app; `community-energy-flex` is the repository.
+After Midnight is the web app; `community-energy-flex` is the repository.
 It doesn't just show "carbon is low at 02:00" — it says _"run the washing
 machine 02:30–04:00, charge the EV 01:30–04:30, expected saving £0.12 and
 0.14 kg CO₂, high confidence"_, with the assumptions and caveats attached.
 
-## Why it exists (stated honestly)
+## Why it exists
 
 A learning / personal-utility build, not a product — Octopus already publishes
 a free greener-nights forecast, and free sites do this on the same public
@@ -46,21 +46,21 @@ optimiser → a typed API → a front end.
 
 ## The engineering
 
-- **An LP/MILP optimiser** schedules flexible loads against live UK grid
-  carbon and price data, per region and tariff.
-- **Contract-first, typed end to end** — pydantic models → OpenAPI → generated
+- An LP/MILP optimiser schedules flexible loads against live UK grid carbon and
+  price data, per region and tariff.
+- Contract-first, typed end to end: pydantic models → OpenAPI → generated
   TypeScript, so the API and the front end can't silently drift. The
-  [API is public and keyless](https://community-energy-flex-api.fly.dev/docs) —
-  you can `curl /v1/optimise` directly.
-- **Graceful degradation by design** — every live feed is TTL-cached with a
+  [API is public and keyless](https://community-energy-flex-api.fly.dev/docs),
+  so you can `curl /v1/optimise` directly.
+- Graceful degradation by design: every live feed is TTL-cached with a
   last-good / sample fallback, so an upstream outage never takes the app down.
-- **A dbt/Snowflake warehouse layer with Power BI reporting** behind the
-  analytical views.
+- A dbt/Snowflake warehouse layer with Power BI reporting behind the analytical
+  views.
 
 ## It closes the loop
 
 Most planners stop at the forecast. This one keeps score: a forecast-vs-actual
-**retro** measures whether yesterday's plan _actually_ saved, using realised
+retro measures whether yesterday's plan _actually_ saved, using realised
 grid data. In the demo period the worst day still saved, the average realised
 95% of forecast — and when the grid came in ~8% dirtier than forecast, the
 plan still realised 108% of its forecast carbon saving.

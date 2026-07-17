@@ -26,18 +26,18 @@ turn it into a deterministic weekly chase list.
 
 ## Applied data science, done honestly
 
-- **Leakage-safe as-of feature store** and a pinned late-payment label with
+- Leakage-safe as-of feature store and a pinned late-payment label with
   censoring.
-- **A rolling-origin, group-aware backtest** with the right metrics for a
-  rare, ranked problem: PR-AUC against prevalence, top-decile precision, and
+- A rolling-origin, group-aware backtest with the right metrics for a rare,
+  ranked problem: PR-AUC against prevalence, top-decile precision, and
   calibration.
-- **A rules → logistic → gradient-boosted bake-off** tracked in MLflow — and
-  on the synthetic data the fitted models **tie the rules baseline**. The
-  evaluation explains why: a latent "health-oracle" ceiling shows the
-  predictive signal is a macro factor unobservable at prediction time without
-  leakage. The tie is reported, not hidden.
-- **An anti-circular synthetic data generator** — the latent mechanism the
-  model never sees — so the demo data can't flatter the model.
+- A rules → logistic → gradient-boosted bake-off tracked in MLflow. On the
+  synthetic data the fitted models tie the rules baseline, and the evaluation
+  explains why: a latent "health-oracle" ceiling shows the predictive signal is
+  a macro factor unobservable at prediction time without leakage. The tie is
+  reported, not hidden.
+- An anti-circular synthetic data generator (the latent mechanism the model
+  never sees), so the demo data can't flatter the model.
 
 ## Security as a build-time requirement
 

@@ -38,9 +38,9 @@ A synthetic fintech data product that connects customer analytics, experimentati
 
 All data is synthetic. No customer data, internal bank data, or proprietary business metrics are used.
 
-## Why it matters
+## Scope
 
-It shows end-to-end data product thinking: warehouse design, model scoring, experiment analysis, dashboarding, and operational handoff — not a one-off notebook.
+Warehouse design, model scoring, experiment analysis, dashboarding, and operational handoff: the full path, run end to end rather than as a one-off notebook.
 
 ## Analytics and modelling
 
@@ -68,13 +68,13 @@ Offer economics workflow covering recommendation guardrails, scenario runs, and 
 
 The project goes beyond local development — the GCP path has been exercised and documented:
 
-- **Cloud Storage** raw landing path loaded into BigQuery
-- **BigQuery** raw tables verified against export manifest; dbt graph run on BigQuery with 107 passing checks
-- **Cloud Run Jobs** deployed for activation scoring and score monitoring
-- **Cloud Run API** (private) deployed and smoke-tested via authenticated `/health`
-- **Cloud Scheduler** configured for daily scoring and monitoring runs
-- **Cloud Monitoring** alert policies created for job failures and API errors
-- **Budget alert** and Cloud Storage lifecycle policy configured for cost control
+- Cloud Storage raw landing path loaded into BigQuery
+- BigQuery raw tables verified against export manifest; dbt graph run on BigQuery with 107 passing checks
+- Cloud Run Jobs deployed for activation scoring and score monitoring
+- Cloud Run API (private) deployed and smoke-tested via authenticated `/health`
+- Cloud Scheduler configured for daily scoring and monitoring runs
+- Cloud Monitoring alert policies created for job failures and API errors
+- Budget alert and Cloud Storage lifecycle policy configured for cost control
 
 ## Delivery surfaces
 

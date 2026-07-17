@@ -33,19 +33,19 @@ layer. A reference analytics-engineering project, not a product._
 Nine authoritative open-data sources, rolled to MSOA grain across the 7,264
 England & Wales neighbourhoods:
 
-- **Sale-market context** — 4.99M Land Registry transactions (2021–2025)
-- **Geography** — ONSPD bridge, 2.73M postcodes (99.999% coverage)
-- **Rent & affordability** — ONS PIPR, including per-bedroom rents
-- **Energy** — 23.5M EPC certificates → per-area median band
-- **Crime** — 17.1M police street crimes as an approximate monthly rate
+- Sale-market context: 4.99M Land Registry transactions (2021–2025)
+- Geography: ONSPD bridge, 2.73M postcodes (99.999% coverage)
+- Rent & affordability: ONS PIPR, including per-bedroom rents
+- Energy: 23.5M EPC certificates → per-area median band
+- Crime: 17.1M police street crimes as an approximate monthly rate
   (an indicator, never a verdict), against official ONS mid-2024 populations
-- **Population** — ONS mid-year estimates as the crime-rate denominator
-- **Flood & planning** — spatial point-in-polygon; England-only sources, so
-  Welsh areas are reported as _not covered_, never given a favourable default
-- **Convenience** — 437k OpenStreetMap amenities, nearest + walkable count
+- Population: ONS mid-year estimates as the crime-rate denominator
+- Flood & planning: spatial point-in-polygon; England-only sources, so Welsh
+  areas are reported as _not covered_, never given a favourable default
+- Convenience: 437k OpenStreetMap amenities, nearest + walkable count
 
-Sources → staging → intermediate → marts, tested at every layer: **222 dbt
-data tests + 2 dbt unit tests**, with lineage and column-level docs published
+Sources → staging → intermediate → marts, tested at every layer: 222 dbt
+data tests plus 2 dbt unit tests, with lineage and column-level docs published
 to GitHub Pages on every push. Each source is fixture-default for fast,
 reproducible CI with a real-data toggle for production builds.
 
@@ -64,10 +64,10 @@ Python and TypeScript implementations in parity.
 
 ## Orchestration and delivery
 
-Land Registry data refreshes monthly, so the refresh is a **Dagster asset
-graph**: ingestion (with a pre-dbt data-quality gate) → dbt → a slim
-`decision.duckdb` extract. A thin **FastAPI service** on Fly.io serves that
-extract publicly with OpenAPI docs. The **Next.js site** on Vercel (search,
+Land Registry data refreshes monthly, so the refresh is a Dagster asset
+graph: ingestion (with a pre-dbt data-quality gate) → dbt → a slim
+`decision.duckdb` extract. A thin FastAPI service on Fly.io serves that
+extract publicly with OpenAPI docs. The Next.js site on Vercel (search,
 compare, listing checker, ~7k programmatic area/town/region/rent pages) is
 just one HTTP client of it.
 
