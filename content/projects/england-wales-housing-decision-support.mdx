@@ -1,6 +1,6 @@
 ---
 title: England & Wales Housing Decision Support
-summary: "Explainable where-to-live decision support for England & Wales — a tested dbt + DuckDB engine turns nine authoritative open-data sources into five transparent 0–100 indicators across 7,264 neighbourhoods, every score shown beside the raw figure it came from, served through a public FastAPI and a Next.js site with ~7k programmatic area pages. 222 dbt data tests + 2 unit tests, a versioned cross-runtime scoring contract, Dagster-orchestrated refresh, published lineage docs."
+summary: "Explainable where-to-live decision support for England & Wales. A tested dbt + DuckDB engine turns nine open-data sources into five transparent 0–100 indicators across 7,264 neighbourhoods, every score shown beside the raw figure it came from, served through a public FastAPI and a Next.js site with ~7k programmatic area pages. 222 dbt data tests + 2 unit tests, a versioned cross-runtime scoring contract, Dagster-orchestrated refresh, published lineage docs."
 stack: [dbt, DuckDB, Dagster, FastAPI, "Fly.io", Next.js, Vercel, GitHub Actions, Python]
 screenshot: /projects/screenshots/england-wales-housing-decision-support.png
 role: Solo project
@@ -24,7 +24,7 @@ The site reads a neighbourhood from official open data and lays it out like a
 surveyor's trade-off receipt — five indicators, each beside the figure it came
 from. It shows the evidence; it never tells you a place is "good" or "safe".
 
-_The "where to live" framing is the vehicle — the substance is the pipeline,
+_The "where to live" framing is the vehicle. The substance is the pipeline,
 the dimensional and decision modelling, the tests, and the explainability
 layer. A reference analytics-engineering project, not a product._
 
@@ -52,29 +52,29 @@ reproducible CI with a real-data toggle for production builds.
 ## Explainable scoring — readable top to bottom
 
 The score is a transformation you can read (`rpt_neighbourhood_score`), not a
-black box: median-anchored, winsorised normalisation to 0–100 (so magnitude
-survives, unlike a pure percentile rank); an overall score as a weighted
-_geometric_ mean so one excellent pillar can't mask a poor one; missing
-indicators dropped — never zeroed — lowering the area's evidence-quality
-level instead of silently penalising it; and every score shipped beside its
-raw figure with a generated "why this area" sentence. The formula is pinned
-by a versioned machine-readable scoring contract with golden cases, and the
-SQL, Python and TypeScript implementations are held in parity by tests.
+black box. Continuous indicators get a median-anchored, winsorised
+normalisation to 0–100, so magnitude survives — a pure percentile rank would
+force a uniform spread and make every area look extreme. The overall score is
+a weighted _geometric_ mean, so one excellent pillar can't mask a poor one.
+Missing indicators are dropped, never zeroed: a gap lowers the area's
+evidence-quality level instead of silently penalising it. Every score ships
+beside its raw figure with a generated "why this area" sentence, and a
+versioned machine-readable scoring contract with golden cases holds the SQL,
+Python and TypeScript implementations in parity.
 
 ## Orchestration and delivery
 
 Land Registry data refreshes monthly, so the refresh is a **Dagster asset
 graph**: ingestion (with a pre-dbt data-quality gate) → dbt → a slim
-`decision.duckdb` extract. A thin **FastAPI service** (Fly.io) serves that
-extract publicly with OpenAPI docs, and the **Next.js site** (Vercel) — search,
-compare, listing checker, ~7k programmatic area/town/region/rent pages — is
+`decision.duckdb` extract. A thin **FastAPI service** on Fly.io serves that
+extract publicly with OpenAPI docs. The **Next.js site** on Vercel (search,
+compare, listing checker, ~7k programmatic area/town/region/rent pages) is
 just one HTTP client of it.
 
 ## Honest limits
 
-A reference analytics-engineering project, not a product — the UK area-data
-space is already well served, and the repo says so up front. Indicators, never
-verdicts; missing data lowers evidence quality rather than becoming a silent
-zero. Planning and flood sources cover England only, and the data refreshes on
-a monthly cadence, not in real time. The project is complete and
-maintenance-only: no active feature roadmap.
+The UK area-data space is already well served, and the repo says so up front.
+Indicators, never verdicts; missing data lowers evidence quality rather than
+becoming a silent zero. Planning and flood sources cover England only, and the
+data refreshes on a monthly cadence, not in real time. The project is complete
+and maintenance-only, with no active feature roadmap.
