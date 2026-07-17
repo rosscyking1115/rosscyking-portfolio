@@ -60,8 +60,9 @@ const TARGETS = [
     streamlit: true,
   },
   {
-    // MoveIn — the shipped Next.js website (repo: uk-housing-decision-support).
-    slug: "movein",
+    // England & Wales Housing Decision Support — the shipped Next.js website
+    // (repo: england-wales-housing-decision-support; Vercel hostname is stable).
+    slug: "england-wales-housing-decision-support",
     url: "https://uk-housing-decision-support.vercel.app",
     streamlit: false,
   },

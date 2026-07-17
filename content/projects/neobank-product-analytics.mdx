@@ -1,26 +1,27 @@
 ---
-title: Customer Growth & Pricing Intelligence Platform
-summary: A synthetic fintech data product that helps a product or growth team decide who to activate, which onboarding test to ship, whether referral spend is truly incremental, and how to price — backed by a dbt metrics layer, CUPED experiments, a calibrated activation model, geo-lift causal analysis, and a deployed FastAPI + GCP pipeline.
+title: Responsible Neobank Growth
+summary: "A synthetic neobank whose backend events misbehave on purpose — late, duplicated, reversed, schema-evolving — generated against a known-truth manifest so a governed dbt warehouse can be checked rather than trusted. On top sit the responsible-growth consumers: experimentation (CUPED, SRM, difference-in-differences, synthetic control), a calibrated activation model, and a release-gate that weighs customer-outcome guardrails. Run once on BigQuery under a £10 cap: 68 dbt models, 215 tests green, full-refresh and incremental matching at every governed interface."
 stack:
   [
     Python,
     dbt,
-    DuckDB,
     BigQuery,
-    Cloud Run,
+    DuckDB,
     FastAPI,
     Streamlit,
-    Marimo,
     scikit-learn,
-    synthetic control,
+    LookML,
     GitHub Actions,
-    GCP,
   ]
 screenshot: /projects/screenshots/neobank-product-analytics.png
 role: Solo project
 period: "2026"
 publishedAt: "2026-07-05"
 featured: false
+metrics:
+  - { value: "215", label: "dbt tests (cloud run)" }
+  - { value: "62.7%", label: "less compute used" }
+  - { value: "£0.21", label: "cloud spend, £10 cap" }
 links:
   github: https://github.com/rosscyking1115/responsible-neobank-growth
   demo: https://neobank-appuct-analytics.streamlit.app/
@@ -28,62 +29,43 @@ links:
 
 ## What I built
 
-A synthetic fintech data product that connects customer analytics, experimentation, activation modelling, pricing intelligence, and cloud deployment into one end-to-end workflow — answering the questions a product or growth team would actually ask:
+A synthetic neobank whose backend events misbehave on purpose — late, duplicated, reversed, schema-evolving — and a governed dbt warehouse that turns them into trusted Growth and referral-reward interfaces. The events are generated against a known-truth manifest, so the warehouse's correctness can be checked rather than asserted.
 
-- Which customers activate, retain, and become higher-value users?
-- Which onboarding treatment should be shipped, monitored, or iterated?
-- Are referral incentives incrementally acquiring customers, or just subsidising signups that would have happened anyway?
-- Which pricing or incentive offers are commercially attractive after guardrails?
-- Can scoring, monitoring, and API surfaces be operated as a small data product rather than a one-off notebook?
+Everything is synthetic. No affiliation with any bank, and no real customer or proprietary data; Monzo's public engineering writing shaped which problems I picked, not how any of it is built.
 
-All data is synthetic. No customer data, internal bank data, or proprietary business metrics are used.
+## Why known truth
 
-## Why it matters
+Most analytics demos start from clean data and treat growth as the only goal. A real neobank has neither luxury: events arrive late, duplicated, corrected and reversed, schemas change under you, and a bad growth decision can leave a vulnerable customer worse off. So the source is built with the answer known in advance — every duplicate, late arrival, reversal, malformed payload and missing posting is injected against a manifest. That is what makes the incremental-versus-full comparison and the reward reconciliation mean anything: there is a fixed truth to check against, not a plausible-looking output to trust.
 
-It shows end-to-end data product thinking: warehouse design, model scoring, experiment analysis, dashboarding, and operational handoff — not a one-off notebook.
+## What holds up
 
-## Analytics and modelling
+Every figure traces to `evidence/registry.yml`, and a claim audit fails CI on any number that doesn't:
 
-### dbt metrics layer
+- The four-layer warehouse ran once on BigQuery under a £10 approved cap: 68 dbt models and 215 tests green. The older 13-table / 107-check run is kept as history, not passed off as current.
+- Full-refresh and incremental builds matched exactly at every governed interface, across all three phases.
+- The cost result is measured and mixed, and I report it that way: incremental billed +1.95% bytes but used −62.7% compute, and partitioning cut one query's scan 523.9×. Total spend was 844 jobs and 32.99 GB billed, about £0.21 against the £10 cap.
 
-A trusted metrics layer in dbt covers D7 activation, W4 retention, feature adoption (Savings Pots, Salary Sorter, referrals), WAU, transaction frequency, CLV proxy, and experiment user metrics. Guardrail metrics track support contact rate, complaint load, fraud flags, crash rate, vulnerable-customer impact, and fair-value signals. 107 dbt tests pass on both local DuckDB and BigQuery.
+## Governed interfaces
 
-### A/B experimentation (personalised onboarding)
+Three contracts the downstream work reads, enforced against the real dbt manifest:
 
-Full analysis: sample-ratio mismatch (SRM) check, CUPED variance reduction implemented from first principles, guardrail metrics, power analysis, heterogeneous treatment effects, and a PM-ready launch recommendation memo.
+- `growth_acquisition` — where applicants move or drop between application, approval and funded activation.
+- `referral_economics` — whether referrals bring in incremental activated customers at a reward cost worth paying.
+- `reward_reconciliation` — which expected rewards are missing, duplicated, mismatched, stale or wrongly reversed.
 
-### Regional referral incrementality (geo-lift)
+## The responsible-growth work
 
-Causal estimation of whether a referral incentive drove incremental signups — not just correlated ones. Methods: difference-in-differences with parallel trends tests, synthetic control, spillover checks, placebo regressions, and embedded ground-truth recovery to validate the estimator against known lift.
+The interfaces feed the analytics, not the other way round:
 
-### Activation decisioning model
+- Experimentation: CUPED, SRM, heterogeneous effects, difference-in-differences and synthetic control, with the Welch/CUPED/SRM estimators running unchanged on the governed interface.
+- A calibrated activation model — isotonic scoring with a model card — behind a FastAPI service.
+- Fairness, wellbeing, inclusion and protection modules, plus a fair-value pricing check.
+- A responsible release-gate that resolves a change to `ship` / `limited_rollout` / `experiment_only` / `needs_human_review` / `block` on evidence and customer-outcome guardrails.
 
-Calibrated binary classifier for D7 activation with: train/test split, calibration curve, SHAP explainability, segment-level fairness checks, and a model card documenting customer-outcome guardrails.
+## Looker — written, not validated
 
-### Pricing intelligence
-
-Offer economics workflow covering recommendation guardrails, scenario runs, and sensitivity analysis. Compares margin, expected conversion, support risk, and fairness guardrails before any rollout decision.
-
-## Production-style deployment
-
-The project goes beyond local development — the GCP path has been exercised and documented:
-
-- **Cloud Storage** raw landing path loaded into BigQuery
-- **BigQuery** raw tables verified against export manifest; dbt graph run on BigQuery with 107 passing checks
-- **Cloud Run Jobs** deployed for activation scoring and score monitoring
-- **Cloud Run API** (private) deployed and smoke-tested via authenticated `/health`
-- **Cloud Scheduler** configured for daily scoring and monitoring runs
-- **Cloud Monitoring** alert policies created for job failures and API errors
-- **Budget alert** and Cloud Storage lifecycle policy configured for cost control
-
-## Delivery surfaces
-
-- Public Streamlit dashboard (Streamlit Community Cloud) for product health, experiments, pricing, and monitoring
-- FastAPI service with activation, churn, upsell, offer recommendation, and pricing scenario contracts
-- Operations runbook covering release gates, drift checks, realised-label calibration, rollback triggers, and GCP triage
-- Docker and Docker Compose for local full-stack reproduction
-- CI running lint, tests, deterministic report regeneration, and monitoring snapshot workflow
+There is a full LookML project: a model, four Explores, three dashboards, and Assert tests, all against the governed BigQuery interface. It has never run in a Looker instance — the trial signup returned a sales-contact page with no instance — so I claim no Looker experience and no validated LookML.
 
 ## Honest limits
 
-This is a synthetic portfolio case study. A real regulated-financial-services deployment would require stronger API protection (API Gateway, IAP, JWT), formal data governance with row/column-level controls, keyless CI/CD via GitHub OIDC, a model registry for reproducible training and shadow deployments, and formal Consumer Duty, model-risk, and audit controls before any live customer decisioning. These gaps are documented in the repo, not left implicit.
+The data is engineered for coverage, not calibrated to any bank: activation rates, £CLV and fairness-gap sizes are illustrative magnitudes, not forecasts. The synthetic event dataset is published on Hugging Face under CC-BY-4.0, verified from a clean download. A real regulated deployment would still need formal data governance, keyless CI/CD, a model registry, and Consumer Duty and model-risk controls before any live customer decisioning — gaps the repo documents rather than hides.

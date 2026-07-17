@@ -19,25 +19,25 @@ links:
 ## What it is
 
 Most predictive-maintenance repos are a notebook and a leaderboard score. This
-one is an **operations system**: a FastAPI inference service, a Streamlit
+one is an operations system: a FastAPI inference service, a Streamlit
 operator console, signed release evidence (model card, SBOM, provenance), and
-drift monitoring — around models trained and evaluated under honest,
-documented protocols. The engineering envelope is the point; the models are
+drift monitoring, around models trained and evaluated under honest, documented
+protocols. The engineering envelope is the point; the models are
 held to it.
 
 ## Two benchmark tracks
 
-- **C-MAPSS turbofan RUL** — the familiar baseline anyone can cross-check:
+- C-MAPSS turbofan RUL: the familiar baseline anyone can cross-check —
   sequence models, diagnostics, and calibrated prediction artifacts.
-- **ESA-ADB spacecraft anomaly detection** — a far less picked-over benchmark,
-  run through its real event-wise protocol (plus SMAP/MSL plumbing).
+- ESA-ADB spacecraft anomaly detection: a far less picked-over benchmark, run
+  through its real event-wise protocol (plus SMAP/MSL plumbing).
 
 ## The leakage audit — and the corrected number
 
 The first ESA-ADB run reported recall 0.24. Auditing the evaluation showed the
 chronological split was counting training-window events — which have no
 test-window predictions — as missed, deflating recall. Restricting scoring to
-test-window events (the correct protocol) gives the honest **0.42**, and the
+test-window events (the correct protocol) gives the honest 0.42, and that
 corrected number is the one reported, with the audit written up. Every
 artifact records its protocol deviations and is stamped _"event-wise detection
 only — not a full ESA-ADB leaderboard claim."_
@@ -45,9 +45,9 @@ only — not a full ESA-ADB leaderboard claim."_
 ## telemeval — the extracted library
 
 The anomaly-evaluation layer (including the leakage guard born from that
-audit) proved general enough to extract: **telemeval** is now a standalone
+audit) proved general enough to extract: telemeval is now a standalone
 Apache-2.0 library on PyPI with a Zenodo DOI for leakage-safe, event-wise and
-affiliation-based evaluation of spacecraft-telemetry anomaly detection — and
+affiliation-based evaluation of spacecraft-telemetry anomaly detection, and
 this repository is its reference pipeline, consuming it as a dependency.
 
 ## Delivery

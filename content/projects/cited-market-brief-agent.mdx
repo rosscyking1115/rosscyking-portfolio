@@ -1,6 +1,6 @@
 ---
 title: Cited Market Brief Agent
-summary: "A region-aware morning-market web app and an audit-ready, evidence-backed brief engine in one. The radar surfaces a market clock, a FRED overnight-risk rail, most-read finance news with AI summaries, and a Taiwan ETF-vs-benchmark attribution tool; the brief engine generates company briefs from SEC EDGAR + FRED where every claim is validated against a stored source span before it ships, with a click-through evidence ledger. Four localized editions (Taiwan, Korea, UK, EU)."
+summary: "A region-aware morning-market web app and an audit-ready, evidence-backed brief engine in one. The radar surfaces a market clock, a FRED overnight-risk rail, most-read finance news with AI summaries, and a Taiwan ETF-vs-benchmark attribution tool; the brief engine generates company briefs from SEC EDGAR + FRED where every claim is validated against a stored source span before it ships, with a click-through evidence ledger. Four localised editions (Taiwan, Korea, UK, EU)."
 stack: [TypeScript, React, FastAPI, Python, Vercel, Docker]
 screenshot: /projects/screenshots/cited-market-brief-agent.png
 role: Solo project
@@ -18,19 +18,19 @@ links:
 
 ## What I built
 
-A full-stack market web app with two surfaces on one page: a consumer **Morning Market Radar** and a professional **evidence-backed brief engine**. It started as a daily market tool for a family member who invests in Taiwan and grew into a portfolio-grade full-stack project — running entirely on free / end-of-day public data, with four localized editions (Taiwan, Korea, UK, EU).
+A full-stack market web app with two surfaces on one page: a consumer Morning Market Radar and a professional evidence-backed brief engine. It started as a daily market tool for a family member who invests in Taiwan and grew into a portfolio-grade full-stack project — running entirely on free / end-of-day public data, with four localised editions (Taiwan, Korea, UK, EU).
 
 ## Morning Market Radar
 
-An Asia → US market clock; a FRED-backed overnight-risk rail (VIX, USD/TWD·JPY·CNY, broad dollar, WTI, US 10-year); most-read finance news over day / week / month windows with AI summaries (Traditional-Chinese key points for the Taiwan edition); and a Taiwan **ETF-vs-TAIEX attribution** tool — paste holdings and it breaks performance into contributors, drags, and sector bars.
+An Asia → US market clock; a FRED-backed overnight-risk rail (VIX, USD/TWD·JPY·CNY, broad dollar, WTI, US 10-year); most-read finance news over day / week / month windows with AI summaries (Traditional-Chinese key points for the Taiwan edition); and a Taiwan ETF-vs-TAIEX attribution tool: paste holdings and it breaks performance into contributors, drags, and sector bars.
 
 ## Evidence-backed brief engine
 
-Cited generation from SEC EDGAR filings and FRED/ALFRED macro series, built so a **claim without a source span is dropped** — every line that ships is backed by primary evidence. A click-through **evidence ledger** exposes the quote, document, section, accession number, and checksum behind each claim.
+Cited generation from SEC EDGAR filings and FRED/ALFRED macro series, built so a claim without a source span is dropped: every line that ships is backed by primary evidence. A click-through evidence ledger exposes the quote, document, section, accession number, and checksum behind each claim.
 
-## Why it matters
+## Auditable by design
 
-A research brief is only useful if you can trust it. This makes the brief auditable: every claim traces back to a primary source, so a reviewer can verify it rather than take it on faith — the opposite of an LLM that asserts confidently and cites nothing.
+Every claim traces back to a primary source, so a reviewer can verify it rather than take it on faith — the opposite of an LLM that asserts confidently and cites nothing.
 
 ## Honest limits
 

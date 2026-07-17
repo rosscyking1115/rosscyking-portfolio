@@ -33,7 +33,7 @@ links:
 
 ## What I built
 
-A release-readiness gate for AI-agent changes, published as a pip-installable package. Before a changed agent, prompt, model, or tool policy ships, it **replays known incidents, applies policy-as-code gates, and produces a single ship / warn / block decision** with the evidence behind it.
+A release-readiness gate for AI-agent changes, published as a pip-installable package. Before a changed agent, prompt, model, or tool policy ships, it replays known incidents, applies policy-as-code gates, and produces a single ship / warn / block decision with the evidence behind it.
 
 ```bash
 pip install agent-release-gates
@@ -43,7 +43,7 @@ pip install agent-release-gates
 agent-safety release-gate --policy config/incident_release_policy.json
 ```
 
-The core install is lean (just `pydantic`); the FastAPI evidence service and Streamlit reviewer dashboard are opt-in extras. The incident-replay suite also runs as a **UK AI Security Institute Inspect** eval.
+The core install is lean (just `pydantic`); the FastAPI evidence service and Streamlit reviewer dashboard are opt-in extras. The incident-replay suite also runs as a UK AI Security Institute Inspect eval.
 
 ## Evaluate your own agent
 
@@ -58,13 +58,13 @@ incidents ──▶ replay matrix ──▶ policy gates ──▶ ship / warn /
 
 ## Incident replay (the first gate)
 
-The first module turns redacted synthetic incidents into regression fixtures. **8 seeded incidents are replayed on every change with a 100% closure rate and 0 replay must-not violations**, each producing a release-gate decision and an incident memo.
+The first module turns redacted synthetic incidents into regression fixtures. 8 seeded incidents are replayed on every change, with a 100% closure rate and 0 replay must-not violations, each producing a release-gate decision and an incident memo.
 
 ## Evaluation evidence (the layer underneath)
 
 The controlled benchmark covers 358 synthetic golden cases and 60 red-team cases across 24 runbook sections and 180 synthetic tickets, plus compact public RAG tracks (160 TechQA, 80 WixQA) evaluated separately. Headline results: 100% retrieval hit rate@3, a safety classifier at 90.91% recall with 0 high-severity false negatives, and 100% block + audit rate on unapproved side-effecting tool calls.
 
-On top of the benchmark sit **six baseline-vs-intervention safety studies** — instruction hierarchy, action-risk gates, safety-classifier review policy, RAG grounding, memory/context pollution, and goal conflict — and reviewed OpenAI and Anthropic judge-calibration runs.
+On top of the benchmark sit six baseline-vs-intervention safety studies (instruction hierarchy, action-risk gates, safety-classifier review policy, RAG grounding, memory/context pollution, and goal conflict), plus reviewed OpenAI and Anthropic judge-calibration runs.
 
 ## Key finding
 

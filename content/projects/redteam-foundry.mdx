@@ -41,10 +41,10 @@ Published adversarial prompts succeed between 0% and 4% of the time across all 1
 
 ### What the harness measures
 
-- **Corpus loading** — AdvBench, JailbreakBench, HarmBench, and AgentDojo, each pinned to an upstream commit for reproducibility
-- **Defence stacks** — paranoid system prompt, Constitutional critique-and-revise, Spotlighting, SecAlign-style structured queries (composable, toggled via YAML run configs)
-- **Scoring pipeline** — rule-based pre-screen → LLM judge → independent cross-judge for validation
-- **Statistical rigour** — ASR with 95% percentile-bootstrap confidence intervals, Cohen's κ and Krippendorff's α for inter-judge agreement, real API cost per run
+- Corpus loading: AdvBench, JailbreakBench, HarmBench, and AgentDojo, each pinned to an upstream commit for reproducibility.
+- Defence stacks: paranoid system prompt, Constitutional critique-and-revise, Spotlighting, and SecAlign-style structured queries, composable and toggled via YAML run configs.
+- Scoring pipeline: rule-based pre-screen → LLM judge → independent cross-judge for validation.
+- Statistical rigour: ASR with 95% percentile-bootstrap confidence intervals, Cohen's κ and Krippendorff's α for inter-judge agreement, and real API cost per run.
 
 ### Cross-judge validation
 
