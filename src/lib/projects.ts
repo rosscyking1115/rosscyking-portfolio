@@ -7,6 +7,7 @@ import matter from "gray-matter";
 import readingTime from "reading-time";
 import { z } from "zod";
 
+import { DEFAULT_LENS, getLens, type LensKey } from "@/lib/lenses";
 import type { LoadedProject, ProjectMeta } from "@/types/project";
 
 const PROJECTS_DIR = path.join(process.cwd(), "content/projects");
@@ -102,16 +103,20 @@ export async function getProjectBySlug(slug: string): Promise<LoadedProject | nu
   return all.find((p) => p.slug === slug) ?? null;
 }
 
-export async function getFeaturedProjects(): Promise<LoadedProject[]> {
+/**
+ * Featured projects for a role lens, in the registry's declared order. The
+ * lens's `featured` slug list (from content/projects/registry.json) is the
+ * source of truth; `validate:projects` guarantees every slug exists and is
+ * shipped, so the map below never drops or reorders silently.
+ */
+export async function getFeaturedProjects(
+  lens: LensKey = DEFAULT_LENS,
+): Promise<LoadedProject[]> {
   const all = await loadAll();
-  return all
-    .filter((p) => p.featured)
-    .sort((a, b) => {
-      const orderA = a.featuredOrder ?? Number.MAX_SAFE_INTEGER;
-      const orderB = b.featuredOrder ?? Number.MAX_SAFE_INTEGER;
-      if (orderA !== orderB) return orderA - orderB;
-      return b.publishedAt.localeCompare(a.publishedAt);
-    });
+  const bySlug = new Map(all.map((project) => [project.slug, project]));
+  return getLens(lens)
+    .featured.map((slug) => bySlug.get(slug))
+    .filter((project): project is LoadedProject => Boolean(project));
 }
 
 export async function getAllStacks(): Promise<string[]> {

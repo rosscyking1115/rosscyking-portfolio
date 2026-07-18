@@ -6,6 +6,7 @@ import { Container } from "@/components/layout/container";
 import { IndexMark } from "@/components/layout/index-mark";
 import { FadeIn, STAGGER_STEP } from "@/components/motion/fade-in";
 import { Badge } from "@/components/ui/badge";
+import { DEFAULT_LENS, type LensKey } from "@/lib/lenses";
 import { nowBuilding } from "@/lib/now-building";
 import { getFeaturedProjects, getProjectMeta } from "@/lib/projects";
 import type { ProjectMeta } from "@/types/project";
@@ -15,6 +16,12 @@ function frameCaption(project: ProjectMeta): string {
   const source = project.links?.demo ?? project.links?.report;
   if (source) return new URL(source).hostname;
   return "run log";
+}
+
+const COUNT_WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven"];
+/** "Four" for 4, falling back to the digit for anything past the list. */
+function countWord(n: number): string {
+  return COUNT_WORDS[n] ?? String(n);
 }
 
 function EvidenceVisual({ project, sizes }: { project: ProjectMeta; sizes: string }) {
@@ -35,10 +42,15 @@ function EvidenceVisual({ project, sizes }: { project: ProjectMeta; sizes: strin
   return null;
 }
 
-export async function FeaturedProjects() {
-  const [projects, all] = await Promise.all([getFeaturedProjects(), getProjectMeta()]);
+export async function FeaturedProjects({ lens = DEFAULT_LENS }: { lens?: LensKey }) {
+  const [projects, all] = await Promise.all([
+    getFeaturedProjects(lens),
+    getProjectMeta(),
+  ]);
   const allLabel = `All ${all.length} projects`;
   const [flagship, ...rest] = projects;
+  const count = projects.length;
+  const lastNumber = String(count).padStart(2, "0");
 
   return (
     <Container className="pb-20">
@@ -46,11 +58,11 @@ export async function FeaturedProjects() {
         <div>
           <IndexMark mark="01" label="Featured work" />
           <h2 className="font-display mt-3 text-3xl font-semibold tracking-tight text-balance">
-            Four projects, shown working
+            {countWord(count)} projects, shown working
           </h2>
           <p className="text-muted-foreground mt-2 max-w-prose text-sm leading-relaxed">
-            Numbered 01–04 by what I&rsquo;d want you to read first — not by date. The
-            screenshots are the actual apps; every card links to the evidence.
+            Numbered 01–{lastNumber} by what I&rsquo;d want you to read first — not by
+            date. The screenshots are the actual apps; every card links to the evidence.
           </p>
         </div>
         <Link

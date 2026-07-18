@@ -134,6 +134,29 @@ if (new Set(orders).size !== orders.length) {
   );
 }
 
+// 7. Lens invariants — each lens's featured set must be real, shipped, and
+// non-trivial, so a shared /for/<lens> URL can't surface a missing or
+// unfinished project.
+for (const [lensKey, lens] of Object.entries(registry.lenses ?? {})) {
+  const feat = lens.featured ?? [];
+  if (feat.length < 2) {
+    errors.push(`  ✗ lens ${lensKey}: ${feat.length} featured project(s), needs ≥2`);
+  }
+  if (new Set(feat).size !== feat.length) {
+    errors.push(`  ✗ lens ${lensKey}: a project is featured more than once`);
+  }
+  for (const slug of feat) {
+    const spec = registry.projects[slug];
+    if (!spec) {
+      errors.push(`  ✗ lens ${lensKey}: featured "${slug}" is not a registry project`);
+    } else if (spec.status !== "shipped") {
+      errors.push(
+        `  ✗ lens ${lensKey}: featured "${slug}" is status "${spec.status}" — featured must be shipped`,
+      );
+    }
+  }
+}
+
 // Report.
 console.log(
   `Validated ${mdx.size} project(s) against registry (${expected.size} expected).`,
