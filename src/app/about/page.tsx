@@ -55,7 +55,7 @@ export default async function AboutPage() {
 
           <div className="ruler my-12" aria-hidden="true" />
 
-          <IndexMark mark="02" label="Certifications" />
+          <IndexMark mark="02" label="Certifications & training" />
           <ul className="border-border divide-border mt-8 divide-y border-y">
             {certifications.map((cert) => (
               <li key={cert.title} className="py-4">
