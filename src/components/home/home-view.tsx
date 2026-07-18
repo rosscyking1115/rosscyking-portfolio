@@ -13,7 +13,7 @@ import { DEFAULT_LENS, type LensKey, lensNav } from "@/lib/lenses";
 export function HomeView({ lens = DEFAULT_LENS }: { lens?: LensKey }) {
   return (
     <>
-      <Hero />
+      <Hero lens={lens} />
       <Container className="-mt-4 pb-2">
         <LensSwitcher items={lensNav} current={lens} />
       </Container>
