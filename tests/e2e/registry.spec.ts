@@ -42,15 +42,15 @@ test.describe("role lenses (in-place switcher)", () => {
 
   test("clicking a lens re-ranks the featured set in place", async ({ page }) => {
     await page.goto("/");
-    // community-energy-flex is featured under `all` but not `data-engineering`;
-    // neobank is the reverse — a clean before/after pair.
+    // community-energy-flex is featured under `all` but not `data`; neobank is
+    // the reverse — a clean before/after pair.
     await expect(
       page.locator('a[href="/projects/community-energy-flex"]').first(),
     ).toBeVisible();
 
     await page.getByRole("button", { name: "Data Engineering" }).click();
 
-    await expect(page).toHaveURL(/\?lens=data-engineering/);
+    await expect(page).toHaveURL(/\?lens=data/);
     await expect(
       page.getByRole("button", { name: "Data Engineering", pressed: true }),
     ).toBeVisible();
@@ -63,19 +63,19 @@ test.describe("role lenses (in-place switcher)", () => {
   });
 
   test("a shared ?lens= URL renders that lens on load", async ({ page }) => {
-    await page.goto("/?lens=ai-safety");
+    await page.goto("/?lens=ai");
     await expect(
-      page.getByRole("button", { name: "AI Safety & Evaluation", pressed: true }),
+      page.getByRole("button", { name: "AI & Evaluation", pressed: true }),
     ).toBeVisible();
-    for (const slug of registry.lenses["ai-safety"].featured) {
+    for (const slug of registry.lenses.ai.featured) {
       await expect(page.locator(`a[href="/projects/${slug}"]`).first()).toBeVisible();
     }
   });
 
   test("old /for/<lens> links redirect to the home lens", async ({ page }) => {
-    await page.goto("/for/analytics-engineering");
-    await expect(page).toHaveURL(/\/\?lens=analytics-engineering$/);
-    for (const slug of registry.lenses["analytics-engineering"].featured) {
+    await page.goto("/for/data");
+    await expect(page).toHaveURL(/\/\?lens=data$/);
+    for (const slug of registry.lenses.data.featured) {
       await expect(page.locator(`a[href="/projects/${slug}"]`).first()).toBeVisible();
     }
   });

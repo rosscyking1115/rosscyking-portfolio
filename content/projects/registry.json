@@ -12,49 +12,42 @@
         "community-energy-flex"
       ]
     },
-    "data-engineering": {
+    "data": {
       "label": "Data Engineering",
-      "headline": "Spark-scale pipelines and open-data warehouses, tested and traceable.",
+      "headline": "Spark-scale pipelines and governed warehouses, tested and traceable.",
       "featured": [
         "tfl-data-engineering",
         "england-wales-housing-decision-support",
         "neobank-product-analytics"
       ]
     },
-    "analytics-engineering": {
-      "label": "Analytics Engineering",
-      "headline": "dbt models and governed warehouses, checked rather than trusted.",
+    "ai": {
+      "label": "AI & Evaluation",
+      "headline": "Applied ML and LLM systems, carried through real evaluation and release-gates.",
       "featured": [
-        "england-wales-housing-decision-support",
-        "neobank-product-analytics",
-        "tfl-data-engineering"
+        "agent-release-gates",
+        "cited-market-brief-agent",
+        "aerospace-prognostics",
+        "redteam-foundry"
       ]
-    },
-    "applied-ai": {
-      "label": "Applied AI",
-      "headline": "ML and LLM systems carried through their real evaluation protocols.",
-      "featured": ["cited-market-brief-agent", "aerospace-prognostics", "cashflow-risk"]
-    },
-    "ai-safety": {
-      "label": "AI Safety & Evaluation",
-      "headline": "Release-gates and red-team evaluation with honest, reproducible evidence.",
-      "featured": ["agent-release-gates", "redteam-foundry", "cited-market-brief-agent"]
     }
   },
   "projects": {
     "tfl-data-engineering": {
       "repo": "https://github.com/rosscyking1115/tfl-data-engineering",
       "demo": "https://tfl-data-engineering.streamlit.app/",
-      "tracks": ["data-engineering", "analytics-engineering"],
+      "tracks": ["data"],
       "status": "shipped",
       "release": "v0.2.0",
-      "metrics": { "dbt data tests": "63" },
+      "metrics": {
+        "dbt data tests": "63"
+      },
       "banned": ["1.2–2.6×", "1.2×–2.6×", "53 dbt", "53 data tests", "1.33×"]
     },
     "england-wales-housing-decision-support": {
       "repo": "https://github.com/rosscyking1115/england-wales-housing-decision-support",
       "demo": "https://uk-housing-decision-support.vercel.app",
-      "tracks": ["analytics-engineering", "data-engineering"],
+      "tracks": ["data"],
       "status": "shipped",
       "release": "v1.0.0",
       "metrics": {
@@ -67,70 +60,86 @@
     "neobank-product-analytics": {
       "repo": "https://github.com/rosscyking1115/responsible-neobank-growth",
       "demo": "https://responsible-neobank-growth.streamlit.app/",
-      "tracks": ["analytics-engineering", "data-engineering"],
+      "tracks": ["data"],
       "status": "shipped",
       "release": "v1.0.0",
-      "metrics": { "dbt tests (cloud run)": "217" },
+      "metrics": {
+        "dbt tests (cloud run)": "217"
+      },
       "banned": ["neobank-appuct", "215 tests"]
     },
     "community-energy-flex": {
       "repo": "https://github.com/rosscyking1115/community-energy-flex",
       "demo": "https://after-midnight-beta.vercel.app/",
-      "tracks": ["data-engineering"],
+      "tracks": ["data"],
       "status": "shipped",
       "release": "v0.2.1",
-      "metrics": { "tests passing": "153" },
+      "metrics": {
+        "tests passing": "153"
+      },
       "banned": ["savings realised", "savings were realised", "realised savings"]
     },
     "aerospace-prognostics": {
       "repo": "https://github.com/rosscyking1115/aerospace-prognostics",
       "demo": null,
-      "tracks": ["applied-ai"],
+      "tracks": ["ai"],
       "status": "shipped",
       "release": "v0.1.0",
-      "metrics": { "tests passing": "451" },
+      "metrics": {
+        "tests passing": "451"
+      },
       "banned": ["453"]
     },
     "cashflow-risk": {
       "repo": "https://github.com/rosscyking1115/cashflow-risk",
       "demo": "https://cashflow-web-sidu.onrender.com/",
-      "tracks": ["applied-ai"],
+      "tracks": ["ai"],
       "status": "shipped",
       "release": "v0.1.0",
-      "metrics": { "tests": "150+" },
+      "metrics": {
+        "tests": "150+"
+      },
       "banned": []
     },
     "cited-market-brief-agent": {
       "repo": "https://github.com/rosscyking1115/cited-market-brief-agent",
       "demo": "https://cited-market-brief-agent.vercel.app",
-      "tracks": ["applied-ai", "ai-safety"],
+      "tracks": ["ai"],
       "status": "shipped",
       "release": "v1.0.0",
-      "metrics": { "claims cited": "100%", "regional editions": "4" },
+      "metrics": {
+        "claims cited": "100%",
+        "regional editions": "4"
+      },
       "banned": []
     },
     "redteam-foundry": {
       "repo": "https://github.com/rosscyking1115/redteam-foundry",
       "demo": null,
-      "tracks": ["ai-safety"],
+      "tracks": ["ai"],
       "status": "shipped",
       "release": "v0.3.0",
-      "metrics": { "attack success": "0–4%" },
+      "metrics": {
+        "attack success": "0–4%"
+      },
       "banned": []
     },
     "agent-release-gates": {
       "repo": "https://github.com/rosscyking1115/agent-release-gates",
       "demo": "https://agent-release-gates.streamlit.app/",
-      "tracks": ["ai-safety"],
+      "tracks": ["ai"],
       "status": "shipped",
       "release": "v0.1.2",
-      "metrics": { "safety recall": "90.91%", "side-effect block": "100%" },
+      "metrics": {
+        "safety recall": "90.91%",
+        "side-effect block": "100%"
+      },
       "banned": []
     },
     "marketing-effectiveness-lab": {
       "repo": "https://github.com/rosscyking1115/marketing-effectiveness-lab",
       "demo": "https://marketing-effectiveness-lab.streamlit.app/",
-      "tracks": ["analytics-engineering"],
+      "tracks": ["data"],
       "status": "archived",
       "release": null,
       "note": "Archived — methodology absorbed into responsible-neobank-growth.",
