@@ -7,8 +7,8 @@ import matter from "gray-matter";
 import readingTime from "reading-time";
 import { z } from "zod";
 
-import { DEFAULT_LENS, getLens, type LensKey } from "@/lib/lenses";
-import type { LoadedProject, ProjectMeta } from "@/types/project";
+import { DEFAULT_LENS, getLens, LENS_KEYS, type LensKey } from "@/lib/lenses";
+import type { FeaturedCard, LoadedProject, ProjectMeta } from "@/types/project";
 
 const PROJECTS_DIR = path.join(process.cwd(), "content/projects");
 
@@ -117,6 +117,27 @@ export async function getFeaturedProjects(
   return getLens(lens)
     .featured.map((slug) => bySlug.get(slug))
     .filter((project): project is LoadedProject => Boolean(project));
+}
+
+/**
+ * Featured cards for every lens, keyed by lens. Built server-side and handed
+ * to the client switcher so lenses can re-rank in place without navigation.
+ * The MDX body is dropped; reading time is kept.
+ */
+export async function getLensFeaturedCards(): Promise<Record<LensKey, FeaturedCard[]>> {
+  const all = await loadAll();
+  const bySlug = new Map(all.map((project) => [project.slug, project]));
+  const toCard = ({ content, ...card }: LoadedProject): FeaturedCard => card;
+
+  return Object.fromEntries(
+    LENS_KEYS.map((key) => [
+      key,
+      getLens(key)
+        .featured.map((slug) => bySlug.get(slug))
+        .filter((project): project is LoadedProject => Boolean(project))
+        .map(toCard),
+    ]),
+  ) as Record<LensKey, FeaturedCard[]>;
 }
 
 export async function getAllStacks(): Promise<string[]> {

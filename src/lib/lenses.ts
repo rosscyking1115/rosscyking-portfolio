@@ -39,14 +39,14 @@ export function getLens(key: LensKey): Lens {
 /** All lenses in registry order — `all` first. */
 export const allLenses: Lens[] = LENS_KEYS.map(getLens);
 
-/** The href for a lens: the default lens lives at `/`, the rest at `/for/<key>`. */
-export function lensHref(key: LensKey): string {
-  return key === DEFAULT_LENS ? "/" : `/for/${key}`;
-}
+/** Slim nav items (key + label only) — safe to hand a client component as props. */
+export const lensNav = allLenses.map(({ key, label }) => ({ key, label }));
 
-/** Slim nav items (no featured lists) — safe to hand a client component as props. */
-export const lensNav = allLenses.map(({ key, label }) => ({
-  key,
-  label,
-  href: lensHref(key),
-}));
+/**
+ * The home URL for a lens. The switcher changes the featured display in place
+ * (client state); this only sets a shareable/bookmarkable query param — the
+ * default lens is the bare home URL.
+ */
+export function lensHref(key: LensKey): string {
+  return key === DEFAULT_LENS ? "/" : `/?lens=${key}`;
+}

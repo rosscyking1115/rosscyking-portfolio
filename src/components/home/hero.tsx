@@ -6,16 +6,11 @@ import { Container } from "@/components/layout/container";
 import { IndexMark } from "@/components/layout/index-mark";
 import { FadeIn, STAGGER_STEP } from "@/components/motion/fade-in";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_LENS, getLens, type LensKey } from "@/lib/lenses";
 import { siteConfig } from "@/lib/site-config";
 
 const ROLES = ["Data Engineering", "ML Engineering", "AI Safety & Evaluation"] as const;
 
-export function Hero({ lens = DEFAULT_LENS }: { lens?: LensKey }) {
-  // On a role lens the headline becomes the role's outcome; the default keeps
-  // the signature identity line + the standard bio.
-  const lensHeadline = lens === DEFAULT_LENS ? null : getLens(lens).headline;
-
+export function Hero() {
   return (
     <Container className="pt-16 pb-16 sm:pt-24 sm:pb-20">
       <div className="max-w-3xl">
@@ -41,15 +36,9 @@ export function Hero({ lens = DEFAULT_LENS }: { lens?: LensKey }) {
         </FadeIn>
 
         <FadeIn whenInView={false} delay={STAGGER_STEP * 3}>
-          {lensHeadline ? (
-            <p className="text-foreground/90 mt-6 max-w-prose text-lg leading-relaxed font-medium text-pretty">
-              {lensHeadline}
-            </p>
-          ) : (
-            <p className="text-muted-foreground mt-6 max-w-prose text-lg leading-relaxed text-pretty">
-              {siteConfig.description}
-            </p>
-          )}
+          <p className="text-muted-foreground mt-6 max-w-prose text-lg leading-relaxed text-pretty">
+            {siteConfig.description}
+          </p>
         </FadeIn>
 
         <FadeIn whenInView={false} delay={STAGGER_STEP * 4}>

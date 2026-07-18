@@ -1,18 +1,21 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 import { ScreenshotFrame, TerminalFrame } from "@/components/home/evidence-frame";
+import { LensSwitcher } from "@/components/home/lens-switcher";
 import { Container } from "@/components/layout/container";
 import { IndexMark } from "@/components/layout/index-mark";
 import { FadeIn, STAGGER_STEP } from "@/components/motion/fade-in";
 import { Badge } from "@/components/ui/badge";
-import { DEFAULT_LENS, type LensKey } from "@/lib/lenses";
+import { type LensKey, lensHref } from "@/lib/lenses";
 import { nowBuilding } from "@/lib/now-building";
-import { getFeaturedProjects, getProjectMeta } from "@/lib/projects";
-import type { ProjectMeta } from "@/types/project";
+import type { FeaturedCard } from "@/types/project";
 
 /** Mono caption for the frame title bar: the visual's host, or a run label. */
-function frameCaption(project: ProjectMeta): string {
+function frameCaption(project: FeaturedCard): string {
   const source = project.links?.demo ?? project.links?.report;
   if (source) return new URL(source).hostname;
   return "run log";
@@ -24,7 +27,7 @@ function countWord(n: number): string {
   return COUNT_WORDS[n] ?? String(n);
 }
 
-function EvidenceVisual({ project, sizes }: { project: ProjectMeta; sizes: string }) {
+function EvidenceVisual({ project, sizes }: { project: FeaturedCard; sizes: string }) {
   if (project.screenshot) {
     return (
       <ScreenshotFrame
@@ -42,18 +45,48 @@ function EvidenceVisual({ project, sizes }: { project: ProjectMeta; sizes: strin
   return null;
 }
 
-export async function FeaturedProjects({ lens = DEFAULT_LENS }: { lens?: LensKey }) {
-  const [projects, all] = await Promise.all([
-    getFeaturedProjects(lens),
-    getProjectMeta(),
-  ]);
-  const allLabel = `All ${all.length} projects`;
+interface LensNavItem {
+  key: LensKey;
+  label: string;
+}
+
+/**
+ * Featured showcase with an in-place role-lens switcher. All lenses' featured
+ * card data is passed in from the server; clicking a lens re-ranks the display
+ * client-side (no navigation) and syncs a shareable `?lens=` query param.
+ */
+export function FeaturedProjects({
+  lensData,
+  nav,
+  allCount,
+  initialLens,
+}: {
+  lensData: Record<LensKey, FeaturedCard[]>;
+  nav: LensNavItem[];
+  allCount: number;
+  initialLens: LensKey;
+}) {
+  const [lens, setLens] = useState<LensKey>(initialLens);
+
+  function selectLens(next: LensKey) {
+    setLens(next);
+    // Shallow URL update — no navigation, no server round-trip, just a
+    // bookmarkable/shareable state on the home page itself.
+    window.history.replaceState(null, "", lensHref(next));
+  }
+
+  const projects = lensData[lens] ?? [];
+  const allLabel = `All ${allCount} projects`;
   const [flagship, ...rest] = projects;
   const count = projects.length;
   const lastNumber = String(count).padStart(2, "0");
 
   return (
     <Container className="pb-20">
+      <div className="border-border/70 mb-8 border-b border-dashed pb-6">
+        <LensSwitcher items={nav} current={lens} onSelect={selectLens} />
+      </div>
+
       <div className="flex items-end justify-between gap-6">
         <div>
           <IndexMark mark="01" label="Featured work" />
@@ -74,7 +107,7 @@ export async function FeaturedProjects({ lens = DEFAULT_LENS }: { lens?: LensKey
       </div>
 
       {flagship && (
-        <FadeIn>
+        <FadeIn key={flagship.slug}>
           <article className="group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative mt-8 grid gap-6 rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 lg:grid-cols-5 lg:gap-8 lg:p-8">
             <div className="flex flex-col lg:col-span-2">
               <div className="text-muted-foreground flex items-center justify-between font-mono text-xs">
