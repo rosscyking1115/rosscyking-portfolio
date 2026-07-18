@@ -46,3 +46,6 @@ coverage
 playwright-report
 test-results
 playwright/.cache
+
+# Internal PMO handoff docs — never publish
+HANDOFF-*.md
