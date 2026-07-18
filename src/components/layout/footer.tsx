@@ -24,7 +24,7 @@ export function Footer() {
               {siteConfig.shortName}
             </Link>
             <p className="text-muted-foreground mt-1.5 max-w-xs text-sm leading-relaxed">
-              AI safety, GenAI evaluation &amp; applied data science.{" "}
+              Data &amp; ML engineering, with an evaluation backbone.{" "}
               {siteConfig.location}.
             </p>
           </div>

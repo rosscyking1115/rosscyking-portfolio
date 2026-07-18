@@ -29,30 +29,54 @@ test.describe("registry ↔ site (drift enumeration)", () => {
   });
 });
 
-test.describe("role lenses", () => {
+test.describe("role lenses (in-place switcher)", () => {
   test("home renders the default (all) lens featured set", async ({ page }) => {
     await page.goto("/");
     await expect(
-      page.getByRole("navigation", { name: /view this portfolio by role/i }),
+      page.getByRole("group", { name: /view this portfolio by role/i }),
     ).toBeVisible();
     for (const slug of registry.lenses.all.featured) {
       await expect(page.locator(`a[href="/projects/${slug}"]`).first()).toBeVisible();
     }
   });
 
-  test("a lens re-ranks the featured set and titles the page", async ({ page }) => {
-    await page.goto("/for/data-engineering");
-    await expect(page).toHaveTitle(/Data Engineering/);
+  test("clicking a lens re-ranks the featured set in place", async ({ page }) => {
+    await page.goto("/");
+    // community-energy-flex is featured under `all` but not `data-engineering`;
+    // neobank is the reverse — a clean before/after pair.
     await expect(
-      page.locator('a[aria-current="page"]', { hasText: "Data Engineering" }),
+      page.locator('a[href="/projects/community-energy-flex"]').first(),
     ).toBeVisible();
-    for (const slug of registry.lenses["data-engineering"].featured) {
+
+    await page.getByRole("button", { name: "Data Engineering" }).click();
+
+    await expect(page).toHaveURL(/\?lens=data-engineering/);
+    await expect(
+      page.getByRole("button", { name: "Data Engineering", pressed: true }),
+    ).toBeVisible();
+    await expect(
+      page.locator('a[href="/projects/neobank-product-analytics"]').first(),
+    ).toBeVisible();
+    await expect(page.locator('a[href="/projects/community-energy-flex"]')).toHaveCount(
+      0,
+    );
+  });
+
+  test("a shared ?lens= URL renders that lens on load", async ({ page }) => {
+    await page.goto("/?lens=ai-safety");
+    await expect(
+      page.getByRole("button", { name: "AI Safety & Evaluation", pressed: true }),
+    ).toBeVisible();
+    for (const slug of registry.lenses["ai-safety"].featured) {
       await expect(page.locator(`a[href="/projects/${slug}"]`).first()).toBeVisible();
     }
   });
 
-  test("the default lens and unknown lenses 404 under /for", async ({ page }) => {
-    expect((await page.goto("/for/all"))?.status()).toBe(404);
-    expect((await page.goto("/for/bogus-lens"))?.status()).toBe(404);
+  test("old /for/<lens> links redirect to the home lens", async ({ page }) => {
+    await page.goto("/for/analytics-engineering");
+    await expect(page).toHaveURL(/\/\?lens=analytics-engineering$/);
+    for (const slug of registry.lenses["analytics-engineering"].featured) {
+      await expect(page.locator(`a[href="/projects/${slug}"]`).first()).toBeVisible();
+    }
   });
 });

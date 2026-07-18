@@ -89,6 +89,9 @@ const nextConfig: NextConfig = {
         destination: "/projects",
         permanent: true,
       })),
+      // Role lenses moved from their own pages to an in-place switcher on the
+      // home page; keep any shared /for/<lens> links working.
+      { source: "/for/:lens", destination: "/?lens=:lens", permanent: true },
     ];
   },
 

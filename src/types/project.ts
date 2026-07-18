@@ -33,5 +33,14 @@ export interface LoadedProject extends ProjectMeta {
   readingTime: string;
 }
 
+/**
+ * Featured-showcase card data: everything a card renders (incl. reading time)
+ * but not the MDX body — safe to serialize from a server component to the
+ * client lens switcher.
+ */
+export interface FeaturedCard extends ProjectMeta {
+  readingTime: string;
+}
+
 /** Back-compat alias kept for existing imports. */
 export type Project = ProjectMeta;
