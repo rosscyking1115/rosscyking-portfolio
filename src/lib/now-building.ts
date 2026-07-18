@@ -3,6 +3,12 @@
  * These are private repos with no public artifact yet — name and one-liner
  * only, no links. Remove an entry when its project page ships (it then
  * belongs in content/projects/ instead).
+ *
+ * Source of truth: content/projects/registry.json. A project that is genuinely
+ * in progress carries `status: "building"` there and belongs in this strip
+ * only until it ships; `validate:projects` enforces the status vocabulary.
+ * Everything in the registry today is `shipped` or `archived`, so this is empty
+ * and the strip hides itself.
  */
 export interface NowBuildingEntry {
   name: string;
@@ -10,6 +16,4 @@ export interface NowBuildingEntry {
   blurb: string;
 }
 
-// Empty for now — aerospace-prognostics and cashflow-risk both shipped and
-// have full project pages. The strip hides itself while this is empty.
 export const nowBuilding: readonly NowBuildingEntry[] = [] as const;

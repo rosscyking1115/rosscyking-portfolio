@@ -53,6 +53,14 @@ for (const slug of mdx.keys()) {
     );
 }
 
+// 1b. Status vocabulary — a typo here would silently break lens / now-building logic.
+const STATUS = new Set(["shipped", "building", "archived"]);
+for (const [slug, spec] of Object.entries(registry.projects)) {
+  if (!STATUS.has(spec.status)) {
+    fail(slug, `status "${spec.status}" is not one of ${[...STATUS].join(" / ")}`);
+  }
+}
+
 // Text a banned-string check may look at: everything a reader sees EXCEPT link URLs.
 const proseOf = ({ data, content }) => {
   const metricText = (data.metrics ?? []).map((m) => `${m.value} ${m.label}`).join(" · ");

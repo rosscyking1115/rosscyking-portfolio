@@ -11,69 +11,52 @@
  * Screenshots are committed, so a failed capture never breaks the build;
  * re-run locally when a demo's UI changes.
  */
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium } from "@playwright/test";
 
-const OUT_DIR = path.join(process.cwd(), "public/projects/screenshots");
+const ROOT = process.cwd();
+const OUT_DIR = path.join(ROOT, "public/projects/screenshots");
 const VIEWPORT = { width: 1600, height: 1000 };
 
 /**
- * slug -> demo URL. `streamlit: true` enables wake-up + embed handling.
- * `out` overrides the default output path (repo-relative) — used for shots
- * that belong in docs/ rather than the served public/ assets.
+ * Per-slug capture quirks (mechanics, not facts). The LIST of what to shoot
+ * and each demo URL is DERIVED FROM content/projects/registry.json below, so a
+ * new or renamed demo can never be missed or left stale here. Only the handful
+ * of capture tweaks a demo needs live in this override map.
  */
+const OPTIONS = {
+  // Render's free tier cold-starts slowly — give the first load extra settle.
+  "cashflow-risk": { settleMs: 45_000 },
+  // First visit shows a region picker then a 3-step tour: pick UK, skip tour.
+  "cited-market-brief-agent": { clickSequence: ["United Kingdom", "Skip"] },
+};
+
+const registry = JSON.parse(
+  await readFile(path.join(ROOT, "content/projects/registry.json"), "utf8"),
+);
+
+// One target per project that has a live demo. Streamlit Community Cloud apps
+// (…streamlit.app) get wake-up + embed handling; the embed suffix is inferred.
+const projectTargets = Object.entries(registry.projects)
+  .filter(([, spec]) => spec.demo)
+  .map(([slug, spec]) => {
+    const streamlit = spec.demo.includes("streamlit.app");
+    const url = streamlit
+      ? `${spec.demo}${spec.demo.includes("?") ? "&" : "?"}embed=true`
+      : spec.demo;
+    return { slug, url, streamlit, ...(OPTIONS[slug] ?? {}) };
+  });
+
+// The live site itself is not a registry project — shot into docs/ for the README.
 const TARGETS = [
   {
-    // The live site itself — embedded at the top of the README.
     slug: "site-home",
     url: "https://rosscyking.com",
     streamlit: false,
     out: "docs/site-home.png",
   },
-  {
-    slug: "tfl-data-engineering",
-    url: "https://tfl-data-engineering.streamlit.app/?embed=true",
-    streamlit: true,
-  },
-  {
-    // After Midnight — the shipped Next.js planner (repo: community-energy-flex).
-    slug: "community-energy-flex",
-    url: "https://after-midnight-beta.vercel.app/",
-    streamlit: false,
-  },
-  {
-    // Render free tier sleeps — give the first load extra settle time.
-    slug: "cashflow-risk",
-    url: "https://cashflow-web-sidu.onrender.com/",
-    streamlit: false,
-    settleMs: 45_000,
-  },
-  {
-    slug: "agent-release-gates",
-    url: "https://agent-release-gates.streamlit.app/?embed=true",
-    streamlit: true,
-  },
-  {
-    slug: "neobank-product-analytics",
-    url: "https://neobank-appuct-analytics.streamlit.app/?embed=true",
-    streamlit: true,
-  },
-  {
-    // England & Wales Housing Decision Support — the shipped Next.js website
-    // (repo: england-wales-housing-decision-support; Vercel hostname is stable).
-    slug: "england-wales-housing-decision-support",
-    url: "https://uk-housing-decision-support.vercel.app",
-    streamlit: false,
-  },
-  {
-    // First visit shows a region picker, then a 3-step onboarding tour —
-    // choose the UK edition, then skip the tour, for a clean page.
-    slug: "cited-market-brief-agent",
-    url: "https://cited-market-brief-agent.vercel.app",
-    streamlit: false,
-    clickSequence: ["United Kingdom", "Skip"],
-  },
+  ...projectTargets,
 ];
 
 async function wakeStreamlit(page) {
