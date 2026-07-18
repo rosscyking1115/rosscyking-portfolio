@@ -7,7 +7,11 @@ import { Container } from "@/components/layout/container";
 import { IndexMark } from "@/components/layout/index-mark";
 import { Badge } from "@/components/ui/badge";
 import { getAboutContent } from "@/lib/about";
-import { certifications } from "@/lib/certifications";
+import {
+  type Certification,
+  certifications,
+  virtualTraining,
+} from "@/lib/certifications";
 import { education, languages } from "@/lib/experience";
 import { siteConfig } from "@/lib/site-config";
 import { skillGroups } from "@/lib/skills";
@@ -29,6 +33,47 @@ const fmtMonth = (ym: string) =>
     year: "numeric",
     timeZone: "UTC",
   });
+
+/** Shared card list for the certifications and virtual-training sections. */
+function CredentialList({ items }: { items: readonly Certification[] }) {
+  return (
+    <ul className="border-border divide-border mt-8 divide-y border-y">
+      {items.map((cert) => (
+        <li key={cert.title} className="py-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="font-display font-semibold">{cert.title}</h3>
+              <div className="text-muted-foreground text-sm">{cert.issuer}</div>
+            </div>
+            <div className="text-muted-foreground shrink-0 font-mono text-xs">
+              {fmtMonth(cert.date)}
+            </div>
+          </div>
+          {cert.skills && cert.skills.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {cert.skills.map((skill) => (
+                <Badge key={skill} variant="outline">
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {cert.url && (
+            <a
+              href={cert.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary mt-3 inline-flex items-center gap-1.5 text-sm font-medium"
+            >
+              Verify
+              <ArrowUpRight className="size-3.5" aria-hidden="true" />
+            </a>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export default async function AboutPage() {
   const source = await getAboutContent();
@@ -55,48 +100,19 @@ export default async function AboutPage() {
 
           <div className="ruler my-12" aria-hidden="true" />
 
-          <IndexMark mark="02" label="Certifications & training" />
-          <ul className="border-border divide-border mt-8 divide-y border-y">
-            {certifications.map((cert) => (
-              <li key={cert.title} className="py-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="font-display font-semibold">{cert.title}</h3>
-                    <div className="text-muted-foreground text-sm">{cert.issuer}</div>
-                  </div>
-                  <div className="text-muted-foreground shrink-0 font-mono text-xs">
-                    {fmtMonth(cert.date)}
-                  </div>
-                </div>
-                {cert.skills && cert.skills.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {cert.skills.map((skill) => (
-                      <Badge key={skill} variant="outline">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                {cert.url && (
-                  <a
-                    href={cert.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary mt-3 inline-flex items-center gap-1.5 text-sm font-medium"
-                  >
-                    Verify
-                    <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                  </a>
-                )}
-              </li>
-            ))}
-          </ul>
+          <IndexMark mark="02" label="Certifications" />
+          <CredentialList items={certifications} />
+
+          <div className="ruler my-12" aria-hidden="true" />
+
+          <IndexMark mark="03" label="Virtual training" />
+          <CredentialList items={virtualTraining} />
         </div>
 
         {/* Toolbox + languages */}
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="border-border rounded-lg border p-6">
-            <IndexMark mark="03" label="Toolbox" />
+            <IndexMark mark="04" label="Toolbox" />
             <div className="mt-5 space-y-5">
               {toolboxGroups.map((group) => (
                 <div key={group.label}>
@@ -119,7 +135,7 @@ export default async function AboutPage() {
 
             <div className="bg-border my-6 h-px w-full" />
 
-            <IndexMark mark="04" label="Languages" />
+            <IndexMark mark="05" label="Languages" />
             <ul className="mt-4 space-y-2.5 text-sm">
               {languages.map((language) => (
                 <li
