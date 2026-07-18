@@ -61,8 +61,7 @@ export async function FeaturedProjects({ lens = DEFAULT_LENS }: { lens?: LensKey
             {countWord(count)} projects, shown working
           </h2>
           <p className="text-muted-foreground mt-2 max-w-prose text-sm leading-relaxed">
-            Numbered 01–{lastNumber} by what I&rsquo;d want you to read first — not by
-            date. The screenshots are the actual apps; every card links to the evidence.
+            {`Numbered 01–${lastNumber} by what I’d want you to read first — not by date. The screenshots are the actual apps; every card links to the evidence.`}
           </p>
         </div>
         <Link
