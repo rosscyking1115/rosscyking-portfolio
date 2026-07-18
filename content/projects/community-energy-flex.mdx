@@ -1,6 +1,6 @@
 ---
-title: After Midnight
-summary: "Works out when to run flexible electricity loads — a wash, an EV charge — to cut cost and carbon from live UK grid data, and shows the working: an LP/MILP optimiser behind a typed FastAPI contract, a Next.js planner, and a forecast-vs-actual retro that checks whether yesterday's plan actually saved. On average 95% of forecast savings were realised; the case-study community centre saves ~£149 and ~179 kg CO₂ a year just by shifting when things run."
+title: Community Energy Flex
+summary: "Works out when to run flexible electricity loads — a wash, an EV charge — to cut cost and carbon from live UK grid data, and shows the working: an LP/MILP optimiser behind a typed FastAPI contract, a Next.js planner, and a forecast-vs-actual retro that checks whether yesterday's plan would have saved. On synthetic data the case-study community centre shifts about £149 and ~179 kg CO₂ a year just by moving when things run — a conditional ex-post estimate, not measured customer outcomes."
 stack:
   [
     Python,
@@ -19,11 +19,11 @@ role: Solo project
 period: "2026"
 publishedAt: "2026-07-10"
 featured: true
-featuredOrder: 3
+featuredOrder: 4
 metrics:
   - { value: "153", label: "tests passing" }
-  - { value: "95%", label: "forecast savings realised" }
-  - { value: "~£149/yr", label: "case-study saving" }
+  - { value: "15", label: "UK grid regions" }
+  - { value: "~£149/yr", label: "case-study saving (synthetic)" }
 links:
   github: https://github.com/rosscyking1115/community-energy-flex
   demo: https://after-midnight-beta.vercel.app/
@@ -31,8 +31,8 @@ links:
 
 ## What it does
 
-After Midnight is the web app; `community-energy-flex` is the repository.
-It doesn't just show "carbon is low at 02:00" — it says _"run the washing
+The `community-energy-flex` web app doesn't just show "carbon is low at
+02:00" — it says _"run the washing
 machine 02:30–04:00, charge the EV 01:30–04:30, expected saving £0.12 and
 0.14 kg CO₂, high confidence"_, with the assumptions and caveats attached.
 

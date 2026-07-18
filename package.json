@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "check:links": "node scripts/check-links.mjs",
+    "validate:projects": "node scripts/validate-projects.mjs",
     "shots": "node scripts/capture-screenshots.mjs",
     "prepare": "husky",
     "test": "vitest run",

@@ -20,6 +20,11 @@ metrics:
   - { value: "12", label: "evaluation cells" }
   - { value: "0–4%", label: "attack success" }
   - { value: "+1.00", label: "cross-judge κ" }
+terminal:
+  - "$ redteam-foundry run --matrix v1   # 12 cells: 2 models × 2 corpora"
+  - "» attack success: 0–4% across all 12 cells"
+  - "» cross-judge κ = +1.00 — the metric is well-posed"
+  - "» exports to a UK AISI Inspect eval log"
 links:
   github: https://github.com/rosscyking1115/redteam-foundry
   pypi: https://pypi.org/project/redteam-foundry/

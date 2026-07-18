@@ -1,6 +1,6 @@
 ---
 title: London Cycle-Hire Analytics Platform
-summary: "Answers one question well: when London's transport is disrupted, how much extra demand lands on the bikes, and where? A 41.4M-journey PySpark backfill unified across five drifting schema eras, a tested dbt star schema, a LightGBM station-level forecast, and a free always-on live layer refreshed daily by GitHub Actions into committed Parquet — no warehouse to keep alive. Headline: strike days run 1.2×–2.6× normal cycling demand."
+summary: "Answers one question well: when London's transport is disrupted, how much extra demand lands on the bikes, and where? A 41.4M-journey PySpark backfill unified across five drifting schema eras, a tested dbt star schema, a LightGBM station-level forecast, and a free always-on live layer refreshed daily by GitHub Actions into committed Parquet — no warehouse to keep alive. Headline: strike days run about 1.4× median demand, up to ~2.3× on the worst full-network strike day."
 stack:
   [
     Python,
@@ -22,8 +22,8 @@ featured: true
 featuredOrder: 1
 metrics:
   - { value: "41.4M", label: "journeys unified" }
-  - { value: "1.2–2.6×", label: "strike-day demand" }
-  - { value: "53", label: "dbt data tests" }
+  - { value: "1.42×", label: "median strike-day demand" }
+  - { value: "63", label: "dbt data tests" }
 links:
   github: https://github.com/rosscyking1115/tfl-data-engineering
   demo: https://tfl-data-engineering.streamlit.app/
@@ -43,11 +43,12 @@ analytical layer and answers exactly that.
   distinct file schemas (columns renamed, dropped, and re-ordered between
   eras), with per-file reconciliation proving no rows are silently lost.
 - A tested dimensional model: a dbt star schema (`fact_journey`,
-  `dim_station`, `dim_date`) with 53 data tests, including cross-era
+  `dim_station`, `dim_date`) with 63 data tests, including cross-era
   station-identity conforming.
 - Isolating the strike effect: a weather-adjusted baseline separates disruption
-  from weather (disruption days run 1.33× median demand, 1.2×–2.6× across
-  events), so ordinary weather is never mistaken for a strike.
+  from weather (disruption days run about 1.42× median demand, 95% CI 1.24–1.61,
+  up to ~2.3× on the worst full-network strike day), so ordinary weather is never
+  mistaken for a strike.
 - A learned forecast rather than a median: a LightGBM model predicts
   station-level daily demand and, by predicting with the disruption flag off,
   supplies a counterfactual "normal" baseline about 21% more accurate than the
