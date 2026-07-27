@@ -1,0 +1,97 @@
+---
+import { allLenses, DEFAULT_LENS } from "../lib/lenses";
+
+interface Props {
+  /** slug -> display title, so panels can name projects without re-reading MDX. */
+  titles: Record<string, string>;
+}
+
+const { titles } = Astro.props;
+---
+
+{/*
+  Every lens's panel is prerendered; CSS shows the one matching `data-lens` on
+  <html>, which LensScript sets before first paint. That is what makes a shared
+  /?lens=ai link land on the right set with no flash and no framework.
+
+  The Next version kept this in React state and passed every lens's cards down
+  as props. Same idea, no hydration.
+*/}
+
+<section aria-label="Featured work">
+  <div role="group" aria-label="View this portfolio by role">
+    {
+      allLenses.map((lens) => (
+        <button
+          type="button"
+          data-lens-button={lens.key}
+          aria-pressed={lens.key === DEFAULT_LENS ? "true" : "false"}
+        >
+          {lens.label}
+        </button>
+      ))
+    }
+  </div>
+
+  {
+    allLenses.map((lens) => (
+      <div data-lens-panel={lens.key}>
+        <h2 data-lens-headline>{lens.headline}</h2>
+        <ul>
+          {lens.featured.map((slug) => (
+            <li>
+              <a href={`/projects/${slug}`}>{titles[slug] ?? slug}</a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))
+  }
+</section>
+
+<style>
+  /* Hidden by default so nothing flashes before the script runs; the matching
+     panel is revealed by the attribute selector below. */
+  [data-lens-panel] {
+    display: none;
+  }
+  :global(html[data-lens="all"]) [data-lens-panel="all"],
+  :global(html[data-lens="data"]) [data-lens-panel="data"],
+  :global(html[data-lens="ai"]) [data-lens-panel="ai"] {
+    display: block;
+  }
+</style>
+
+<script>
+  import { DEFAULT_LENS, isLensKey, lensHref, type LensKey } from "../lib/lenses";
+
+  const buttons =
+    document.querySelectorAll<HTMLButtonElement>("[data-lens-button]");
+
+  function select(lens: LensKey, pushUrl: boolean) {
+    document.documentElement.dataset.lens = lens;
+    for (const button of buttons) {
+      button.setAttribute(
+        "aria-pressed",
+        String(button.dataset.lensButton === lens),
+      );
+    }
+    if (pushUrl) {
+      // replaceState, not pushState: switching lens is a filter, not a
+      // navigation. Back should leave the page, as it did in the Next app.
+      window.history.replaceState({}, "", lensHref(lens));
+    }
+  }
+
+  // The inline head script already resolved the lens; adopt it rather than
+  // re-parsing the URL and risking a mismatch.
+  const initial = document.documentElement.dataset.lens ?? DEFAULT_LENS;
+  select(isLensKey(initial) ? initial : DEFAULT_LENS, false);
+
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      const key = button.dataset.lensButton;
+      if (key && isLensKey(key)) select(key, true);
+    });
+  }
+</script>

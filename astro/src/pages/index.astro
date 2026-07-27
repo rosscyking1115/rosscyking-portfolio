@@ -1,17 +1,28 @@
 ---
+import { getCollection } from "astro:content";
 
+import LensSwitcher from "../components/LensSwitcher.astro";
+import Base from "../layouts/Base.astro";
+import { siteConfig } from "../lib/site-config";
+
+/**
+ * Home page — the lens mechanism only (migration risk #6).
+ *
+ * Deliberately structural rather than designed. The Hero, ProofStrip, evidence
+ * frames, project cards and SkillsCluster arrive with the component port; what
+ * this branch proves is that a *prerendered* page can honour a shared
+ * `?lens=` link with no flash and no framework, which is the part the Next
+ * version got from reading `searchParams` on the server.
+ */
+const projects = await getCollection("projects", ({ data }) => !data.draft);
+const titles = Object.fromEntries(projects.map((p) => [p.id, p.data.title]));
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Base
+  title={siteConfig.titleTagline}
+  description={siteConfig.metaDescription}
+  canonical="/"
+>
+  <h1>{siteConfig.name}</h1>
+  <LensSwitcher titles={titles} />
+</Base>
