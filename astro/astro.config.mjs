@@ -50,6 +50,63 @@ export default defineConfig({
   site: "https://rosscyking.com",
   output: "static",
 
+  /**
+   * Migration note (risk #4 — redirects).
+   *
+   * Nine live SEO redirects ported from next.config.ts. Production answers all
+   * nine with 308 (Next's `permanent: true`), so each is pinned to 308
+   * explicitly: Astro's default for a permanent redirect is 301, which is
+   * SEO-equivalent but not byte-parity.
+   *
+   * These live here rather than in vercel.json because Astro compiles them into
+   * .vercel/output/config.json AND serves them in `astro dev`, so every rule is
+   * covered by a real end-to-end test rather than a config diff.
+   *
+   * The tenth rule — /for/:lens -> /?lens=:lens — CANNOT be expressed here.
+   * Astro rejects it at build time with InvalidRedirectDestination: "The
+   * destination of a dynamic redirect must include all dynamic parameters from
+   * the source route", and a query string is not a route. It lives in
+   * vercel.json instead; see the comment there.
+   *   https://docs.astro.build/en/reference/configuration-reference/
+   */
+  redirects: {
+    // Project pages that were renamed keep their old URLs working.
+    "/projects/internal-ai-agent-eval-lab": {
+      status: 308,
+      destination: "/projects/agent-release-gates",
+    },
+    "/projects/llm-redteam-harness": {
+      status: 308,
+      destination: "/projects/redteam-foundry",
+    },
+    "/projects/uk-property-analytics": {
+      status: 308,
+      destination: "/projects/england-wales-housing-decision-support",
+    },
+    "/projects/movein": {
+      status: 308,
+      destination: "/projects/england-wales-housing-decision-support",
+    },
+
+    // Retired projects land on the index rather than a 404.
+    "/projects/com6513-qa-assistant": { status: 308, destination: "/projects" },
+    "/projects/event-extraction-llm-baseline": { status: 308, destination: "/projects" },
+    "/projects/fromatob-file-converter": { status: 308, destination: "/projects" },
+    "/projects/scalable-machine-learning-pyspark": {
+      status: 308,
+      destination: "/projects",
+    },
+    "/projects/speech-speed-tempo-classification": {
+      status: 308,
+      destination: "/projects",
+    },
+
+    // Migration insurance: the OG card moved from Next's extensionless
+    // /opengraph-image to a prerendered file. Nothing should hold the old URL,
+    // but a social platform that cached it costs nothing to keep working.
+    "/opengraph-image": { status: 308, destination: "/opengraph-image.png" },
+  },
+
   vite: {
     // @resvg/resvg-js (OG card rendering) ships a native .node binary. Vite's
     // dependency optimizer tries to prebundle it and dies with
