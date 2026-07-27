@@ -531,6 +531,64 @@ Preview). The six server-side secrets keep their names byte-identically and were
 
 ---
 
+## 6d. Risk #3 (dynamic OG images) — landed 2026-07-27
+
+Eleven cards — one site-wide, ten project — generated at **build time** and verified by looking at
+them, not just counting bytes.
+
+**The docs gap in §6.2 is confirmed and now closed by choice, not by a documented pattern.** Astro
+still has no OG recipe. The implementation uses `satori` + `@resvg/resvg-js` directly, which is
+exactly what `next/og` wraps — so the two JSX layouts are near-verbatim ports and render the same
+design.
+
+**Improvement over Next:** these are prerendered (`prerender = true` + `getStaticPaths`), so there
+are zero serverless invocations and no cold start on the first social scrape. Next generated them per
+request. It also means a project whose frontmatter cannot produce a card **fails the build** rather
+than 500ing when a crawler happens by.
+
+**The one intentional visual change:** satori cannot resolve `system-ui` — it needs real font
+buffers. `next/og` silently falls back to its bundled Noto Sans, so the live cards are Noto today.
+These use Geist, the site's actual typeface, so the cards now match the site.
+
+### Also landed here, because OG needed it
+
+- **`src/content.config.ts`** — the projects collection, schema ported from the Next app's
+  `frontMatterSchema` rather than re-derived from reading the files. It loads from
+  **`../content/projects` at the repo root**, so there is exactly one authored list and
+  `validate-projects.mjs` still gates it. A copy under `astro/` would drift, which is the whole
+  reason the registry exists.
+- **`src/lib/site-config.ts`** — ported verbatim.
+- **Open Graph + Twitter meta tags** in `Base.astro`. The cards would otherwise exist and be
+  referenced by nothing.
+
+### Four things that cost real time
+
+1. **`geist` cannot be used as a font source.** Its `exports` map only exposes Next-specific font
+   modules — even `geist/package.json` is not exported. The two `.ttf`s are vendored into
+   `src/assets/fonts` with their SIL OFL licence.
+2. **`import.meta.url` paths break after bundling.** The built chunk lands in
+   `dist/server/.prerender/chunks`, and the fonts are not copied there — `ENOENT`. Fixed with Vite's
+   `?inline`, so the bytes travel with the chunk.
+3. **Importing `og.tsx` into the layout took down the dev server for every page.** Pulling in
+   `@resvg/resvg-js` — a native `.node` binary — made Vite's optimizer fail with
+   `[UNLOADABLE_DEPENDENCY] ... stream did not contain valid UTF-8`. Two fixes, both needed: a
+   dependency-free `og-config.ts` for the constants layouts need, and
+   `optimizeDeps.exclude` + `ssr.external` for resvg.
+4. **URL shape changed deliberately:** `/opengraph-image?<hash>` → `/opengraph-image.png`. A
+   prerendered endpoint writes a file, and without an extension the host cannot reliably infer
+   `image/png`. Crawlers only ever reach these URLs by reading `og:image` off the page, so this is
+   invisible to them — but **add `/opengraph-image` → `/opengraph-image.png` to the redirect set in
+   risk #4** as cheap insurance for anything holding the old URL.
+
+### Gate
+
+`astro/tests/e2e/og-images.spec.ts` enumerates from `content/projects/registry.json` — the same
+canonical source `validate-projects.mjs` gates — and asserts each card returns 200, is a real PNG by
+its IHDR magic bytes, measures 1200×630, and exceeds 10 KB (a card that renders no text still
+produces a valid but tiny PNG). Adding a project without a working card fails here.
+
+---
+
 ## 7. Recommended shape — unchanged from the brief, with one addition
 
 Phase 0 (IA, today) → Phase 1 (port at parity) → Phase 2 (redesign in Astro). The brief's reasoning
