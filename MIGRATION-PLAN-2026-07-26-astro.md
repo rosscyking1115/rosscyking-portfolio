@@ -629,6 +629,49 @@ not emulate Vercel's edge. It closes with gate 9, alongside the headers, on one 
 
 ---
 
+## 6f. Risk #5 (theme no-flash) — landed 2026-07-27
+
+The Next app read the `theme` cookie server-side and rendered the right class into the HTML. A
+prerendered Astro page cannot — there is no request at build time, so the same HTML goes to everyone.
+Replaced with an inline `<head>` script that applies the class before first paint.
+
+**The docs gap in §6.3 is confirmed.** Astro's recipes index has no dark-mode, theme-toggle or
+theme-flash entry, so this is a deliberate implementation rather than a documented pattern.
+
+Three things are load-bearing, and each would fail silently:
+
+1. **`is:inline`.** Without it Astro bundles the script, which makes it deferred — it runs _after_
+   first paint, which is the exact flash this exists to prevent.
+2. **Position before any stylesheet** in `<head>`, so the class is on `<html>` before the browser has
+   anything to paint with.
+3. **try/catch.** Theme is cosmetic; it must never take the page down.
+
+**The cookie name and values are unchanged**, so a returning visitor keeps the theme they already
+chose rather than being silently reset by the migration. Asserted in the tests.
+
+**The toggle is not a React island.** The Next version was a client component only because everything
+around it was; here a button that flips a class is what Astro's zero-JS default is for. It ships a
+handful of bytes instead of hydrating a framework — a small structural improvement, taken because it
+was free, not as a redesign.
+
+### CSP coupling — worth remembering
+
+The inline script needs `script-src 'unsafe-inline'`, which the production policy already allows
+(risk #2). **If that policy is ever tightened to hashes, this script must be hashed with it** or the
+site breaks in the dark. This is exactly the interaction §6.3 predicted.
+
+### Gate
+
+`astro/tests/e2e/theme.spec.ts` covers: the script's position relative to stylesheets, a stored dark
+preference applying immediately, a stored preference beating a conflicting OS setting, `system`
+following the OS in both directions, the toggle cycling light → dark → system and surviving a reload,
+and the cookie matching the Next app's name, values and path.
+
+Proven by sabotage: removing `is:inline` fails the ordering test, which is the one that stands
+between the site and a visible flash.
+
+---
+
 ## 7. Recommended shape — unchanged from the brief, with one addition
 
 Phase 0 (IA, today) → Phase 1 (port at parity) → Phase 2 (redesign in Astro). The brief's reasoning
