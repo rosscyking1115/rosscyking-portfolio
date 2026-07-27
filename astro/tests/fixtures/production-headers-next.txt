@@ -1,0 +1,21 @@
+HTTP/1.1 200 OK
+Age: 0
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://challenges.cloudflare.com https://va.vercel-scripts.com https://vitals.vercel-insights.com; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; manifest-src 'self'; upgrade-insecure-requests
+Content-Type: text/html; charset=utf-8
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Date: Mon, 27 Jul 2026 00:06:48 GMT
+Link: </_next/static/media/0c89a48fa5027cee-s.p.0rd3rjvnnhw7n.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/media/GeistMono_Variable.p.17jn9btb_52pq.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/media/Geist_Variable-s.p.0-te~ja_gpvcf.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/chunks/0pir6_45g5ilw.css>; rel=preload; as="style"
+Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(), usb=()
+Referrer-Policy: strict-origin-when-cross-origin
+Server: Vercel
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+X-Content-Type-Options: nosniff
+X-Dns-Prefetch-Control: on
+X-Frame-Options: DENY
+X-Matched-Path: /
+X-Vercel-Cache: MISS
+X-Vercel-Id: lhr1::iad1::v8m6v-1785110807747-19cec02058f3
+
