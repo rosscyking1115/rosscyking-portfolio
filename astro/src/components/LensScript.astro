@@ -1,5 +1,5 @@
 ---
-import { DEFAULT_LENS, LENS_KEYS } from "../lib/lenses";
+import { DEFAULT_LENS, LENS_ALIASES, LENS_KEYS } from "../lib/lenses";
 
 /**
  * Applies the `?lens=` query parameter before first paint (migration risk #6).
@@ -16,21 +16,29 @@ import { DEFAULT_LENS, LENS_KEYS } from "../lib/lenses";
  * The valid keys are injected from the registry at build time rather than
  * hardcoded, so adding a lens cannot leave this behind.
  *
- * An unknown lens falls back to the default — matching `isLensKey()` in the
- * Next app exactly. NOTE: that means the two retired lens names
- * (`analytics-engineering`, `ai-safety`) still land on the default rather than
- * a sensible neighbour. That is the pre-existing behaviour, ported faithfully;
- * whether to map them is a Phase 0 decision for Ross, recorded in the plan §1.4.
+ * Retired lens names are mapped onto the surviving lens that answers the same
+ * role (see LENS_ALIASES) rather than dumped on the default. Genuine nonsense
+ * still falls back. Both the key list and the alias map are injected from the
+ * registry at build time, so neither can be left behind.
  */
 const keys = JSON.stringify(LENS_KEYS);
+const aliases = JSON.stringify(LENS_ALIASES);
 ---
 
-<script is:inline define:vars={{ keys, defaultLens: DEFAULT_LENS }}>
+<script is:inline define:vars={{ keys, aliases, defaultLens: DEFAULT_LENS }}>
   (function () {
     try {
       var valid = JSON.parse(keys);
+      var aliasMap = JSON.parse(aliases);
       var requested = new URLSearchParams(window.location.search).get("lens");
-      var lens = valid.indexOf(requested) > -1 ? requested : defaultLens;
+
+      var lens = defaultLens;
+      if (requested) {
+        if (valid.indexOf(requested) > -1) lens = requested;
+        else if (Object.prototype.hasOwnProperty.call(aliasMap, requested))
+          lens = aliasMap[requested];
+      }
+
       document.documentElement.dataset.lens = lens;
     } catch (error) {
       document.documentElement.dataset.lens = defaultLens;
