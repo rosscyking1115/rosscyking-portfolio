@@ -672,6 +672,47 @@ between the site and a visible flash.
 
 ---
 
+## 6g. Risk #6 (role-lens switcher) — landed 2026-07-27
+
+The Next app read `?lens=` from `searchParams` in a server component and rendered the matching
+featured set. A prerendered Astro page cannot — the same HTML goes to everyone.
+
+**Solved with CSS rather than JavaScript state.** Every lens panel is prerendered; an inline head
+script sets `data-lens` on `<html>` from the query parameter before first paint, and a CSS attribute
+selector reveals the matching panel. A shared `/?lens=ai` link therefore lands on the right set with
+no flash, no hydration and no framework — the Next version needed React state plus every lens's cards
+passed down as props.
+
+Switching is `history.replaceState`, not `pushState`: a lens is a filter, not a navigation, so Back
+leaves the page exactly as it did before. The default lens keeps the bare `/` URL, matching
+`lensHref()`.
+
+### The retired lens names — still a decision for Ross
+
+Ported faithfully, which means **unchanged**: `/?lens=analytics-engineering` and `/?lens=ai-safety`
+resolve, fail validation, and fall back to the default lens. There is now a test that _documents_
+this as pre-existing behaviour rather than asserting it is correct. Mapping them onto `data` / `ai`
+is the open Phase 0 decision from §1.4.
+
+### Scope
+
+Structural, not designed. Hero, ProofStrip, evidence frames, project cards and SkillsCluster arrive
+with the component port. What this branch proves is the mechanism the Next version got for free from
+server-side `searchParams`.
+
+### Gate
+
+`astro/tests/e2e/lenses.spec.ts` enumerates from `registry.json` — so adding or reordering a lens
+cannot leave it asserting a stale set — and covers: each lens's shared URL showing its own featured
+slugs and headline, only one panel visible at a time, missing and nonsense lenses falling back,
+retired names falling back, in-place re-ranking using the registry's own before/after pair, the URL
+becoming shareable, `aria-pressed` tracking the active lens, and the script's position before any
+stylesheet.
+
+Proven by sabotage: making the script ignore the query parameter failed four tests.
+
+---
+
 ## 7. Recommended shape — unchanged from the brief, with one addition
 
 Phase 0 (IA, today) → Phase 1 (port at parity) → Phase 2 (redesign in Astro). The brief's reasoning

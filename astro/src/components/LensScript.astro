@@ -1,0 +1,39 @@
+---
+import { DEFAULT_LENS, LENS_KEYS } from "../lib/lenses";
+
+/**
+ * Applies the `?lens=` query parameter before first paint (migration risk #6).
+ *
+ * The Next app read `searchParams` in a server component and rendered the right
+ * featured set. A prerendered Astro page cannot — the same HTML is served to
+ * everyone — so every lens panel is prerendered and CSS picks the visible one
+ * off `data-lens` on <html>.
+ *
+ * This runs inline in <head>, for the same reason as ThemeScript: a bundled
+ * script is deferred and would run after first paint, so a visitor opening a
+ * shared /?lens=ai link would see the default lens flash first.
+ *
+ * The valid keys are injected from the registry at build time rather than
+ * hardcoded, so adding a lens cannot leave this behind.
+ *
+ * An unknown lens falls back to the default — matching `isLensKey()` in the
+ * Next app exactly. NOTE: that means the two retired lens names
+ * (`analytics-engineering`, `ai-safety`) still land on the default rather than
+ * a sensible neighbour. That is the pre-existing behaviour, ported faithfully;
+ * whether to map them is a Phase 0 decision for Ross, recorded in the plan §1.4.
+ */
+const keys = JSON.stringify(LENS_KEYS);
+---
+
+<script is:inline define:vars={{ keys, defaultLens: DEFAULT_LENS }}>
+  (function () {
+    try {
+      var valid = JSON.parse(keys);
+      var requested = new URLSearchParams(window.location.search).get("lens");
+      var lens = valid.indexOf(requested) > -1 ? requested : defaultLens;
+      document.documentElement.dataset.lens = lens;
+    } catch (error) {
+      document.documentElement.dataset.lens = defaultLens;
+    }
+  })();
+</script>
