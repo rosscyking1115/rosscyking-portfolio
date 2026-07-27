@@ -4,6 +4,8 @@ import { defineConfig, envField } from "astro/config";
 import react from "@astrojs/react";
 import vercel from "@astrojs/vercel";
 
+import mdx from "@astrojs/mdx";
+
 /**
  * Migration note (risk #1 — contact form).
  *
@@ -47,7 +49,18 @@ import vercel from "@astrojs/vercel";
 export default defineConfig({
   site: "https://rosscyking.com",
   output: "static",
-  integrations: [react()],
+
+  vite: {
+    // @resvg/resvg-js (OG card rendering) ships a native .node binary. Vite's
+    // dependency optimizer tries to prebundle it and dies with
+    // "[UNLOADABLE_DEPENDENCY] ... stream did not contain valid UTF-8", which
+    // takes down the whole dev server for every HTML page — not just the OG
+    // endpoints. Excluding it from prebundling and keeping it external to the
+    // SSR bundle lets Node load the binary directly.
+    optimizeDeps: { exclude: ["@resvg/resvg-js"] },
+    ssr: { external: ["@resvg/resvg-js"] },
+  },
+  integrations: [react(), mdx()],
   adapter: vercel({ staticHeaders: true }),
 
   // https://docs.astro.build/en/guides/environment-variables/
