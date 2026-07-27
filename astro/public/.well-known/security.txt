@@ -1,0 +1,8 @@
+Contact: mailto:rosscyking@gmail.com
+Expires: 2027-04-30T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://rosscyking.com/.well-known/security.txt
+
+# Reporting
+# This is a personal portfolio site. If you've found a security issue, please
+# email the address above. I'll acknowledge within 72 hours.

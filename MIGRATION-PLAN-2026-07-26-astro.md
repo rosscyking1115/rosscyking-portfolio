@@ -388,8 +388,10 @@ Stated rather than guessed, per the standing rule.
    — that list will need rewriting, and shrinking it to keep the number green would be cheating.
    Decide deliberately.
 
-5. **`staticHeaders` + a hand-written `vercel.json`** — merge or overwrite? Undocumented. Test early.
-   Still open; belongs to risk #2.
+5. ~~**`staticHeaders` + a hand-written `vercel.json`** — merge or overwrite?~~ — **RESOLVED 2026-07-27.**
+   They coexist. Verified locally: a hand-written `vercel.json` survives `astro build` untouched, and
+   `staticHeaders` writes into `.vercel/output/config.json` (Build Output API v3) as per-route
+   `headers` entries — _not_ into `vercel.json`, despite the adapter docs' wording.
 
 6. ~~**Client IP inside an Action handler**~~ — **RESOLVED 2026-07-27.** `clientAddress` _is_ present
    on the Actions handler context (verified against a running server: resolved to `::1` locally, not
@@ -465,6 +467,67 @@ Two things needing Ross's action outside the repo:
 
 Not ported on this branch, deliberately: the shadcn/Radix ui primitives and Tailwind tokens. This
 branch proves the contact _architecture_; class names are kept so styling drops straight back in.
+
+---
+
+## 6c. Risk #2 (security headers / CSP) — landed 2026-07-27
+
+All nine headers live in `astro/vercel.json`, hand-written, byte-identical to what
+`rosscyking.com` serves today. Plus the `/.well-known/security.txt` content-type and cache rule, and
+the file itself.
+
+**Astro's own CSP feature is deliberately not used.** It is real and it works — enabling
+`security.csp` writes per-route CSP headers with generated hashes into `.vercel/output/config.json` —
+but it is wrong for this site on three counts the docs state outright:
+
+- **"Shiki isn't currently supported."** Every `/projects/[slug]` page renders MDX code blocks through
+  Shiki, which emits inline styles. This alone disqualifies it.
+- **"External scripts and external styles are not supported out of the box."** Turnstile and Vercel
+  Analytics are both already in the production CSP.
+- **It "isn't supported while working in dev mode"**, so it cannot be checked locally without a build.
+
+Astro's generated policy also only covers `script-src` and `style-src`; the other seven headers have
+no Astro source at all. Hand-writing `vercel.json` gives exact parity in one reviewable file.
+
+`staticHeaders: true` is kept but is **currently inert** — it only forwards headers Astro itself
+produces, and with CSP off there are none. Left on so that if the Shiki limitation lifts, enabling
+`security.csp` emits real headers rather than a `<meta>` tag.
+
+### The gate, and what it does not prove
+
+`astro/tests/e2e/headers.spec.ts` diffs `vercel.json` against
+`astro/tests/fixtures/production-headers-next.txt` — a real `curl -sI https://rosscyking.com/`
+response — and fails if any of the nine is missing, altered, or weakened. Proven by sabotage:
+weakening `frame-ancestors 'none'` to `*` and deleting `X-Frame-Options` produced exactly three
+failures; restoring made them green.
+
+**This is a drift alarm, not gate 9.** It reads a config file, which is precisely the failure mode
+the brief warned about. `vercel.json` is applied by Vercel's edge, and nothing has yet proved these
+headers reach the wire from an Astro build.
+
+### Blocker: gate 9 cannot run yet — needs Ross
+
+The existing Vercel project's Root Directory is the repo root, so a preview deployment of this branch
+builds the **Next** app. `astro/vercel.json` is never exercised. To close gate 9 one of these is
+needed:
+
+1. **A second Vercel project** with Root Directory `astro/` (preview-only, no custom domain). Cleanest
+   — gives every migration PR a real Astro preview URL to `curl -sI` against, for the rest of the
+   migration. Recommended.
+2. `vercel deploy` from `astro/` against a linked project, using Ross's CLI auth. One-off.
+3. Defer to cutover — accept the headers are unproven on the wire until the promotion commit. Worst
+   option: it puts the single most silently-losable thing in the migration on the critical path.
+
+### Env var decision, recorded
+
+`NEXT_PUBLIC_*` → `PUBLIC_*` is an **add, not a rename**. Renaming
+`NEXT_PUBLIC_TURNSTILE_SITE_KEY` while the Next app is live breaks the contact form outright:
+`TURNSTILE_SECRET_KEY` is set, so the server demands a token, but with no site key the widget never
+renders and no token is ever sent. Both names coexist harmlessly; delete the `NEXT_PUBLIC_*` pair
+only after `astro/` is promoted to root.
+
+Added by Ross 2026-07-27: `PUBLIC_TURNSTILE_SITE_KEY` (Production), `PUBLIC_SITE_URL` (Production +
+Preview). The six server-side secrets keep their names byte-identically and were not touched.
 
 ---
 
