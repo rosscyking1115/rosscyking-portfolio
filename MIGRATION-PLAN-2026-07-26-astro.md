@@ -1,0 +1,497 @@
+# Astro migration — planning day (2026-07-26)
+
+Planning only. No code written. Nothing committed. Ross decides before Phase 1 starts.
+
+Every architectural claim below cites a specific Astro docs page. Where the docs do not cover
+something, that is stated explicitly rather than filled in from memory.
+
+---
+
+## 0. Astro docs MCP server — installed, connected, one caveat
+
+Installed with the exact snippet from
+[docs.astro.build/en/guides/build-with-ai](https://docs.astro.build/en/guides/build-with-ai/):
+
+```bash
+claude mcp add --transport http astro-docs https://mcp.docs.astro.build/mcp
+```
+
+Health check:
+
+```
+astro-docs: https://mcp.docs.astro.build/mcp (HTTP) - ✔ Connected
+```
+
+**Caveat, stated plainly:** the server is connected, but Claude Code loads MCP tool schemas at
+session start, so its tools are not callable inside _this_ session. Everything below was researched
+by fetching `docs.astro.build` pages directly — the same source of truth the MCP wraps, and every
+claim is cited to a URL you can open. From the next session the MCP tools will be live and should be
+the default lookup path.
+
+**Skills check (`/find-skills`, standing instruction):** run. `skills_registry.yaml` contains zero
+Astro entries; `~/.claude/skills/` has no Astro skill; the long-tail library has none. The router
+resolved only `github-actions-docs` (useful later, for the CI rewrite) and `nextjs` (the framework
+we are leaving — not loading it). It did **not** pull `shadcn` or `vercel-react-best-practices` for
+this task description. No external candidate found worth putting through the acquisition gate. The
+Astro docs MCP is the authority for the port.
+
+---
+
+## 1. Where the brief was wrong
+
+Six corrections. Two of them change the plan.
+
+### 1.1 `npm run check:links` is not a migration gate — **remove it from the Phase 1 criteria**
+
+`scripts/check-links.mjs` reads `content/projects/*.mdx` front matter and probes the **external**
+GitHub and demo URLs for rot. It never loads a page of the site. It will pass identically before and
+after the port because the port does not touch `content/`. It also is not blocking in CI —
+`.github/workflows/link-check.yml` is a weekly cron with `continue-on-error: true` that opens a
+tracking issue.
+
+It proves nothing about the migration. Keeping it in the pass gate creates false confidence. The
+replacement gate that _does_ prove URL parity is in §5.
+
+### 1.2 The `motion` risk is one file, not ten
+
+The brief says "the 10 `use client` components using `motion`". Actual count:
+
+- **9** files carry `"use client"`, not 10.
+- Exactly **one** imports `motion`: [`src/components/motion/fade-in.tsx`](src/components/motion/fade-in.tsx).
+  `<FadeIn>` is consumed by 4 call sites (`projects/page.tsx`, `hero.tsx`, `featured-projects.tsx`,
+  `skills-cluster.tsx`).
+- The other 8 are client for unrelated reasons: `nav.tsx` and `theme-provider.tsx` (real state),
+  `contact-form.tsx`, `lens-switcher.tsx`, `featured-projects.tsx`, `theme-toggle.tsx`,
+  `project-filter.tsx`, and `ui/label.tsx` (client only because Radix requires it).
+
+This matters: dropping `motion` for CSS is a **one-file change**, not a ten-component rewrite. That
+moves it from "definitely defer to Phase 2" to "cheap enough to consider during the port". Still
+recommend deferring — but it is no longer a big lever.
+
+### 1.3 "Lighthouse ≥ current" has no baseline and is currently unfalsifiable
+
+Nothing in the repo captures a Lighthouse score. There is no Lighthouse CI, no stored report, no
+budget file. If the baseline is not captured against production **before** any Astro code is written,
+this criterion cannot be checked. Action in §5.
+
+### 1.4 Role lenses: three, and two historical lens URLs already degrade silently
+
+`registry.json` has three lenses: `all`, `data`, `ai`. The brief's body says this correctly; risk #6
+and `HANDOFF-2026-07-17-redesign.md` still describe the old four (`data-engineering`,
+`analytics-engineering`, `applied-ai`, `ai-safety`).
+
+The live redirect is a wildcard — `/for/:lens` → `/?lens=:lens`. So an old shared link like
+`/for/analytics-engineering` still 301s, lands on `/?lens=analytics-engineering`, fails `isLensKey()`,
+and silently falls back to the default lens. Not a 404, but not what the link promised either.
+**Phase 0 decision needed:** map the retired names onto surviving lenses, or accept the fallback.
+
+### 1.5 Two components are dead code — do not port them
+
+- [`src/components/about/cv-download.tsx`](src/components/about/cv-download.tsx) — imported nowhere.
+  The CV is still reachable (hero, contact page, footer all link `/cv.pdf`), but this component is
+  orphaned. `MAINTENANCE.md` still describes a "Download CV button on /about" that no longer exists.
+- [`src/components/home/evidence-frame.tsx`](src/components/home/evidence-frame.tsx) exports
+  `ScreenshotFrame` and `TerminalFrame`. Only `TerminalFrame` is imported. `ScreenshotFrame` is dead.
+
+That is 24 components on paper, ~22 worth porting.
+
+### 1.6 Astro's built-in CSP does **not** solve the static-headers problem (but the Vercel adapter does)
+
+Detail in §3.3. This is the finding that changes the deploy architecture.
+
+**Everything else in the brief checked out**: 5 routes, 24 components, 11 MDX content files +
+`registry.json`, Next 16.2.4, React 19.2.4, Tailwind 4, 9 redirect rules, the full CSP/HSTS/COOP/CORP
+header set, two `opengraph-image.tsx` files, `theme-cookie.server.ts` reading the cookie server-side.
+
+---
+
+## 2. Phase 0 — Information architecture
+
+Every route and major section, with a recommendation. **Ross decides each row.**
+
+### Routes
+
+| Route              | Recommend | Note                                    |
+| ------------------ | --------- | --------------------------------------- |
+| `/`                | **KEEP**  | Hero + FeaturedProjects + SkillsCluster |
+| `/projects`        | **KEEP**  | Gallery + stack filter chips            |
+| `/projects/[slug]` | **KEEP**  | 10 entries                              |
+| `/about`           | **KEEP**  |                                         |
+| `/contact`         | **KEEP**  | The only route needing a server         |
+
+No route cuts recommended. Five routes is already lean; cutting one saves days of work, not weeks,
+and each earns its place.
+
+### Sections within routes
+
+| Where              | Section                          | Recommend          | Reasoning                                                                                                                                                                                                                                           |
+| ------------------ | -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                | Hero (+ ProofStrip inside it)    | KEEP               |                                                                                                                                                                                                                                                     |
+| `/`                | LensSwitcher                     | KEEP               | Recent deliberate work (#55, #56)                                                                                                                                                                                                                   |
+| `/`                | FeaturedProjects + TerminalFrame | KEEP               |                                                                                                                                                                                                                                                     |
+| `/`                | SkillsCluster                    | **MERGE — decide** | Renders `skillGroups`; `/about`'s Toolbox aside renders the _same_ `skillGroups` minus Languages. The site says the same thing twice. Options: (a) keep both, (b) cut from home and let `/about` own it, (c) cut from `/about` and let home own it. |
+| `/projects`        | ProjectFilter (stack chips)      | KEEP               |                                                                                                                                                                                                                                                     |
+| `/projects/[slug]` | MDX body + not-found             | KEEP               |                                                                                                                                                                                                                                                     |
+| `/about`           | Bio (`about.mdx`)                | KEEP               |                                                                                                                                                                                                                                                     |
+| `/about`           | 01 Education                     | KEEP               |                                                                                                                                                                                                                                                     |
+| `/about`           | 02 Certifications                | KEEP               |                                                                                                                                                                                                                                                     |
+| `/about`           | 03 Virtual training              | KEEP               | Added 4 days ago (#57) — deliberate                                                                                                                                                                                                                 |
+| `/about`           | 04 Toolbox (aside)               | see MERGE above    |                                                                                                                                                                                                                                                     |
+| `/about`           | 05 Languages (aside)             | KEEP               |                                                                                                                                                                                                                                                     |
+| `/contact`         | Form + direct-contact links      | KEEP               |                                                                                                                                                                                                                                                     |
+| —                  | `cv-download.tsx`                | **CUT**            | Dead code (§1.5)                                                                                                                                                                                                                                    |
+| —                  | `ScreenshotFrame` export         | **CUT**            | Dead code (§1.5)                                                                                                                                                                                                                                    |
+| —                  | `now-building.ts`                | **CUT or resolve** | Empty; `HANDOFF` P1 flagged it. No project has `status: "building"`.                                                                                                                                                                                |
+
+### Non-page routes — all KEEP, all need an Astro answer
+
+`sitemap.ts`, `robots.ts`, `manifest.ts`, `icon.tsx`, `apple-icon.tsx`, `opengraph-image.tsx` ×2,
+`/.well-known/security.txt`, `public/google0acbb4712509578f.html` (Search Console — must stay
+byte-identical; it is already in `.prettierignore`).
+
+### Content — port verbatim, per the brief
+
+`content/` is copied across unchanged. Phase 1 gate includes `git diff --stat content/` being empty
+(§5). The four repos with READMEs being corrected, the missing `lakehouse-capstone` entry, and the
+six never-audited entries are all a **separate later workstream** — deliberately not touched here.
+
+---
+
+## 3. Contact form architecture — the recommendation
+
+**Recommendation: Astro Actions, `output: 'static'` (the default), `@astrojs/vercel` adapter
+installed, `export const prerender = false` on `/contact` only. Four routes stay statically
+generated; one route gets a serverless function.**
+
+### 3.1 Why Actions, and what they require
+
+[Actions guide](https://docs.astro.build/en/guides/actions/) — Actions give type-safe server
+functions with Zod input validation and a standard `{ data, error }` result shape, which is close to
+a one-for-one match for the existing `submitContactForm`. The page also supports zero-JS form
+submission via standard `<form>` attributes, with `Astro.getActionResult()` reading the result
+server-side.
+
+The constraint, quoted from that page: **"Pages must be on-demand rendered when calling actions using
+a form action"** and **"Ensure prerendering is disabled on the page before using this API."**
+
+The [Actions API reference](https://docs.astro.build/en/reference/modules/astro-actions/) documents
+`defineAction()` (with `handler` and `input`), `accept: 'form'` for `FormData`, `ActionError`,
+`isInputError()`, and the `actions` object importable from a client island. It does **not** state the
+adapter requirement — that chain is documented across the other two pages below.
+
+### 3.2 Why that forces an adapter, and only for one route
+
+[On-demand rendering](https://docs.astro.build/en/guides/on-demand-rendering/) — `output` is
+`'static'` by default; a single route opts out with `export const prerender = false`. The page
+advises: _"Start with the default `'static'` mode until you are sure that most or all of your pages
+will be rendered on demand."_ Four of our five routes are static forever, so `'static'` is right.
+
+[Configuration reference](https://docs.astro.build/en/reference/configuration-reference/) — the
+`adapter` option exists "to enable on-demand rendering in your Astro project". Four official
+adapters: `@astrojs/vercel`, `@astrojs/netlify`, `@astrojs/cloudflare`, `@astrojs/node`.
+
+The [Build forms with API routes recipe](https://docs.astro.build/en/recipes/build-forms-api/) states
+the prerequisite outright: "A project with an adapter for on-demand rendering", and shows
+`export const prerender = false; // Not needed in 'server' mode`.
+
+So: **Actions → on-demand rendering → adapter.** Not optional.
+
+### 3.3 Hosting implication — the adapter also rescues the security headers
+
+This is the part that changes the deploy architecture, and it is the answer to the brief's risk #2.
+
+Astro _does_ have built-in CSP (`security.csp`, documented as stable since v6 at
+[reference/experimental-flags/csp](https://docs.astro.build/en/reference/experimental-flags/csp/) —
+that URL path looks legacy, re-verify via the MCP next session). But read the limitation: it emits a
+`<meta http-equiv="content-security-policy">` tag, **not** an HTTP header, and it works **only for
+on-demand rendered pages**. On its own it does not give our four static routes a CSP header.
+
+The [Vercel adapter](https://docs.astro.build/en/guides/integrations-guide/vercel/) closes that gap.
+`staticHeaders` (type `boolean`, default `false`, added in `@astrojs/vercel@10.0.0`): _"Enables
+specifying custom headers for prerendered pages in Vercel's configuration. If enabled, the adapter
+will save static headers in the Vercel `vercel.json` file when provided by Astro features, such as
+Content Security Policy."_
+
+So the adapter earns its place **twice** — once for `/contact`, once for turning Astro's CSP config
+into real response headers on the prerendered routes, written into `vercel.json` at build time rather
+than hand-maintained.
+
+**Caveat, and it is a real one:** `staticHeaders` covers headers Astro itself produces (CSP). HSTS,
+`X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, COOP, CORP, `X-Content-Type-Options`,
+`X-DNS-Prefetch-Control` are not Astro features and have no documented Astro source. Those go in
+`vercel.json` by hand. Whether `staticHeaders: true` merges with a hand-written `vercel.json` or
+overwrites it is **not documented on that page** — must be tested in Phase 1 before trusting it.
+
+### 3.4 What the rest of the stack becomes
+
+| Today                            | In Astro                                                                                                                                                                         | Confidence         |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `"use server"` action            | `defineAction({ accept: 'form', input: z…, handler })`                                                                                                                           | Documented         |
+| zod schema, shared client/server | Same file, reused as the Action's `input`                                                                                                                                        | Documented         |
+| `zodResolver` + react-hook-form  | React island calling `actions.contact(…)`, or zero-JS form                                                                                                                       | Documented         |
+| Honeypot                         | Unchanged — a schema field                                                                                                                                                       | Trivial            |
+| Upstash Ratelimit                | Unchanged — plain SDK call inside the handler                                                                                                                                    | Not Astro-specific |
+| Turnstile server verify          | `fetch` to Cloudflare inside the handler. Astro also ships a [Verify a Captcha recipe](https://docs.astro.build/en/recipes/captcha/) (listed on the recipes index; not read yet) | Fine               |
+| `@marsidev/react-turnstile`      | Stays, as a React island via `@astrojs/react`                                                                                                                                    | Documented         |
+| Resend                           | Unchanged                                                                                                                                                                        | Not Astro-specific |
+| `headers()` for client IP        | `Astro.request.headers` / the Action context. **Exact shape not verified — check the MCP**                                                                                       | **Unverified**     |
+| `sonner` toasts                  | Stays in the React island                                                                                                                                                        | Fine               |
+
+**Solve this route first**, per the brief. It determines whether `@astrojs/vercel` is in the project
+at all, and the same shape gets reused for `sunjungko-portfolio`.
+
+---
+
+## 4. Starting template — build fresh, harvest astroplate
+
+**Recommendation: `npm create astro@latest`
+([getting-started](https://docs.astro.build/en/getting-started/), which confirms current major is
+**Astro v7**). Keep astroplate checked out beside it as a reference. Do not fork it.**
+
+### astroplate, verified against the repo (not the README)
+
+| Claim         | Verified 2026-07-26                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------ |
+| Licence       | MIT ✓                                                                                            |
+| Astro version | `astro: 7.0.0` ✓                                                                                 |
+| Tailwind      | `@tailwindcss/vite: ^4.3.1` ✓ (Vite plugin, not PostCSS — note the difference from our setup)    |
+| Stars         | 1,175 ✓                                                                                          |
+| Maintained    | `pushed_at` 2026-07-25 — yesterday. Not archived, 7 open issues ✓                                |
+| Also          | React 19.2.7 + `@astrojs/react` 6.0.0, `@astrojs/mdx` 7.0.0, sitemap 3.7.3, `llmsGenerator.js` ✓ |
+
+Ross's numbers hold up.
+
+### Why not use it as the base
+
+- It ships a blog/marketing IA — Authors, Blog, Tags, Categories, Search, Disqus, multilingual,
+  Privacy Policy. We have five routes. Most of it gets deleted, and the residue (`disqus-react`,
+  `astro-swiper`, `tailwind-bootstrap-grid`, `astro-auto-import`, generator scripts) stays in the
+  lockfile and the mental model.
+- **It has no adapter.** No `@astrojs/vercel`, no Actions, no `output` config. It is a pure static
+  template, so it solves precisely zero of §3 — the hardest part of this migration.
+- It solves none of the other five risks either: no OG-image generation, no CSP, no redirects, no
+  project registry.
+- `pnpm`-first with its own `themeGenerator.js` / `jsonGenerator.js` build pipeline we would have to
+  either adopt or unpick.
+
+### What to harvest from it
+
+Its `astro.config.mjs` shape, the Tailwind-4-via-Vite-plugin wiring, `src/content.config.ts` schema
+patterns, `<head>`/SEO component structure, and `llmsGenerator.js` if we want `llms.txt`. Read it,
+copy patterns, do not inherit the tree.
+
+### Content pipeline — this genuinely shrinks
+
+[Content collections](https://docs.astro.build/en/guides/content-collections/) replaces
+`next-mdx-remote` + `gray-matter` + manual zod + `shiki` + `rehype-pretty-code` + `remark-gfm` with:
+`defineCollection` + the `glob()` loader over `content/projects/**/*.mdx`, a zod schema (from
+`astro/zod`), `getCollection()`/`getEntry()`, and `render(entry)` returning `<Content />`.
+
+`registry.json` has a documented home too — the `file()` loader "will automatically detect and parse
+a single array of objects from JSON and YAML files", and object-keyed formats use "each key as the
+`id`", which is exactly `registry.projects`'s shape. Whether to load the registry as a collection or
+just `import` the JSON is a Phase 1 call; both work.
+
+---
+
+## 5. Phase 1 pass gate — the exact commands and thresholds
+
+Objective, falsifiable, and runnable. **The two starred items must be captured on Next.js, before any
+Astro code exists**, or they cannot be compared.
+
+### Baselines to capture first (blocking prerequisite)
+
+```bash
+# ★ 1. URL inventory — the canonical parity artefact
+curl -s https://rosscyking.com/sitemap.xml > baseline/sitemap-next.xml
+
+# ★ 2. Live response headers — read the wire, never the config file
+curl -sI https://rosscyking.com/ > baseline/headers-next.txt
+
+# ★ 3. Live redirect behaviour, all 9 rules
+for u in internal-ai-agent-eval-lab llm-redteam-harness uk-property-analytics movein \
+         com6513-qa-assistant event-extraction-llm-baseline fromatob-file-converter \
+         scalable-machine-learning-pyspark speech-speed-tempo-classification; do
+  curl -sI "https://rosscyking.com/projects/$u" | head -2
+done
+curl -sI https://rosscyking.com/for/data | head -2
+
+# ★ 4. Lighthouse baseline (does not exist today — §1.3)
+npx lighthouse https://rosscyking.com --output json --output-path baseline/lh-home.json
+# repeat for /projects, /about, /contact and one /projects/[slug]
+```
+
+### The gate itself
+
+| #   | Gate                    | Command                                                          | Threshold                                                                                      |
+| --- | ----------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1   | Content untouched       | `git diff --stat content/`                                       | Empty. Zero bytes changed.                                                                     |
+| 2   | Registry drift          | `npm run validate:projects`                                      | Exit 0. **Framework-agnostic `.mjs` — survives the port unchanged. The one free gate.**        |
+| 3   | Typecheck               | `astro check`                                                    | 0 errors                                                                                       |
+| 4   | Build                   | `astro build`                                                    | Exit 0                                                                                         |
+| 5   | **URL parity**          | diff new `dist/sitemap*.xml` against `baseline/sitemap-next.xml` | **Identical URL set.** Replaces the brief's `check:links`.                                     |
+| 6   | Redirects               | new Playwright spec, one assertion per rule                      | 9/9 land on the right target **with a 301** — not a `<meta refresh>` (see §6)                  |
+| 7   | E2E + a11y              | `npm run test:e2e` (existing 7 specs, ported selectors)          | All pass, axe 0 violations                                                                     |
+| 8   | Unit/component          | `vitest run`                                                     | Passes for surviving React islands; `.astro` components are out of scope (see §6)              |
+| 9   | **Headers on the wire** | `curl -sI <preview-deploy-url>` vs `baseline/headers-next.txt`   | Every header present, values equal or stricter. **Must run against a real Vercel deployment.** |
+| 10  | Lighthouse              | rerun ×5 pages against the preview deploy                        | ≥ baseline on every page, every category                                                       |
+
+### Gate 9 is the one that will silently lie to you
+
+`headers.spec.ts` currently runs against `localhost:3100` via Playwright's `webServer`, and it passes
+today because Next's `headers()` applies in `next start`. After the migration those headers come from
+`vercel.json`, applied by **Vercel's edge, not by `astro preview`**. Pointed at localhost it will go
+green while production ships bare. Gate 9 must target a deployed preview URL. This is the single
+easiest thing in the whole migration to lose without noticing — exactly as the brief warned.
+
+### CI changes implied
+
+`.github/workflows/ci.yml` keeps the same three jobs. `quality` swaps `next build` → `astro build`
+and `tsc --noEmit` → `astro check`. `e2e` gains the redirect spec. A new job (or a manual step) is
+needed for gate 9 against a preview deployment, since it cannot run locally. `link-check.yml` and
+`codeql.yml` are unaffected.
+
+---
+
+## 6. Open questions and undocumented gaps
+
+Stated rather than guessed, per the standing rule.
+
+1. **Redirects will regress unless the adapter handles them.** The
+   [config reference](https://docs.astro.build/en/reference/configuration-reference/) says for a
+   static site without an adapter, `redirects` _"will produce a client redirect using a
+   `meta http-equiv="refresh"` tag and does not support status codes."_ For 9 live SEO URLs, swapping
+   301s for meta-refresh is a real downgrade. With an adapter, status codes work. Since §3 already
+   installs `@astrojs/vercel`, this resolves — but it must be **verified on the wire**, not assumed.
+   The good news: `'/blog/[...slug]': '/articles/[...slug]'` is documented, so our 4 slug moves and
+   the `/for/:lens` wildcard have a documented shape.
+
+2. **OG images — the docs do not cover this.** The recipes index lists 21 official recipes; none is
+   about Open Graph or social images, and `/en/recipes/og-images/` 404s. The only OG mentions in the
+   docs are third-party media integrations (ImageKit's `<OgImage />`, Cloudinary's
+   `getCldOgImageUrl()`), both of which mean a hosted image service, not generation. There is a
+   well-known community route here, but it is **not documented by Astro**, so it needs a real
+   research pass at the start of Phase 1 rather than a guess today. Fallback if it gets expensive:
+   ship a static `/og.png` per route (which `siteConfig.ogImage` already references) and treat
+   per-project dynamic cards as a Phase 2 nice-to-have.
+
+3. **Theme no-flash — the docs do not cover this either.** No dark-mode or theme recipe exists on the
+   recipes index. `theme-cookie.server.ts` reads the cookie server-side, which a prerendered page
+   cannot do. The likely answer is a small inline script in `<head>`, which then interacts with the
+   CSP work in §3.3 (`'unsafe-inline'` is already in the current `script-src`, so this is survivable,
+   but the two decisions are coupled). Needs an MCP lookup next session.
+
+4. **Testing `.astro` components has no plan yet.** The 4 unit and 2 component Vitest specs cover
+   `contact-schema`, `email-template`, `theme-cookie`, `utils`, `badge`, `button`. The first four are
+   plain TS and port unchanged. `badge`/`button` survive only if those stay React. Anything converted
+   to `.astro` loses its component test. The coverage threshold is 80% on an explicit `include` list
+   — that list will need rewriting, and shrinking it to keep the number green would be cheating.
+   Decide deliberately.
+
+5. **`staticHeaders` + a hand-written `vercel.json`** — merge or overwrite? Undocumented. Test early.
+   Still open; belongs to risk #2.
+
+6. ~~**Client IP inside an Action handler**~~ — **RESOLVED 2026-07-27.** `clientAddress` _is_ present
+   on the Actions handler context (verified against a running server: resolved to `::1` locally, not
+   inferred from docs). The implementation prefers `x-forwarded-for` / `x-real-ip` because that is
+   what Vercel sets in front of the function, with `clientAddress` as fallback.
+
+7. **`.npmrc` `legacy-peer-deps=true`** exists solely because `@vercel/analytics` declares SvelteKit
+   as a peerOptional under the Next adapter. Probably deletable post-migration. Try removing it; if
+   `npm ci` stays clean, drop it and the comment.
+
+---
+
+## 6b. Risk #1 (contact form) — landed 2026-07-27
+
+Built in `astro/` on `feat/astro-contact`. Astro 7.1.3, `output: 'static'`, `@astrojs/vercel` with
+`staticHeaders: true`, `export const prerender = false` on `/contact` only. Build confirms the shape:
+`/index.html` prerendered, `/contact` bundled as a serverless function.
+
+**Verified working end to end** (not asserted — exercised): all five pipeline stages, email
+normalisation, every original validation message, honeypot, and the success toast.
+`astro/tests/e2e/contact.spec.ts` — 10/10 passing — locks each finding below in place.
+
+Six things the docs did not tell us, all found by running the thing:
+
+1. **Astro's `accept: 'form'` parser gives the schema `null`, not `""`.** Next's
+   `Object.fromEntries(formData.entries())` produced empty strings. This rejected **every** real
+   submission on `company` and `honeypot` with "expected string, received null". The schema now
+   normalises `null → ""` so all the original zod messages survive.
+
+2. **The honeypot must be enforced in the handler, not the input schema.** Astro validates `input`
+   before the handler runs and answers failures with `400` + the offending field name — which tells a
+   bot exactly what caught it. Next silently returned success. `.max(0)` moved out of the schema.
+
+3. **zod 4 deprecates `.email()` on `ZodString`.** The obvious swap to top-level `z.email()` silently
+   reorders the checks — it would validate format _before_ `.trim().toLowerCase()`, rejecting
+   `"  Ross@Example.com "`, which the Next app accepted. Fixed with `.pipe()` to preserve order.
+
+4. **Astro islands do not share module state, and `sonner` is stateful.** With `<Toaster>` in the
+   layout and `toast()` in the form, the page loaded sonner _twice_ — once as
+   `node_modules/sonner/dist/index.mjs` (resolved for the `.astro` file), once as Vite's prebundled
+   `.vite/deps/sonner.js` (for the `.tsx` island). Two toast stores; every toast vanished silently.
+   Both must live in one island.
+
+5. **`@astrojs/vercel` does not implement `astro preview`.** There is no way to serve the built
+   on-demand route locally without `vercel dev` and a linked project. This _reinforces_ gate 9: the
+   local suite runs against `astro dev`, so headers and serverless behaviour are only ever proven on a
+   real deployment.
+
+6. **`security.checkOrigin` is on by default** (astro@4.9.0+) and 403s form POSTs whose `Origin` does
+   not match. Free CSRF protection for the contact endpoint — good news, but it means any non-browser
+   client must send the header.
+
+Tooling notes, each a half-hour if rediscovered cold:
+
+- **TypeScript 7 breaks `astro check`** — the native compiler does not expose the programmatic API the
+  language server needs. Pinned to `^6`.
+- **Astro 7 force-backgrounds `astro dev` inside coding agents** (via `am-i-vibing`, keyed on
+  `CLAUDECODE`), so Playwright's `webServer` sees the wrapper exit and reports the misleading
+  "Process from config.webServer exited early". The config blanks the variable; no-op in CI.
+- **Root tooling had to be scoped away from `astro/`** — root `tsconfig.json` includes `**/*.ts` with
+  only `node_modules` excluded, so `npm run typecheck` tried to compile `astro:actions` and failed.
+  `astro/` is now excluded from root tsconfig, ESLint and Prettier. **Reverse all three when `astro/`
+  is promoted to the root.**
+
+Two things needing Ross's action outside the repo:
+
+- **`NEXT_PUBLIC_*` → `PUBLIC_*`.** Astro only exposes browser vars under `PUBLIC_`. Both
+  `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_TURNSTILE_SITE_KEY` need renaming in the Vercel dashboard at
+  cutover. Documented in `astro/.env.example`.
+- **`MAINTENANCE.md` is stale here:** it says `cp .env.example .env.local`, but no `.env.example` is
+  tracked — the root `.gitignore`'s bare `.env*` swallows it at every depth. `astro/.env.example`
+  works around this with an explicit negation.
+
+Not ported on this branch, deliberately: the shadcn/Radix ui primitives and Tailwind tokens. This
+branch proves the contact _architecture_; class names are kept so styling drops straight back in.
+
+---
+
+## 7. Recommended shape — unchanged from the brief, with one addition
+
+Phase 0 (IA, today) → Phase 1 (port at parity) → Phase 2 (redesign in Astro). The brief's reasoning
+holds and the repo evidence supports it: `validate:projects` and the Playwright suite are a free
+regression harness _only while markup and URLs stay stable_.
+
+**One addition:** Phase 1 should be split so `/contact` lands first, alone, on a branch, deployed to
+a Vercel preview and verified end-to-end (form sends, rate limit fires, Turnstile rejects, headers on
+the wire) **before** any other route is ported. It is the only route with an irreversible
+architecture decision in it. If Actions-plus-adapter turns out wrong, that is a two-day discovery on
+a one-route branch, not a two-week discovery on a finished site.
+
+---
+
+## Decisions needed from Ross
+
+1. `SkillsCluster` on `/` vs Toolbox on `/about` — keep both, or pick one?
+2. The two retired lens names (`analytics-engineering`, `ai-safety`) — map them onto `data`/`ai`, or
+   accept the silent fallback to default?
+3. Confirm `cv-download.tsx`, `ScreenshotFrame`, `now-building.ts` are cut rather than ported.
+4. Confirm: fresh `npm create astro@latest`, astroplate as reference only.
+5. Confirm: `@astrojs/vercel` adapter installed, `output: 'static'`, `prerender = false` on
+   `/contact` only.
+6. Confirm the Phase 1 gate — in particular dropping `check:links` and adding the sitemap-diff and
+   deployed-headers gates.
+7. Approve capturing the four baselines above before any Astro code is written.
+8. Approve `/contact`-first sequencing within Phase 1.
