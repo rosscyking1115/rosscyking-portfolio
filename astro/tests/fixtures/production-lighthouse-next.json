@@ -1,0 +1,38 @@
+{
+  "_comment": "Lighthouse baseline for the Next.js site at https://rosscyking.com, captured before the Astro component port changed any rendering. Phase 1 gate 10 requires the Astro build to score at least these numbers on every route and every category. Re-capture with: npx lighthouse <url> --only-categories=performance,accessibility,best-practices,seo",
+  "capturedAt": "2026-07-27T16:02:16.394Z",
+  "lighthouseVersion": "13.4.1",
+  "framework": "next@16.2.4",
+  "scores": {
+    "/": {
+      "performance": 93,
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "/projects": {
+      "performance": 95,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "/about": {
+      "performance": 96,
+      "accessibility": 98,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "/contact": {
+      "performance": 96,
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "/projects/tfl-data-engineering": {
+      "performance": 97,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    }
+  }
+}

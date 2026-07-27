@@ -68,11 +68,22 @@ This matters: dropping `motion` for CSS is a **one-file change**, not a ten-comp
 moves it from "definitely defer to Phase 2" to "cheap enough to consider during the port". Still
 recommend deferring — but it is no longer a big lever.
 
-### 1.3 "Lighthouse ≥ current" has no baseline and is currently unfalsifiable
+### 1.3 ~~"Lighthouse ≥ current" has no baseline~~ — **CAPTURED 2026-07-27**
 
-Nothing in the repo captures a Lighthouse score. There is no Lighthouse CI, no stored report, no
-budget file. If the baseline is not captured against production **before** any Astro code is written,
-this criterion cannot be checked. Action in §5.
+Nothing in the repo captured a Lighthouse score, so the criterion was unfalsifiable. Now recorded at
+`astro/tests/fixtures/production-lighthouse-next.json`, taken against production with Lighthouse
+13.4.1 **before** the component port changes any rendering:
+
+| Route                            | Perf | A11y | Best practices | SEO |
+| -------------------------------- | ---- | ---- | -------------- | --- |
+| `/`                              | 93   | 100  | 96             | 100 |
+| `/projects`                      | 95   | 100  | 100            | 100 |
+| `/about`                         | 96   | 98   | 100            | 100 |
+| `/contact`                       | 96   | 100  | 96             | 100 |
+| `/projects/tfl-data-engineering` | 97   | 100  | 100            | 100 |
+
+Gate 10 is now checkable: the Astro build must meet or beat every cell. Note the bar is high —
+"same-or-better" here means holding 93+ performance and 100 SEO, not merely "looks fine".
 
 ### 1.4 Role lenses: three, and two historical lens URLs already degrade silently
 
@@ -124,24 +135,24 @@ and each earns its place.
 
 ### Sections within routes
 
-| Where              | Section                          | Recommend          | Reasoning                                                                                                                                                                                                                                           |
-| ------------------ | -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/`                | Hero (+ ProofStrip inside it)    | KEEP               |                                                                                                                                                                                                                                                     |
-| `/`                | LensSwitcher                     | KEEP               | Recent deliberate work (#55, #56)                                                                                                                                                                                                                   |
-| `/`                | FeaturedProjects + TerminalFrame | KEEP               |                                                                                                                                                                                                                                                     |
-| `/`                | SkillsCluster                    | **MERGE — decide** | Renders `skillGroups`; `/about`'s Toolbox aside renders the _same_ `skillGroups` minus Languages. The site says the same thing twice. Options: (a) keep both, (b) cut from home and let `/about` own it, (c) cut from `/about` and let home own it. |
-| `/projects`        | ProjectFilter (stack chips)      | KEEP               |                                                                                                                                                                                                                                                     |
-| `/projects/[slug]` | MDX body + not-found             | KEEP               |                                                                                                                                                                                                                                                     |
-| `/about`           | Bio (`about.mdx`)                | KEEP               |                                                                                                                                                                                                                                                     |
-| `/about`           | 01 Education                     | KEEP               |                                                                                                                                                                                                                                                     |
-| `/about`           | 02 Certifications                | KEEP               |                                                                                                                                                                                                                                                     |
-| `/about`           | 03 Virtual training              | KEEP               | Added 4 days ago (#57) — deliberate                                                                                                                                                                                                                 |
-| `/about`           | 04 Toolbox (aside)               | see MERGE above    |                                                                                                                                                                                                                                                     |
-| `/about`           | 05 Languages (aside)             | KEEP               |                                                                                                                                                                                                                                                     |
-| `/contact`         | Form + direct-contact links      | KEEP               |                                                                                                                                                                                                                                                     |
-| —                  | `cv-download.tsx`                | **CUT**            | Dead code (§1.5)                                                                                                                                                                                                                                    |
-| —                  | `ScreenshotFrame` export         | **CUT**            | Dead code (§1.5)                                                                                                                                                                                                                                    |
-| —                  | `now-building.ts`                | **CUT or resolve** | Empty; `HANDOFF` P1 flagged it. No project has `status: "building"`.                                                                                                                                                                                |
+| Where              | Section                          | Recommend            | Reasoning                                                                                                                                                                |
+| ------------------ | -------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                | Hero (+ ProofStrip inside it)    | KEEP                 |                                                                                                                                                                          |
+| `/`                | LensSwitcher                     | KEEP                 | Recent deliberate work (#55, #56)                                                                                                                                        |
+| `/`                | FeaturedProjects + TerminalFrame | KEEP                 |                                                                                                                                                                          |
+| `/`                | SkillsCluster                    | **CUT** (2026-07-27) | Rendered the _same_ `skillGroups` as `/about`'s Toolbox aside. Ross: show it once. `/about` keeps it; home shows the stack through the project cards' own chips instead. |
+| `/projects`        | ProjectFilter (stack chips)      | KEEP                 |                                                                                                                                                                          |
+| `/projects/[slug]` | MDX body + not-found             | KEEP                 |                                                                                                                                                                          |
+| `/about`           | Bio (`about.mdx`)                | KEEP                 |                                                                                                                                                                          |
+| `/about`           | 01 Education                     | KEEP                 |                                                                                                                                                                          |
+| `/about`           | 02 Certifications                | KEEP                 |                                                                                                                                                                          |
+| `/about`           | 03 Virtual training              | KEEP                 | Added 4 days ago (#57) — deliberate                                                                                                                                      |
+| `/about`           | 04 Toolbox (aside)               | see MERGE above      |                                                                                                                                                                          |
+| `/about`           | 05 Languages (aside)             | KEEP                 |                                                                                                                                                                          |
+| `/contact`         | Form + direct-contact links      | KEEP                 |                                                                                                                                                                          |
+| —                  | `cv-download.tsx`                | **CUT**              | Dead code (§1.5)                                                                                                                                                         |
+| —                  | `ScreenshotFrame` export         | **CUT**              | Dead code (§1.5)                                                                                                                                                         |
+| —                  | `now-building.ts`                | **CUT or resolve**   | Empty; `HANDOFF` P1 flagged it. No project has `status: "building"`.                                                                                                     |
 
 ### Non-page routes — all KEEP, all need an Astro answer
 
@@ -727,16 +738,30 @@ a one-route branch, not a two-week discovery on a finished site.
 
 ---
 
-## Decisions needed from Ross
+## Decisions — settled 2026-07-27
 
-1. `SkillsCluster` on `/` vs Toolbox on `/about` — keep both, or pick one?
-2. The two retired lens names (`analytics-engineering`, `ai-safety`) — map them onto `data`/`ai`, or
-   accept the silent fallback to default?
-3. Confirm `cv-download.tsx`, `ScreenshotFrame`, `now-building.ts` are cut rather than ported.
-4. Confirm: fresh `npm create astro@latest`, astroplate as reference only.
-5. Confirm: `@astrojs/vercel` adapter installed, `output: 'static'`, `prerender = false` on
-   `/contact` only.
-6. Confirm the Phase 1 gate — in particular dropping `check:links` and adding the sitemap-diff and
-   deployed-headers gates.
-7. Approve capturing the four baselines above before any Astro code is written.
-8. Approve `/contact`-first sequencing within Phase 1.
+1. ✅ **`SkillsCluster` on `/` vs Toolbox on `/about` — show it once.** Cut from the home page; the
+   `/about` Toolbox aside owns it. Home already shows the stack _through the work_ — every project
+   card carries its own stack chips — so a separate list there is the narrative version of something
+   the evidence already says. It also shortens the path from hero to the featured set. Recorded for
+   the component port; **no change made to the live Next site**, since production stays untouched
+   until cutover.
+2. ✅ **Retired lens names map to their nearest surviving lens.** `analytics-engineering` and
+   `data-engineering` → `data`; `applied-ai` and `ai-safety` → `ai`. Analytics engineering maps to
+   `data` rather than the default because data and analytics engineering are the same direction for
+   this portfolio, and that is the direction being led with. Implemented in `LENS_ALIASES`; genuine
+   nonsense still falls back to the default. Broader positioning is still open — Ross is thinking
+   about it, and nothing here forecloses it.
+3. ✅ `cv-download.tsx`, `ScreenshotFrame`, `now-building.ts` — cut, not ported.
+4. ✅ Fresh `npm create astro@latest`; astroplate reference only.
+5. ✅ `@astrojs/vercel`, `output: 'static'`, `prerender = false` on `/contact` only.
+6. ✅ Phase 1 gate as written — `check:links` dropped, sitemap-diff and deployed-headers added.
+7. ✅ Baselines captured: sitemap, live headers, redirect status codes, and Lighthouse (§1.3).
+8. ✅ `/contact`-first sequencing — done; all six risks landed in order.
+
+### Still open
+
+- **Gate 9 — needs a second Vercel project pointed at `astro/`.** Until then the security headers and
+  the `/for/:lens` redirect are config-parity only. See §6c.
+- **Broader positioning.** Data engineering and analytics engineering lead for now; Ross is still
+  weighing the wider framing. The lens aliases above are compatible with either outcome.

@@ -72,22 +72,48 @@ test.describe("unknown and missing lenses fall back to the default", () => {
     await expect(page.locator(`[data-lens-panel="${DEFAULT_LENS}"]`)).toBeVisible();
   });
 
-  /**
-   * Documents PRE-EXISTING behaviour, not desired behaviour. The lens set was
-   * collapsed from four to three (#56), and the /for/:lens redirect is a
-   * wildcard, so an old shared /for/analytics-engineering link still resolves
-   * but lands on the default rather than a sensible neighbour.
-   *
-   * Ported faithfully so the migration changes nothing. Whether to map the two
-   * retired names is a Phase 0 decision for Ross — plan §1.4.
-   */
-  test("retired lens names still fall back to the default (pre-existing)", async ({
-    page,
-  }) => {
-    for (const retired of ["analytics-engineering", "ai-safety"]) {
+});
+
+/**
+ * The lens set was collapsed from four to three (#56), but `/for/:lens` is a
+ * wildcard redirect, so old shared links still resolve. They used to fail
+ * validation and dump the visitor on the default lens — a link promising
+ * "here is my analytics engineering work" landing on the generic set is a quiet
+ * broken promise, which is why it went unnoticed.
+ *
+ * Analytics engineering maps to `data`, not to the default: that is the
+ * direction being led with. Ross's call, 2026-07-27.
+ */
+test.describe("retired lens names land on the right surviving lens", () => {
+  const aliases = [
+    ["data-engineering", "data"],
+    ["analytics-engineering", "data"],
+    ["applied-ai", "ai"],
+    ["ai-safety", "ai"],
+  ] as const;
+
+  for (const [retired, target] of aliases) {
+    test(`?lens=${retired} shows the ${target} set`, async ({ page }) => {
       await page.goto(`/?lens=${retired}`);
-      await expect(page.locator("html")).toHaveAttribute("data-lens", DEFAULT_LENS);
+
+      await expect(page.locator("html")).toHaveAttribute("data-lens", target);
+      await expect(page.locator(`[data-lens-panel="${target}"]`)).toBeVisible();
+
+      for (const slug of lenses[target]!.featured) {
+        await expect(
+          page.locator(`[data-lens-panel="${target}"] a[href="/projects/${slug}"]`),
+        ).toBeVisible();
+      }
+    });
+  }
+
+  test("an alias never points at a lens that no longer exists", async ({ page }) => {
+    // Guards the map itself: renaming a lens in registry.json without updating
+    // the aliases would strand these URLs on a panel that is never rendered.
+    for (const [, target] of aliases) {
+      expect(lensKeys, `alias target "${target}" is not a real lens`).toContain(target);
     }
+    await page.goto("/");
   });
 });
 
