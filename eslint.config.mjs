@@ -14,6 +14,11 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Dev tooling (Node scripts), not application code.
     "scripts/**",
+    // The Astro app is a self-contained project with its own toolchain
+    // (`astro check`, its own tsconfig/prettier). Linting it with
+    // eslint-config-next would judge Astro code by Next's rules.
+    // Remove this when astro/ is promoted to the repo root.
+    "astro/**",
   ]),
 ]);
 

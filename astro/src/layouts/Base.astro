@@ -1,0 +1,38 @@
+---
+/**
+ * Minimal layout for the risk #1 (contact form) branch.
+ *
+ * Deliberately thin. The real layout — Nav, Footer, theme provider, JSON-LD,
+ * Geist fonts, the full metadata block — is the layout port, not this branch.
+ * What is here is what /contact needs to render, be crawled correctly, and be
+ * testable: title, description, canonical, and the toast host.
+ *
+ * Title template matches the Next root layout exactly: `%s — Ross King`.
+ */
+interface Props {
+  title: string;
+  description: string;
+  /** Path-only canonical, e.g. "/contact". */
+  canonical: string;
+}
+
+const { title, description, canonical } = Astro.props;
+const canonicalUrl = new URL(canonical, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} — Ross King</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
