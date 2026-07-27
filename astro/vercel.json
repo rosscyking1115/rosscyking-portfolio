@@ -1,5 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "_comment": "The other nine redirects live in astro.config.mjs, where Astro compiles them into the build output AND serves them in `astro dev`, so they are covered by real end-to-end tests. This one cannot go there: Astro rejects it at build time with InvalidRedirectDestination because the destination of a dynamic redirect must include all the source's dynamic parameters, and a query string is not a route. 308 matches what production answers today.",
+  "redirects": [
+    { "source": "/for/:lens", "destination": "/?lens=:lens", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/(.*)",

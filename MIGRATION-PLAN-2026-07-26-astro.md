@@ -589,6 +589,46 @@ produces a valid but tiny PNG). Adding a project without a working card fails he
 
 ---
 
+## 6e. Risk #4 (redirects) — landed 2026-07-27
+
+Ten rules: the nine from `next.config.ts`, plus `/opengraph-image` → `/opengraph-image.png` as
+insurance for the URL change in risk #3.
+
+**Production answers all nine with 308**, captured with `curl -sI` rather than inferred from the
+config. Astro's default for a permanent redirect is **301** — SEO-equivalent, but not parity — so
+each rule pins `{ status: 308, destination }` explicitly.
+
+### Split mechanism, and why
+
+Nine live in `astro.config.mjs`; one lives in `vercel.json`. That is forced, not a preference:
+
+- **`/for/:lens` → `/?lens=:lens` cannot be expressed in Astro.** It fails the build with
+  `InvalidRedirectDestination` — "the destination of a dynamic redirect must include all dynamic
+  parameters from the source route", and a query string is not a route. Verified by trying it.
+- Everything else stays in `astro.config.mjs` because Astro compiles those into the build output
+  **and** serves them in `astro dev` — so they get real end-to-end tests instead of a config diff.
+  Putting all ten in `vercel.json` for tidiness would have cost that.
+
+### `astro dev` does not honour the pinned status
+
+Observed: **301** for the `/projects/*` rules, whose destinations do not exist yet, and **308** for
+`/opengraph-image`, whose destination does. The build output is right in every case — all ten land in
+`.vercel/output/config.json` as 308.
+
+So each rule is checked **twice**: a live request proves it redirects and where to; an assertion on
+`.vercel/output/config.json` proves the status that actually ships. `npm run test:e2e` now runs
+`astro build && playwright test` so the build output is never stale.
+
+Proven by sabotage: deleting `/projects/movein` and downgrading one rule to 302 produced three
+failures; restoring made them green.
+
+### Still outstanding
+
+`/for/:lens` is config-parity only, for the same reason as the security headers — `astro dev` does
+not emulate Vercel's edge. It closes with gate 9, alongside the headers, on one deployment.
+
+---
+
 ## 7. Recommended shape — unchanged from the brief, with one addition
 
 Phase 0 (IA, today) → Phase 1 (port at parity) → Phase 2 (redesign in Astro). The brief's reasoning
