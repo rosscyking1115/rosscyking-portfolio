@@ -1,4 +1,6 @@
 ---
+import ThemeScript from "../components/ThemeScript.astro";
+import ThemeToggle from "../components/ThemeToggle.astro";
 import { DEFAULT_OG_IMAGE, OG_SIZE } from "../lib/og-config";
 import { siteConfig } from "../lib/site-config";
 
@@ -41,6 +43,13 @@ const fullTitle = `${title} — ${siteConfig.shortName}`;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    {/*
+      Must come before any stylesheet: the class has to be on <html> before the
+      browser has anything to paint, or the wrong theme flashes. See risk #5.
+    */}
+    <ThemeScript />
+
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
@@ -64,6 +73,9 @@ const fullTitle = `${title} — ${siteConfig.shortName}`;
     <meta name="twitter:image" content={ogImageUrl} />
   </head>
   <body>
+    <header>
+      <ThemeToggle />
+    </header>
     <main>
       <slot />
     </main>

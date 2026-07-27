@@ -1,0 +1,63 @@
+---
+/**
+ * Theme toggle — cycles light → dark → system, matching the Next app's model.
+ *
+ * Deliberately NOT a React island. The Next version was a client component only
+ * because everything around it was React; here a button that flips a class is
+ * exactly the case Astro's zero-JS-by-default is for, so it ships a handful of
+ * bytes instead of hydrating a framework.
+ *
+ * Styling is intentionally minimal — the design tokens and the real control
+ * arrive with the component port. What matters on this branch is that the
+ * behaviour and the persisted cookie match the Next app exactly.
+ */
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  aria-live="polite"
+  data-testid="theme-toggle"
+>
+  <span data-theme-label>Theme</span>
+</button>
+
+<script>
+  import { browserCookie, resolveTheme, type Theme } from "../lib/theme";
+
+  const ORDER: Theme[] = ["light", "dark", "system"];
+
+  const button = document.getElementById("theme-toggle");
+  const label = button?.querySelector("[data-theme-label]");
+
+  function apply(theme: Theme) {
+    const resolved = resolveTheme(theme);
+    const root = document.documentElement;
+    root.classList.toggle("dark", resolved === "dark");
+    root.style.colorScheme = resolved;
+    root.dataset.theme = theme;
+
+    if (button) button.setAttribute("aria-label", `Theme: ${theme}. Change theme.`);
+    if (label) label.textContent = theme;
+  }
+
+  // The inline no-flash script already stamped the current preference onto
+  // <html>, so start from that rather than re-reading and risking a mismatch.
+  const initial = (document.documentElement.dataset.theme ?? "system") as Theme;
+  apply(initial);
+
+  button?.addEventListener("click", () => {
+    const current = (document.documentElement.dataset.theme ?? "system") as Theme;
+    const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]!;
+    browserCookie.set(next);
+    apply(next);
+  });
+
+  // Follow the OS while the preference is "system", matching the Next app's
+  // useSyncExternalStore subscription.
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if ((document.documentElement.dataset.theme ?? "system") === "system") {
+      apply("system");
+    }
+  });
+</script>
