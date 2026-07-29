@@ -16,6 +16,14 @@ import { expect, test } from "@playwright/test";
 
 const THEME_COOKIE = { name: "theme", domain: "localhost", path: "/" };
 
+/**
+ * The nav renders a toggle for desktop and another for mobile, and exactly one
+ * is visible at any viewport. Target the visible one rather than `.first()`, so
+ * these tests keep working whichever breakpoint they run at.
+ */
+const themeToggle = (page: import("@playwright/test").Page) =>
+  page.getByTestId("theme-toggle").locator("visible=true");
+
 test.describe("no-flash: the theme is applied before paint", () => {
   test("the inline script is in <head> and precedes every stylesheet", async ({
     page,
@@ -101,7 +109,7 @@ test.describe("toggle", () => {
     await page.goto("/contact");
 
     const html = page.locator("html");
-    const toggle = page.getByTestId("theme-toggle");
+    const toggle = themeToggle(page);
 
     // Starts on "system", which resolves light here.
     await expect(html).toHaveAttribute("data-theme", "system");
@@ -133,7 +141,7 @@ test.describe("toggle", () => {
     const page = await context.newPage();
     await page.goto("/contact");
 
-    await page.getByTestId("theme-toggle").click();
+    await themeToggle(page).click();
 
     const cookie = (await context.cookies()).find((c) => c.name === "theme");
     expect(cookie, "no `theme` cookie written").toBeDefined();

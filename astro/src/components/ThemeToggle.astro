@@ -1,4 +1,8 @@
 ---
+import { Monitor, Moon, Sun } from "@lucide/astro";
+
+import { buttonVariants } from "../lib/button-variants";
+
 /**
  * Theme toggle — cycles light → dark → system, matching the Next app's model.
  *
@@ -7,28 +11,51 @@
  * exactly the case Astro's zero-JS-by-default is for, so it ships a handful of
  * bytes instead of hydrating a framework.
  *
- * Styling is intentionally minimal — the design tokens and the real control
- * arrive with the component port. What matters on this branch is that the
- * behaviour and the persisted cookie match the Next app exactly.
+ * All three icons are rendered and CSS picks the visible one off `data-theme`
+ * on <html> — the same attribute-driven trick as the lens panels. That means
+ * the icon is correct on first paint, with no flash and no JS on the critical
+ * path; the script only handles clicks.
  */
 ---
 
 <button
-  id="theme-toggle"
+  data-theme-toggle
   type="button"
-  aria-live="polite"
+  class={buttonVariants({ variant: "ghost", size: "icon" })}
+  aria-label="Change theme"
   data-testid="theme-toggle"
 >
-  <span data-theme-label>Theme</span>
+  <Sun class="theme-icon" data-theme-icon="light" aria-hidden="true" />
+  <Moon class="theme-icon" data-theme-icon="dark" aria-hidden="true" />
+  <Monitor class="theme-icon" data-theme-icon="system" aria-hidden="true" />
+  <span class="sr-only" data-theme-label>Theme</span>
 </button>
+
+<style>
+  .theme-icon {
+    display: none;
+  }
+  :global(html[data-theme="light"]) [data-theme-icon="light"],
+  :global(html[data-theme="dark"]) [data-theme-icon="dark"],
+  :global(html[data-theme="system"]) [data-theme-icon="system"] {
+    display: block;
+  }
+  /* Before the inline head script runs there is no data-theme yet; show the
+     system icon so the button is never empty. */
+  :global(html:not([data-theme])) [data-theme-icon="system"] {
+    display: block;
+  }
+</style>
 
 <script>
   import { browserCookie, resolveTheme, type Theme } from "../lib/theme";
 
   const ORDER: Theme[] = ["light", "dark", "system"];
 
-  const button = document.getElementById("theme-toggle");
-  const label = button?.querySelector("[data-theme-label]");
+  // The nav renders one toggle for desktop and one for mobile, so every
+  // instance has to be wired and kept in sync. An `id` would have been invalid
+  // HTML twice over and would have left the mobile button dead.
+  const buttons = document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]");
 
   function apply(theme: Theme) {
     const resolved = resolveTheme(theme);
@@ -37,8 +64,11 @@
     root.style.colorScheme = resolved;
     root.dataset.theme = theme;
 
-    if (button) button.setAttribute("aria-label", `Theme: ${theme}. Change theme.`);
-    if (label) label.textContent = theme;
+    for (const button of buttons) {
+      button.setAttribute("aria-label", `Theme: ${theme}. Change theme.`);
+      const label = button.querySelector("[data-theme-label]");
+      if (label) label.textContent = theme;
+    }
   }
 
   // The inline no-flash script already stamped the current preference onto
@@ -46,12 +76,14 @@
   const initial = (document.documentElement.dataset.theme ?? "system") as Theme;
   apply(initial);
 
-  button?.addEventListener("click", () => {
-    const current = (document.documentElement.dataset.theme ?? "system") as Theme;
-    const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]!;
-    browserCookie.set(next);
-    apply(next);
-  });
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      const current = (document.documentElement.dataset.theme ?? "system") as Theme;
+      const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]!;
+      browserCookie.set(next);
+      apply(next);
+    });
+  }
 
   // Follow the OS while the preference is "system", matching the Next app's
   // useSyncExternalStore subscription.
