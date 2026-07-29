@@ -68,7 +68,7 @@ test.describe("stack filter", () => {
     await page.goto("/projects?stack=GitHub%20Actions");
 
     const visible = page.locator("[data-project]:visible");
-    expect(await visible.count()).toBeGreaterThan(0);
+    await expect(visible).not.toHaveCount(0);
     for (const card of await visible.all()) {
       expect(await card.getAttribute("data-stack")).toContain("|GitHub Actions|");
     }
@@ -151,7 +151,7 @@ test.describe("write-ups", () => {
     // Pinned metrics come from the MDX front matter, which validate-projects
     // gates against registry.json — a stale number fails CI before it ships.
     const metrics = page.locator(".font-mono.text-2xl");
-    expect(await metrics.count()).toBeGreaterThan(0);
+    await expect(metrics).not.toHaveCount(0);
     await expect(metrics.first()).not.toBeEmpty();
 
     const neighbours = page.getByRole("navigation", { name: "Project navigation" });
@@ -164,7 +164,7 @@ test.describe("write-ups", () => {
     await page.goto("/projects/tfl-data-engineering");
     const doc = page.locator(".doc");
     await expect(doc).toBeVisible();
-    expect(await doc.locator("h2").count()).toBeGreaterThan(0);
+    await expect(doc.locator("h2")).not.toHaveCount(0);
 
     // The auto-numbering counter is the signature; losing it is silent.
     const marker = await page.evaluate(

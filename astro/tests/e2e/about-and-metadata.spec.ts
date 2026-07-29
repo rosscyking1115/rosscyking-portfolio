@@ -40,7 +40,11 @@ test.describe("about page", () => {
     await page.goto("/about");
     const bio = page.locator("[data-bio]");
     // Imported directly from the repo-root MDX — no copy, no front matter.
-    expect(await bio.locator("p").count()).toBeGreaterThan(1);
+    // `expect(locator).not.toHaveCount(0)` RETRIES; `await locator.count()`
+    // is a one-shot snapshot that reads 0 if it lands mid-render. That is
+    // exactly how this test failed once the suite grew and the dev server
+    // started compiling pages on demand under load.
+    await expect(bio.locator("p")).not.toHaveCount(0);
     await expect(bio).toContainText("MSc Artificial Intelligence candidate");
   });
 
@@ -48,12 +52,12 @@ test.describe("about page", () => {
     page,
   }) => {
     await page.goto("/about");
-    expect(await page.locator("main ol li h3").count()).toBeGreaterThan(0);
+    await expect(page.locator("main ol li h3")).not.toHaveCount(0);
 
     const lists = page.locator("main ul.divide-y");
     await expect(lists).toHaveCount(2);
     for (const list of await lists.all()) {
-      expect(await list.locator("li").count()).toBeGreaterThan(0);
+      await expect(list.locator("li")).not.toHaveCount(0);
     }
   });
 
@@ -61,7 +65,7 @@ test.describe("about page", () => {
     await page.goto("/about");
 
     const toolbox = page.locator("[data-toolbox]");
-    expect(await toolbox.locator("> div").count()).toBeGreaterThan(0);
+    await expect(toolbox.locator("> div")).not.toHaveCount(0);
     // Languages get their own block below; duplicating them in the toolbox was
     // the behaviour the Next page deliberately filtered out.
     await expect(toolbox).not.toContainText("Languages");

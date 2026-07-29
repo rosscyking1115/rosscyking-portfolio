@@ -169,3 +169,101 @@ test.describe("contact action — server contract", () => {
     }
   });
 });
+
+/**
+ * Page chrome and form styling.
+ *
+ * /contact was built first, during risk #1, before the design system existed —
+ * so it shipped functional but with bare markup, and stayed that way through
+ * the whole component port. Everything passed the whole time, because nothing
+ * here was tested. These assertions exist so "works but looks unfinished"
+ * cannot pass again.
+ */
+test.describe("contact page — chrome and styling", () => {
+  test("renders the registration mark, availability pill and contact list", async ({
+    page,
+  }) => {
+    await page.goto("/contact");
+    const main = page.locator("main");
+
+    await expect(main.getByText("[ Contact ]")).toBeVisible();
+    // The pulsing dot is part of the availability signal, not decoration.
+    await expect(main.locator(".animate-ping")).toBeVisible();
+    await expect(main.getByText(/Available for full-time roles/)).toBeVisible();
+
+    for (const label of ["Email", "GitHub", "LinkedIn", "Download CV"]) {
+      const link = main.locator(".divide-y > a").filter({ hasText: label });
+      await expect(link, `${label} link is missing`).toBeVisible();
+      // Each row is icon-led; an empty icon box is the tell that a brand mark
+      // or lucide import was dropped.
+      await expect(link.locator("svg").first(), `${label} has no icon`).toBeVisible();
+    }
+  });
+
+  test("the form controls use the design-system primitives", async ({ page }) => {
+    await page.goto("/contact");
+
+    // Bare <input>/<textarea> render with no border at all, which is exactly
+    // what this page shipped with before the primitives were ported.
+    for (const id of ["name", "email", "company"]) {
+      const box = await page.locator(`#${id}`).evaluate((el) => {
+        const s = getComputedStyle(el);
+        return { border: s.borderTopWidth, radius: s.borderTopLeftRadius, height: s.height };
+      });
+      expect(box.border, `#${id} has no border`).not.toBe("0px");
+      expect(box.radius, `#${id} is not rounded`).not.toBe("0px");
+      expect(box.height, `#${id} is not 40px tall`).toBe("40px");
+    }
+
+    const textareaBorder = await page
+      .locator("#message")
+      .evaluate((el) => getComputedStyle(el).borderTopWidth);
+    expect(textareaBorder).not.toBe("0px");
+
+    // Label carries the primitive's weight; a bare <label> would be 400.
+    const labelWeight = await page
+      .locator('label[for="name"]')
+      .evaluate((el) => getComputedStyle(el).fontWeight);
+    expect(labelWeight).toBe("500");
+  });
+
+  test("the submit button shares the site's button styling", async ({ page }) => {
+    await page.goto("/contact");
+    const submit = page.locator('form button[type="submit"]');
+
+    // Primary variant — the same #3d5a73 every other primary button uses, so a
+    // drifted class string shows up here rather than only to the eye.
+    await expect(submit).toHaveCSS("background-color", "rgb(61, 90, 115)");
+    await expect(submit.locator("svg")).toBeVisible();
+  });
+
+  test("an invalid field is flagged to assistive tech and restyled", async ({ page }) => {
+    await page.goto("/contact");
+    await waitForFormHydration(page);
+    await page.getByRole("button", { name: /Send message/ }).click();
+
+    const name = page.locator("#name");
+    await expect(name).toHaveAttribute("aria-invalid", "true");
+    await expect(page.locator("#company")).toHaveAttribute("aria-invalid", "false");
+
+    /**
+     * The `aria-[invalid=true]:border-destructive` rule fires — toggling the
+     * attribute changes the computed border-color.
+     *
+     * It deliberately does NOT assert the border is red, because it is not.
+     * Checked against the live Next site: an invalid field there computes to
+     * exactly the same value, `oklab(0.916204 0.000517875 -0.00546789)`, which
+     * is a light grey rather than --destructive. So this is inherited
+     * behaviour, faithfully ported, not a migration regression — and asserting
+     * "is red" would fail against the very thing being ported.
+     *
+     * Worth revisiting in the redesign phase: the invalid state is announced to
+     * screen readers but is not visually distinct. Flagged to Ross.
+     */
+    const valid = await page
+      .locator("#company")
+      .evaluate((el) => getComputedStyle(el).borderTopColor);
+    const invalid = await name.evaluate((el) => getComputedStyle(el).borderTopColor);
+    expect(invalid, "aria-invalid did not change the border").not.toBe(valid);
+  });
+});

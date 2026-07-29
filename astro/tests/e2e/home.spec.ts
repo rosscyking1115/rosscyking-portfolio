@@ -112,6 +112,10 @@ test.describe("featured showcase", () => {
       await page.goto(key === "all" ? "/" : `/?lens=${key}`);
       const panel = page.locator(`[data-lens-panel="${key}"]`);
 
+      // Wait for the panel to actually render before counting anything —
+      // .count() does not retry, so a mid-render read looks like "no visual".
+      await expect(panel.locator("article")).not.toHaveCount(0);
+
       for (const card of await panel.locator("article").all()) {
         const title = await card.locator("h3").textContent();
         const hasImage = (await card.locator("figure img").count()) > 0;

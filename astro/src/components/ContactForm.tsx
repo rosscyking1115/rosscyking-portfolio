@@ -6,7 +6,9 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { Toaster, toast } from "sonner";
 
+import { buttonVariants } from "../lib/button-variants";
 import { contactFormSchema, type ContactFormValues } from "../lib/contact-schema";
+import { Input, Label, SendIcon, Textarea } from "./ui/form-controls";
 
 /**
  * Ported from src/components/contact/contact-form.tsx.
@@ -22,10 +24,9 @@ import { contactFormSchema, type ContactFormValues } from "../lib/contact-schema
  *       https://docs.astro.build/en/guides/actions/
  *   - `process.env.NEXT_PUBLIC_*` -> `astro:env/client`.
  *
- * NOT ported on this branch: the shadcn/Radix ui primitives (Button, Input,
- * Label, Textarea) and the Tailwind design tokens. This branch proves the
- * contact ARCHITECTURE works end to end; the design system arrives with the
- * component port. Class names are kept so styling drops straight back in.
+ * The form controls come from ./ui/form-controls, ported from the shadcn
+ * primitives. The submit button shares `buttonVariants` with every other button
+ * on the site rather than restyling itself.
  */
 export function ContactForm() {
   const {
@@ -111,7 +112,7 @@ export function ContactForm() {
 
       <div className="mt-6 grid gap-5 sm:grid-cols-2">
         <Field id="name" label="Name" error={errors.name?.message} required>
-          <input
+          <Input
             id="name"
             placeholder="Jane Recruiter"
             autoComplete="name"
@@ -121,7 +122,7 @@ export function ContactForm() {
         </Field>
 
         <Field id="email" label="Email" error={errors.email?.message} required>
-          <input
+          <Input
             id="email"
             type="email"
             inputMode="email"
@@ -139,7 +140,7 @@ export function ContactForm() {
           error={errors.company?.message}
           wide
         >
-          <input
+          <Input
             id="company"
             placeholder="Acme AI"
             autoComplete="organization"
@@ -149,7 +150,7 @@ export function ContactForm() {
         </Field>
 
         <Field id="message" label="Message" error={errors.message?.message} required wide>
-          <textarea
+          <Textarea
             id="message"
             rows={4}
             placeholder="A line about the role and team…"
@@ -172,8 +173,19 @@ export function ContactForm() {
       )}
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
-        <button type="submit" disabled={isPending}>
-          {isPending ? "Sending…" : "Send message"}
+        <button
+          type="submit"
+          disabled={isPending}
+          className={buttonVariants()}
+        >
+          {isPending ? (
+            "Sending…"
+          ) : (
+            <>
+              Send message
+              <SendIcon />
+            </>
+          )}
         </button>
         <p className="text-muted-foreground text-xs">No newsletter. No follow-up spam.</p>
       </div>
@@ -196,10 +208,10 @@ function Field({ id, label, error, hint, required, wide, children }: FieldProps)
   return (
     <div className={`flex flex-col gap-1.5 ${wide ? "sm:col-span-2" : ""}`}>
       <div className="flex items-baseline justify-between gap-2">
-        <label htmlFor={id}>
+        <Label htmlFor={id}>
           {label}
           {required && <span className="text-destructive ml-0.5">*</span>}
-        </label>
+        </Label>
         {hint && <span className="text-muted-foreground text-xs">{hint}</span>}
       </div>
       {children}
