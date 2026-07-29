@@ -27,15 +27,24 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
   /**
-   * Capped rather than left to default.
+   * Capped hard, and lowered twice as the suite has grown.
    *
    * These run against `astro dev` (the Vercel adapter has no preview command),
-   * so every page, OG card and icon is rendered on demand. At the default
-   * worker count the suite saturated the dev server once it passed ~120 tests
-   * and unrelated specs began failing intermittently — verified as load, not
-   * defects: each passed in isolation.
+   * so every page, OG card and icon is rendered on demand and @resvg/resvg-js
+   * blocks the event loop while it rasterises. Past a certain concurrency the
+   * dev server simply cannot keep up, and the tests that fail are the ones
+   * waiting on something to become ready — island hydration on /contact, and
+   * computed styles that need the stylesheet in.
+   *
+   * The symptom is unrelated specs failing intermittently; the tell is that
+   * every one of them passes in isolation. Seen at the default count around
+   * ~120 tests, then again at 4 workers around ~129. Two is stable.
+   *
+   * Do not raise this to make the suite faster. The saturation point moves down
+   * as tests are added, and a flaky gate is not a gate. The real fix is serving
+   * a production build, which needs `vercel dev` and a linked project.
    */
-  workers: process.env.CI ? 1 : 4,
+  workers: process.env.CI ? 1 : 2,
   reporter: process.env.CI ? [["html"], ["github"]] : "html",
   timeout: 30_000,
 

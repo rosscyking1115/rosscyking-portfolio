@@ -837,6 +837,34 @@ Two things carried over unchanged rather than improved, and are worth knowing:
 - **Cutover.** Promote `astro/` to the repo root, delete Next, reverse the three tooling exclusions
   (root `tsconfig`, ESLint, Prettier), repoint the existing Vercel project — which keeps its env
   vars, domain and analytics — then delete the temporary Astro project and the `NEXT_PUBLIC_*` pair.
+- **One `curl` against production after cutover**, to confirm the 404 answers correctly on a real
+  Vercel edge. It is proven at the build-artefact level only: the preview deployment sits behind
+  Vercel deployment protection and answers `302` to `vercel.com/sso-api` on every path, so it could
+  not be checked on the wire. Same lesson as gate 9, where headers were compared against a
+  deployment that was still the Next build and passed tautologically.
+
+---
+
+## 6i. Deliberate rendering divergence — SmartyPants, recorded 2026-07-29
+
+**Astro applies SmartyPants to Markdown and MDX prose; the Next app did not.** This was found by the
+port-completeness sweep (PR #73) and is recorded here because it was never recorded — that was the
+defect, not the behaviour itself. Curly quotes are the correct output. An undocumented change to how
+`content/` renders is not.
+
+What it does, and does not, affect:
+
+- **Prose quotes, apostrophes and dashes now render typographically.** A source line reading
+  `Nobody can answer "what does a tube strike actually do…"` renders with curly quotes on Astro and
+  straight quotes on the live Next site.
+- **`content/` is unmodified.** Every `.mdx` file is byte-for-byte as ported; this is entirely a
+  rendering default of Astro's Markdown pipeline, not an edit to the source.
+- **Code blocks are untouched.** Verified rather than assumed: zero curly characters appear inside
+  `<pre>` on a write-up containing shell commands, so every `pip install …` and CLI invocation stays
+  copy-pasteable. SmartyPants skips code by design, and this confirms it holds here.
+
+The brief required content ported verbatim and it is. The rendering of that content changed, in a way
+that improves it, and now says so out loud.
 
 ---
 

@@ -20,6 +20,25 @@ export type ResolvedTheme = "light" | "dark";
 
 export const SYSTEM_QUERY = "(prefers-color-scheme: dark)";
 
+/** The cycle order, shared by the toggle's script and its labels. */
+export const THEME_ORDER: readonly Theme[] = ["light", "dark", "system"];
+
+/**
+ * Accessible name and tooltip for the toggle, keyed by the CURRENT theme and
+ * describing WHAT THE NEXT CLICK DOES — ported verbatim from the LABELS map in
+ * src/components/layout/theme-toggle.tsx.
+ *
+ * The Astro port had replaced these with "Theme: light. Change theme.", which
+ * states the current value instead of the outcome, and dropped the `title`
+ * tooltip entirely. Both are affordance: a user hovering the button wants to
+ * know where it takes them, not where they already are.
+ */
+export const THEME_LABELS: Record<Theme, string> = {
+  light: "Switch to dark theme",
+  dark: "Switch to system theme",
+  system: "Switch to light theme",
+};
+
 export function isTheme(value: unknown): value is Theme {
   return value === "light" || value === "dark" || value === "system";
 }
