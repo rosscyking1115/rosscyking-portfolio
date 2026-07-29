@@ -5,6 +5,7 @@ import LensScript from "../components/LensScript.astro";
 import Footer from "../components/layout/Footer.astro";
 import Nav from "../components/layout/Nav.astro";
 import ThemeScript from "../components/ThemeScript.astro";
+import { personSchema, websiteSchema } from "../lib/json-ld";
 import { DEFAULT_OG_IMAGE, OG_SIZE } from "../lib/og-config";
 import { siteConfig } from "../lib/site-config";
 import "../styles/global.css";
@@ -63,7 +64,13 @@ const fullTitle = `${title} — ${siteConfig.shortName}`;
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
+
+    {/* Ported from the Next root layout. Astro serves these at stable paths, so
+        unlike Next's hash-suffixed URLs they can also be listed in the manifest. */}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icon.png" type="image/png" sizes="512x512" />
+    <link rel="apple-touch-icon" href="/apple-icon.png" type="image/png" sizes="180x180" />
+    <link rel="manifest" href="/manifest.webmanifest" />
 
     {/* Open Graph — mirrors the tag set the Next app emits today. */}
     <meta property="og:type" content="website" />
@@ -81,6 +88,23 @@ const fullTitle = `${title} — ${siteConfig.shortName}`;
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
+
+    {/*
+      Person + WebSite structured data, ported from src/lib/json-ld.ts. The Next
+      app had to work around React 19 refusing <script> inside a client
+      component; an .astro file has no such constraint, so this is just a script
+      tag. set:html avoids Astro escaping the JSON.
+    */}
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify(personSchema())}
+    />
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify(websiteSchema())}
+    />
   </head>
   <body class="flex min-h-dvh flex-col">
     <a href="#main" class="skip-to-content">Skip to content</a>

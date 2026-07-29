@@ -1,0 +1,44 @@
+---
+import type { ExperienceItem } from "../../types/experience";
+
+/**
+ * Education timeline. Ported verbatim from
+ * src/components/about/experience-timeline.tsx — the markup, the connector
+ * line, and the newest-first sort are unchanged.
+ */
+interface Props {
+  items: readonly ExperienceItem[];
+}
+
+const { items } = Astro.props;
+const sorted = [...items].sort((a, b) => b.startDate.localeCompare(a.startDate));
+---
+
+<ol class="mt-8">
+  {
+    sorted.map((item, index) => (
+      <li class="relative grid grid-cols-[auto_1fr] gap-x-5 pb-9 last:pb-0">
+        <div class="flex flex-col items-center">
+          <span class="border-primary bg-background z-10 mt-1 h-2.5 w-2.5 rounded-full border-2" />
+          {index !== sorted.length - 1 && <span class="bg-border mt-1 w-px flex-1" />}
+        </div>
+        <div>
+          <div class="text-muted-foreground font-mono text-xs">{item.period}</div>
+          <h3 class="font-display mt-1 text-lg font-semibold">{item.title}</h3>
+          <div class="text-muted-foreground text-sm">
+            {item.organisation}
+            {item.location ? ` · ${item.location}` : null}
+            {item.grade ? ` · ${item.grade}` : null}
+          </div>
+          {item.highlights && item.highlights.length > 0 && (
+            <ul class="text-muted-foreground mt-2 space-y-1.5 text-sm leading-relaxed">
+              {item.highlights.map((highlight) => (
+                <li>{highlight}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </li>
+    ))
+  }
+</ol>
