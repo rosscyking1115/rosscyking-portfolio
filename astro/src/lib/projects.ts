@@ -86,3 +86,29 @@ export function toMetaDescription(text: string, max = 155): string {
   const lastSpace = slice.lastIndexOf(" ");
   return `${slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd()}…`;
 }
+
+/**
+ * Featured cards for every lens, keyed by lens, in the registry's declared
+ * order. Ported from `getLensFeaturedCards` in the Next app's src/lib/projects.ts.
+ *
+ * The Next version built this so a React client component could re-rank in
+ * place without navigating. Here it feeds one prerendered panel per lens, which
+ * CSS shows or hides — same idea, no hydration.
+ *
+ * `validate:projects` guarantees every lens slug exists and is shipped, so the
+ * lookup below can never silently drop a card.
+ */
+export async function getLensFeaturedCards(): Promise<Record<string, Project[]>> {
+  const { LENS_KEYS, getLens } = await import("./lenses");
+  const all = await getAllProjects();
+  const bySlug = new Map(all.map((project) => [project.id, project]));
+
+  return Object.fromEntries(
+    LENS_KEYS.map((key) => [
+      key,
+      getLens(key)
+        .featured.map((slug) => bySlug.get(slug))
+        .filter((project): project is Project => Boolean(project)),
+    ]),
+  );
+}

@@ -1,21 +1,19 @@
 ---
-import { getCollection } from "astro:content";
-
-import LensSwitcher from "../components/LensSwitcher.astro";
+import FeaturedProjects from "../components/home/FeaturedProjects.astro";
+import Hero from "../components/home/Hero.astro";
 import Base from "../layouts/Base.astro";
+import { getAllProjects } from "../lib/projects";
 import { siteConfig } from "../lib/site-config";
 
 /**
- * Home page — the lens mechanism only (migration risk #6).
+ * Home page. Ported from src/app/page.tsx + src/components/home/home-view.tsx.
  *
- * Deliberately structural rather than designed. The Hero, ProofStrip, evidence
- * frames, project cards and SkillsCluster arrive with the component port; what
- * this branch proves is that a *prerendered* page can honour a shared
- * `?lens=` link with no flash and no framework, which is the part the Next
- * version got from reading `searchParams` on the server.
+ * SkillsCluster is deliberately absent: it rendered the same `skillGroups` as
+ * the Toolbox aside on /about, so the site said the same thing twice. Ross's
+ * call (2026-07-27) was to show it once, on /about — home shows the stack
+ * through the project cards' own chips instead. Recorded in MIGRATION-PLAN §2.
  */
-const projects = await getCollection("projects", ({ data }) => !data.draft);
-const titles = Object.fromEntries(projects.map((p) => [p.id, p.data.title]));
+const all = await getAllProjects();
 ---
 
 <Base
@@ -23,6 +21,6 @@ const titles = Object.fromEntries(projects.map((p) => [p.id, p.data.title]));
   description={siteConfig.metaDescription}
   canonical="/"
 >
-  <h1>{siteConfig.name}</h1>
-  <LensSwitcher titles={titles} />
+  <Hero />
+  <FeaturedProjects allCount={all.length} />
 </Base>

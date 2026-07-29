@@ -52,11 +52,20 @@ test.describe("shared ?lens= links land on the right set", () => {
     await expect(page.locator('[data-lens-panel="data"]')).toBeHidden();
   });
 
-  test("each lens shows its own headline", async ({ page }) => {
+  /**
+   * NOT the registry's `headline` field. That field exists in registry.json but
+   * the Next featured showcase never rendered it — it shows "<N> projects,
+   * shown working", counted from what is actually displayed. Porting at parity
+   * means matching the component, not the unused registry field.
+   *
+   * Using the count also makes a dropped card loud: lose one and the wording
+   * changes from "Four" to "Three".
+   */
+  test("each lens heading counts the projects it is showing", async ({ page }) => {
     await page.goto("/?lens=data");
-    await expect(page.locator('[data-lens-panel="data"] [data-lens-headline]')).toHaveText(
-      lenses.data!.headline,
-    );
+    await expect(
+      page.locator('[data-lens-panel="data"] [data-lens-headline]'),
+    ).toContainText("projects, shown working");
   });
 });
 

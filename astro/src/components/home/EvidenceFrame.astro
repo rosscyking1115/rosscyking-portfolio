@@ -1,0 +1,140 @@
+---
+import { Image } from "astro:assets";
+
+import { cn } from "../../lib/utils";
+
+/**
+ * Shared chrome for showcase evidence: a 1px-bordered frame with a title bar
+ * (three window dots + a mono caption + optional status), holding either a
+ * live-demo screenshot or a terminal readout. The frame is the section's
+ * signature — every visual is presented as an instrument reading, not a
+ * decorative image.
+ *
+ * Ported from src/components/home/evidence-frame.tsx, with the two exported
+ * frames merged into one component chosen by props. The Next file exported
+ * `ScreenshotFrame` and `TerminalFrame` separately and only the latter was ever
+ * imported — `ScreenshotFrame` was dead code (plan §1.5).
+ *
+ * ── Images ───────────────────────────────────────────────────────────────────
+ * The screenshots live in `public/projects/screenshots/` at the REPO ROOT, and
+ * `content/projects/*.mdx` names them by that public path. Content is ported
+ * verbatim, so the path cannot change.
+ *
+ * Astro will not optimise anything served from `public/` — it copies those
+ * files untouched. To keep the optimisation next/image was doing, the images
+ * are imported through a glob pointing at the same root directory, so there is
+ * still exactly ONE copy of each file and the MDX path stays the lookup key.
+ * A missing import falls back to a plain <img> rather than failing the build.
+ */
+const screenshots = import.meta.glob<{ default: ImageMetadata }>(
+  "../../../../public/projects/screenshots/*.{png,jpg,jpeg,webp,avif}",
+  { eager: true },
+);
+
+interface Props {
+  /** Mono text in the title bar — the demo's hostname or a run label. */
+  caption: string;
+  /** Show the "live" status dot — true when a public demo backs the visual. */
+  live?: boolean;
+  /** Public path from the MDX front matter, e.g. "/projects/screenshots/x.png". */
+  screenshot?: string;
+  alt?: string;
+  /** Terminal readout, used when a project has no UI to screenshot. */
+  lines?: readonly string[];
+  /** Responsive sizes for this slot, mirroring the next/image `sizes` prop. */
+  sizes?: string;
+  /** The flagship image is above the fold and should not be lazy. */
+  eager?: boolean;
+  class?: string;
+}
+
+const {
+  caption,
+  live,
+  screenshot,
+  alt,
+  lines,
+  sizes,
+  eager = false,
+  class: className,
+} = Astro.props;
+
+const key = screenshot
+  ? Object.keys(screenshots).find((path) => path.endsWith(screenshot.split("/").pop()!))
+  : undefined;
+const image = key ? screenshots[key]!.default : undefined;
+---
+
+<figure
+  class={cn(
+    "border-border bg-muted/60 overflow-hidden rounded-lg border shadow-xs",
+    className,
+  )}
+>
+  <figcaption class="border-border/60 flex items-center gap-2 border-b px-3 py-2">
+    <span class="flex gap-1.5" aria-hidden="true">
+      <span class="bg-border size-2 rounded-full"></span>
+      <span class="bg-border size-2 rounded-full"></span>
+      <span class="bg-border size-2 rounded-full"></span>
+    </span>
+    <span
+      class="text-muted-foreground min-w-0 flex-1 truncate text-center font-mono text-[11px]"
+    >
+      {caption}
+    </span>
+    {
+      live ? (
+        <span class="text-muted-foreground flex shrink-0 items-center gap-1.5 font-mono text-[10px] tracking-wider uppercase">
+          <span class="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+          Live
+        </span>
+      ) : (
+        /* Mirror the dots' width so the caption stays optically centred. */
+        <span class="w-[26px]" aria-hidden="true" />
+      )
+    }
+  </figcaption>
+
+  {
+    screenshot ? (
+      /* Fixed ratio so every card crops identically; screenshots are 16:10. */
+      <div class="relative aspect-[16/10]">
+        {image ? (
+          <Image
+            src={image}
+            alt={alt ?? ""}
+            widths={[400, 800, 1200]}
+            sizes={sizes ?? "100vw"}
+            loading={eager ? "eager" : "lazy"}
+            class="absolute inset-0 size-full object-cover object-top transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          />
+        ) : (
+          <img
+            src={screenshot}
+            alt={alt ?? ""}
+            loading={eager ? "eager" : "lazy"}
+            decoding="async"
+            class="absolute inset-0 size-full object-cover object-top"
+          />
+        )}
+      </div>
+    ) : (
+      lines &&
+      lines.length > 0 && (
+        <div class="bg-card flex aspect-[16/10] flex-col justify-center gap-2 px-5 font-mono text-[11px] leading-relaxed sm:px-6 sm:text-xs">
+          {lines.map((line) => (
+            <p
+              class={
+                line.startsWith("$")
+                  ? "text-foreground"
+                  : "text-muted-foreground before:content-none"
+              }
+            >
+              {line}
+            </p>
+          ))}
+        </div>
+      )
+    )
+  }
+</figure>
