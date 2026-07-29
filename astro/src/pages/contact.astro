@@ -1,31 +1,53 @@
 ---
+import { ArrowUpRight, Download, Mail } from "@lucide/astro";
+
 import { ContactForm } from "../components/ContactForm";
+import BrandIcon from "../components/icons/BrandIcon.astro";
+import Container from "../components/layout/Container.astro";
+import IndexMark from "../components/layout/IndexMark.astro";
 import Base from "../layouts/Base.astro";
+import { siteConfig } from "../lib/site-config";
 
 /**
  * The one route in the whole site that is NOT prerendered.
  *
- * Astro Actions called from a form require on-demand rendering, and
- * on-demand rendering requires an adapter — hence @astrojs/vercel in
- * astro.config.mjs. Everything else stays static.
+ * Astro Actions called from a form require on-demand rendering, and on-demand
+ * rendering requires an adapter — hence @astrojs/vercel in astro.config.mjs.
+ * Everything else stays static.
  *   https://docs.astro.build/en/guides/actions/
  *   https://docs.astro.build/en/guides/on-demand-rendering/
+ *
+ * Built first, during risk #1, before the design system existed — so it shipped
+ * with bare markup and a note that styling would arrive with the component
+ * port. This is that: Container, IndexMark, the availability pill and the
+ * icon-led contact list, all matching src/app/contact/page.tsx.
  */
 export const prerender = false;
-
-// Copy ported verbatim from src/app/contact/page.tsx — not rewritten.
-const email = "rosscyking@gmail.com";
-const github = "https://github.com/rosscyking1115";
-const linkedin = "https://www.linkedin.com/in/rosscyking";
-const availability = "Available for full-time roles from Oct 2026";
 
 const strip = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "");
 
 const links = [
-  { label: "Email", value: email, href: `mailto:${email}` },
-  { label: "GitHub", value: strip(github), href: github, external: true },
-  { label: "LinkedIn", value: strip(linkedin), href: linkedin, external: true },
-  { label: "Download CV", value: "PDF", href: "/cv.pdf", download: "Cheng-Yuan-King-CV.pdf" },
+  { label: "Email", value: siteConfig.email, href: `mailto:${siteConfig.email}` },
+  {
+    label: "GitHub",
+    value: strip(siteConfig.links.github),
+    href: siteConfig.links.github,
+    external: true,
+    brand: "github" as const,
+  },
+  {
+    label: "LinkedIn",
+    value: strip(siteConfig.links.linkedin),
+    href: siteConfig.links.linkedin,
+    external: true,
+    brand: "linkedin" as const,
+  },
+  {
+    label: "Download CV",
+    value: "PDF",
+    href: "/cv.pdf",
+    download: "Cheng-Yuan-King-CV.pdf",
+  },
 ];
 ---
 
@@ -34,41 +56,70 @@ const links = [
   description="Get in touch about applied AI, GenAI evaluation, data science, and AI safety roles in the UK. Replies usually within a couple of days."
   canonical="/contact"
 >
-  <div class="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
-    <div class="max-w-prose">
-      <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
-        Let&rsquo;s talk.
-      </h1>
-      <p class="text-muted-foreground mt-4 text-lg leading-relaxed text-pretty">
-        I&rsquo;m looking for 2026 roles in AI safety, GenAI evaluation, and applied
-        data science. If that&rsquo;s what you&rsquo;re hiring for, the fastest route
-        is email — I reply within a day or two.
-      </p>
+  <Container class="py-12 sm:py-16">
+    <div class="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
+      {/* Intro + links */}
+      <div class="max-w-prose">
+        <IndexMark mark="Contact" label="Sheffield, UK · GMT" />
+        <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+          Let&rsquo;s talk.
+        </h1>
+        <p class="text-muted-foreground mt-4 text-lg leading-relaxed text-pretty">
+          I&rsquo;m looking for 2026 roles in AI safety, GenAI evaluation, and applied
+          data science. If that&rsquo;s what you&rsquo;re hiring for, the fastest route
+          is email — I reply within a day or two.
+        </p>
 
-      <p>{availability}</p>
+        <span
+          class="border-border bg-background mt-8 inline-flex w-fit items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-sm font-medium"
+        >
+          <span class="relative flex size-2">
+            <span
+              class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60"
+            ></span>
+            <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+          </span>
+          {siteConfig.availability}
+        </span>
 
-      <ul class="border-border divide-border mt-8 flex flex-col divide-y border-y">
-        {
-          links.map((link) => (
-            <li>
+        <div class="border-border divide-border mt-8 flex flex-col divide-y border-y">
+          {
+            links.map((link) => (
               <a
                 href={link.href}
                 {...(link.external
                   ? { target: "_blank", rel: "noopener noreferrer" }
                   : {})}
                 {...(link.download ? { download: link.download } : {})}
+                class="group flex items-center gap-3 py-3.5 transition-[padding] duration-150 hover:px-1"
               >
-                <span>{link.label}</span>
-                <span class="text-muted-foreground block font-mono text-xs">
-                  {link.value}
+                <span class="border-border text-muted-foreground flex size-9 items-center justify-center rounded border">
+                  {link.brand ? (
+                    <BrandIcon name={link.brand} class="size-4" />
+                  ) : link.label === "Email" ? (
+                    <Mail class="size-4" aria-hidden="true" />
+                  ) : (
+                    <Download class="size-4" aria-hidden="true" />
+                  )}
                 </span>
+                <span class="flex-1">
+                  <span class="block text-sm font-medium">{link.label}</span>
+                  <span class="text-muted-foreground block font-mono text-xs">
+                    {link.value}
+                  </span>
+                </span>
+                <ArrowUpRight
+                  class="text-muted-foreground size-4 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
               </a>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
+            ))
+          }
+        </div>
+      </div>
 
-    <ContactForm client:load />
-  </div>
+      {/* Form */}
+      <ContactForm client:load />
+    </div>
+  </Container>
 </Base>

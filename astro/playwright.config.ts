@@ -26,7 +26,16 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  /**
+   * Capped rather than left to default.
+   *
+   * These run against `astro dev` (the Vercel adapter has no preview command),
+   * so every page, OG card and icon is rendered on demand. At the default
+   * worker count the suite saturated the dev server once it passed ~120 tests
+   * and unrelated specs began failing intermittently — verified as load, not
+   * defects: each passed in isolation.
+   */
+  workers: process.env.CI ? 1 : 4,
   reporter: process.env.CI ? [["html"], ["github"]] : "html",
   timeout: 30_000,
 
