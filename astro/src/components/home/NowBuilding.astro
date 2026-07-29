@@ -1,0 +1,68 @@
+---
+import { nowBuilding, type NowBuildingEntry } from "../../lib/now-building";
+import IndexMark from "../layout/IndexMark.astro";
+
+/**
+ * "Now building" strip, ported from the aside at the foot of
+ * src/components/home/featured-projects.tsx.
+ *
+ * Split out of FeaturedProjects for one reason: testability. The real list is
+ * empty, so the strip renders nothing, so the markup was unreachable from any
+ * assertion — which is exactly how it came to be missing from the Astro port in
+ * the first place without a single test going red. Taking `entries` as a prop
+ * lets tests/e2e render it with a fixture while the page keeps using the real
+ * (currently empty) list.
+ *
+ * See src/pages/__fixtures__/[name].astro for the dev-only fixture route.
+ */
+interface Props {
+  entries?: readonly NowBuildingEntry[];
+}
+
+const { entries = nowBuilding } = Astro.props;
+---
+
+{
+  entries.length > 0 && (
+    <aside
+      aria-label="Now building"
+      class="reveal border-border mt-10 border-t border-dashed pt-6"
+    >
+      <IndexMark mark="//" label="Now building" />
+      <ul class="mt-4 flex flex-col gap-2.5">
+        {entries.map((entry) => (
+          <li class="flex items-baseline gap-3 text-sm">
+            <span class="relative flex size-2 shrink-0 self-center">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60 motion-reduce:animate-none" />
+              <span class="relative inline-flex size-2 rounded-full bg-emerald-500" />
+            </span>
+            <span class="font-mono text-[13px]">{entry.name}</span>
+            <span class="text-muted-foreground leading-relaxed">{entry.blurb}</span>
+          </li>
+        ))}
+      </ul>
+      <p class="text-muted-foreground mt-3 text-xs">
+        Private repos while in progress — each goes public when it ships.
+      </p>
+    </aside>
+  )
+}
+
+<style>
+  /* Matches the reveal in FeaturedProjects.astro; scoped styles do not cross
+     component boundaries, so the keyframes are declared where they are used. */
+  .reveal {
+    animation: reveal 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

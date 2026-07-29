@@ -1,0 +1,50 @@
+---
+import Section from "../components/layout/Section.astro";
+import Button from "../components/ui/Button.astro";
+import Base from "../layouts/Base.astro";
+
+/**
+ * The site-wide 404, ported from src/app/projects/[slug]/not-found.tsx.
+ *
+ * The Astro port shipped without one at all, so an unknown URL fell through to
+ * Vercel's generic 404: no nav, no footer, no branding, and no route back. The
+ * Next app served a fully-chromed page for an unknown project slug, and this
+ * restores that for every unmatched path.
+ *
+ * ONE DELIBERATE DIFFERENCE FROM NEXT, stated rather than papered over.
+ * Next had two tiers: a route-scoped not-found under /projects/[slug] that said
+ * "Project not found", and the framework default everywhere else. A static
+ * 404.html cannot know which path the visitor asked for, so this is one page
+ * whose wording has to cover both. The alternatives were both worse:
+ *
+ *   - `prerender = false` here would let the page read Astro.url.pathname and
+ *     branch, but it turns every 404 — including bot noise — into a serverless
+ *     invocation, and /contact is deliberately the only on-demand route.
+ *   - Rewriting the heading from an inline script would flash the wrong text
+ *     first and leaves the page wrong with JS disabled.
+ *
+ * So the copy is path-agnostic and BOTH routes back are offered, which is
+ * strictly more useful than what Next's default 404 gave. Astro emits this as
+ * dist/404.html and Vercel serves it for any unmatched path with a 404 status.
+ *   https://docs.astro.build/en/basics/astro-pages/#custom-404-error-page
+ */
+---
+
+<Base
+  title="Page not found"
+  description="That page doesn’t exist or has been moved."
+  canonical="/404"
+>
+  <Section
+    headingAs="h1"
+    size="lg"
+    eyebrow="404"
+    heading="Page not found"
+    description="The page you’re looking for doesn’t exist or has been moved."
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <Button href="/projects">Back to projects</Button>
+      <Button href="/" variant="outline">Go home</Button>
+    </div>
+  </Section>
+</Base>
