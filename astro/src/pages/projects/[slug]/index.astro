@@ -1,0 +1,180 @@
+---
+import { ArrowLeft, ExternalLink, FileText, Package, ScrollText } from "@lucide/astro";
+import { render } from "astro:content";
+
+import BrandIcon from "../../../components/icons/BrandIcon.astro";
+import Container from "../../../components/layout/Container.astro";
+import Badge from "../../../components/ui/Badge.astro";
+import Button from "../../../components/ui/Button.astro";
+import Base from "../../../layouts/Base.astro";
+import {
+  getAdjacentProjects,
+  getAllProjects,
+  projectReadingTime,
+  toMetaDescription,
+} from "../../../lib/projects";
+
+/**
+ * Ported from src/app/projects/[slug]/page.tsx.
+ *
+ * The MDX pipeline collapses hard here, exactly as the brief predicted:
+ * next-mdx-remote's compileMDX, remark-gfm and rehype-pretty-code all become
+ * `render(entry)`. GFM is on by default in Astro, and Shiki is built in — the
+ * dual themes moved to astro.config.mjs.
+ *
+ * `getStaticPaths` replaces `generateStaticParams` and additionally carries the
+ * entry itself through props, so the page body needs no second lookup.
+ */
+export async function getStaticPaths() {
+  const projects = await getAllProjects();
+  return projects.map((project, index) => ({
+    params: { slug: project.id },
+    props: { project, number: String(index + 1).padStart(2, "0") },
+  }));
+}
+
+const { project, number } = Astro.props;
+const { Content } = await render(project);
+const { prev, next } = await getAdjacentProjects(project.id);
+
+const { title, summary, stack, period, role, links, metrics } = project.data;
+const description = toMetaDescription(summary);
+
+/** Ported one-for-one from the Next page's link buttons, in the same order. */
+const externalLinks = [
+  { href: links?.github, label: "Source", icon: "github" as const, variant: "default" as const },
+  { href: links?.demo, label: "Live demo", Icon: ExternalLink, variant: "outline" as const },
+  { href: links?.report, label: "Report", Icon: FileText, variant: "outline" as const },
+  { href: links?.paper, label: "Paper", Icon: ScrollText, variant: "outline" as const },
+  { href: links?.pypi, label: "PyPI", Icon: Package, variant: "outline" as const },
+].filter((link) => Boolean(link.href));
+---
+
+<Base
+  title={title}
+  description={description}
+  canonical={`/projects/${project.id}`}
+  ogImage={`/projects/${project.id}/opengraph-image.png`}
+>
+  <article>
+    <Container class="py-12 sm:py-16" size="sm">
+      <a
+        href="/projects"
+        class="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
+      >
+        <ArrowLeft class="size-4" aria-hidden="true" />
+        All projects
+      </a>
+
+      <header class="mt-6">
+        <div
+          class="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs"
+        >
+          <span class="text-primary">[ {number} ]</span>
+          <span>{period}</span>
+          {
+            role && (
+              <>
+                <span class="bg-border h-3 w-px" aria-hidden="true" />
+                <span>{role}</span>
+              </>
+            )
+          }
+          <span class="bg-border h-3 w-px" aria-hidden="true"></span>
+          <span>{projectReadingTime(project)}</span>
+        </div>
+
+        <h1
+          class="font-display mt-4 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl"
+        >
+          {title}
+        </h1>
+        <p class="text-muted-foreground mt-4 text-lg leading-relaxed text-pretty">
+          {summary}
+        </p>
+
+        <ul class="mt-5 flex flex-wrap gap-1.5">
+          {stack.map((tech) => <li><Badge variant="tag">{tech}</Badge></li>)}
+        </ul>
+
+        {
+          externalLinks.length > 0 && (
+            <div class="mt-6 flex flex-wrap gap-2.5">
+              {externalLinks.map((link) => (
+                <Button
+                  href={link.href}
+                  variant={link.variant}
+                  size="sm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link.icon ? (
+                    <BrandIcon name={link.icon} class="size-4" />
+                  ) : (
+                    link.Icon && <link.Icon aria-hidden="true" />
+                  )}
+                  {link.label}
+                </Button>
+              ))}
+            </div>
+          )
+        }
+      </header>
+
+      <div class="ruler my-10" aria-hidden="true"></div>
+
+      {
+        metrics && metrics.length > 0 && (
+          <div class="bg-border border-border grid grid-cols-3 gap-px overflow-hidden rounded-lg border">
+            {metrics.map((metric) => (
+              <div class="bg-background p-4 text-center">
+                <div class="font-mono text-2xl font-medium">{metric.value}</div>
+                <div class="text-muted-foreground mt-1 font-mono text-[11px] tracking-wider uppercase">
+                  {metric.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      <div class="doc mt-10">
+        <Content />
+      </div>
+
+      <nav
+        aria-label="Project navigation"
+        class="border-border mt-14 grid gap-3 border-t pt-8 sm:grid-cols-2"
+      >
+        {
+          prev ? (
+            <a
+              href={`/projects/${prev.id}`}
+              class="border-border hover:border-foreground/20 flex flex-col rounded-lg border p-4 transition-[border-color,box-shadow] duration-150 hover:shadow-xs"
+            >
+              <span class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
+                ← Previous
+              </span>
+              <span class="font-display mt-1 font-semibold">{prev.data.title}</span>
+            </a>
+          ) : (
+            <span aria-hidden="true" />
+          )
+        }
+        {
+          next && (
+            <a
+              href={`/projects/${next.id}`}
+              class="border-border hover:border-foreground/20 flex flex-col rounded-lg border p-4 text-right transition-[border-color,box-shadow] duration-150 hover:shadow-xs sm:items-end"
+            >
+              <span class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
+                Next →
+              </span>
+              <span class="font-display mt-1 font-semibold">{next.data.title}</span>
+            </a>
+          )
+        }
+      </nav>
+    </Container>
+  </article>
+</Base>

@@ -31,9 +31,9 @@ import { expect, test } from "@playwright/test";
  *
  * `npm run test:e2e` builds first so the build output is never stale.
  *
- * Redirects are not followed: the destinations do not exist yet (/projects and
- * the detail routes arrive with the page port), so following would 404 and mask
- * the thing under test.
+ * Redirects are not followed. Status + Location is the contract being ported;
+ * following would exercise the destination page instead and mask a wrong code
+ * or a wrong target behind a 200.
  */
 
 const PERMANENT = 308;

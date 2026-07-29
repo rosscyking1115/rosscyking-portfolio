@@ -1,0 +1,112 @@
+---
+import { cn } from "../../lib/utils";
+
+/**
+ * Stack-filter chip strip.
+ *
+ * The Next version read `?stack=` from `searchParams` on the server and rendered
+ * only the matching cards. A prerendered page cannot — the same HTML goes to
+ * everyone — so this is the same problem as the role lenses (risk #6), solved
+ * the same way: render everything, then let an inline head script decide what is
+ * visible BEFORE first paint.
+ *
+ * The difference from the lens switcher is that a stack is free text, so a fixed
+ * CSS rule per value is not possible. Instead the head script injects one rule
+ * naming the requested stack. That still runs before paint, so a shared
+ * `?stack=dbt` link never flashes the full list first.
+ *
+ * Matching uses `|`-delimited values (`|Python|dbt|GitHub Actions|`) because
+ * stacks contain spaces, which rules out the whitespace-separated `~=` operator.
+ *
+ * The chips stay plain links. The Next version intercepted clicks to push
+ * router state and avoid a reload; here each filter is a real navigation to a
+ * prerendered page, which is both simpler and shareable — the property that
+ * version was working to preserve.
+ */
+interface Props {
+  stacks: readonly string[];
+}
+
+const { stacks } = Astro.props;
+
+const chipClass = (extra?: string) =>
+  cn(
+    "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors",
+    "border-border bg-background text-muted-foreground hover:text-foreground",
+    "aria-[current]:border-primary aria-[current]:bg-primary aria-[current]:text-primary-foreground",
+    extra,
+  );
+---
+
+<ul class="flex flex-wrap gap-2" aria-label="Filter projects by tech stack">
+  <li>
+    <a href="/projects" class={chipClass()} data-stack-chip="">All</a>
+  </li>
+  {
+    stacks.map((stack) => (
+      <li>
+        <a
+          href={`/projects?stack=${encodeURIComponent(stack)}`}
+          class={chipClass()}
+          data-stack-chip={stack}
+        >
+          {stack}
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<script is:inline>
+  (function () {
+    try {
+      var requested = new URLSearchParams(window.location.search).get("stack");
+      if (!requested) return;
+
+      // Inject the rule before paint so a shared ?stack= link never shows the
+      // full list first. CSS.escape guards against a stack name containing
+      // quotes or backslashes.
+      var style = document.createElement("style");
+      style.textContent =
+        '[data-project]:not([data-stack*="|' +
+        CSS.escape(requested).replace(/\\/g, "") +
+        '|"]) { display: none }';
+      document.head.appendChild(style);
+      document.documentElement.dataset.stack = requested;
+    } catch (error) {
+      /* Filtering is an enhancement — never let it hide the whole gallery. */
+    }
+  })();
+</script>
+
+<script>
+  // Marks the active chip and corrects the visible count. Runs after paint,
+  // which is fine: neither is layout-shifting, and the cards themselves were
+  // already filtered by the inline script above.
+  const active = new URLSearchParams(window.location.search).get("stack") ?? "";
+
+  document.querySelectorAll<HTMLAnchorElement>("[data-stack-chip]").forEach((chip) => {
+    if ((chip.dataset.stackChip ?? "") === active) {
+      chip.setAttribute("aria-current", "true");
+    }
+  });
+
+  const visible = document.querySelectorAll<HTMLElement>(
+    "[data-project]:not([hidden])",
+  ).length;
+  const counter = document.querySelector("[data-project-count]");
+  const shown = [...document.querySelectorAll<HTMLElement>("[data-project]")].filter(
+    (card) => card.offsetParent !== null,
+  ).length;
+  const count = active ? shown : visible;
+  if (counter) counter.textContent = `${count} project${count === 1 ? "" : "s"}`;
+
+  // Empty state — only reachable by hand-editing the query string, since every
+  // offered chip has at least two projects behind it.
+  const empty = document.querySelector<HTMLElement>("[data-projects-empty]");
+  const grid = document.querySelector<HTMLElement>("[data-projects-grid]");
+  if (empty && grid && count === 0) {
+    empty.hidden = false;
+    grid.hidden = true;
+  }
+</script>

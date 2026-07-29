@@ -344,3 +344,30 @@
     max-width: none !important;
   }
 }
+
+/* ---------- Shiki dual-theme code blocks ----------
+ * `defaultColor: false` in astro.config.mjs makes Shiki emit BOTH themes as CSS
+ * variables rather than baking one in, so the theme class picks the winner.
+ * Astro's class is `.astro-code`, not Shiki's `.shiki` — the docs call this
+ * substitution out explicitly.
+ * https://docs.astro.build/en/guides/syntax-highlighting/
+ *
+ * Keyed off `.dark` rather than a media query so it follows the site's own
+ * theme toggle, not just the OS. The .doc pre rules above still own the block's
+ * surface, border and padding, which is what rehype-pretty-code's
+ * `keepBackground: false` bought in the Next app. */
+.astro-code,
+.astro-code span {
+  color: var(--shiki-light);
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+  text-decoration: var(--shiki-light-text-decoration);
+}
+
+.dark .astro-code,
+.dark .astro-code span {
+  color: var(--shiki-dark);
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
+}

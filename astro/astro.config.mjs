@@ -156,6 +156,26 @@ export default defineConfig({
     },
   ],
 
+  /**
+   * Migration note (Phase B — project write-ups).
+   *
+   * The Next app highlighted code with rehype-pretty-code wrapping Shiki, dual
+   * github-*-default themes and `keepBackground: false` so the block took the
+   * page's own surface. Astro has Shiki built in, so the plugin disappears and
+   * only the themes carry over.
+   *
+   * `defaultColor: false` is the equivalent of keepBackground: false — it stops
+   * Shiki inlining one theme's colours as the default, leaving both available as
+   * CSS variables for the .dark rules in global.css to choose between.
+   *   https://docs.astro.build/en/guides/syntax-highlighting/
+   */
+  markdown: {
+    shikiConfig: {
+      themes: { light: "github-light-default", dark: "github-dark-default" },
+      defaultColor: false,
+    },
+  },
+
   vite: {
     // @resvg/resvg-js (OG card rendering) ships a native .node binary. Vite's
     // dependency optimizer tries to prebundle it and dies with

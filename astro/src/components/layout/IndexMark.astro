@@ -19,6 +19,13 @@ interface Props {
 }
 
 const { mark, label, class: className } = Astro.props;
+
+/**
+ * A `label` slot takes precedence over the prop, so a caller can hang
+ * attributes on the label element — the projects gallery uses it to mark the
+ * count for its filter script to update.
+ */
+const hasLabelSlot = Astro.slots.has("label");
 ---
 
 <div
@@ -29,5 +36,5 @@ const { mark, label, class: className } = Astro.props;
 >
   <span class="text-primary">[ {mark} ]</span>
   <span class="bg-border h-px w-8" aria-hidden="true"></span>
-  {label && <span>{label}</span>}
+  {hasLabelSlot ? <slot name="label" /> : label && <span>{label}</span>}
 </div>
