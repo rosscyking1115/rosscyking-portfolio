@@ -6,7 +6,7 @@ import Footer from "../components/layout/Footer.astro";
 import Nav from "../components/layout/Nav.astro";
 import ThemeScript from "../components/ThemeScript.astro";
 import { personSchema, websiteSchema } from "../lib/json-ld";
-import { DEFAULT_OG_IMAGE, OG_SIZE } from "../lib/og-config";
+import { DEFAULT_OG_ALT, DEFAULT_OG_IMAGE, OG_SIZE } from "../lib/og-config";
 import { siteConfig } from "../lib/site-config";
 import "../styles/global.css";
 
@@ -33,6 +33,23 @@ interface Props {
    * pass their own `/projects/<slug>/opengraph-image.png`.
    */
   ogImage?: string;
+  /** Alt text for that card. Project pages pass PROJECT_OG_ALT. */
+  ogImageAlt?: string;
+  /**
+   * Which way round the brand and the page name go.
+   *
+   * Ports Next's `metadata.title` split, which this layout originally
+   * flattened into one form and got backwards for the home page:
+   *
+   *   template — "<page> — Ross King". Every route except home.
+   *   default  — "Ross King — <tagline>". Home only, matching
+   *              `metadata.title.default` in src/app/layout.tsx.
+   *
+   * The comment on site-config.ts documented the `default` form all along; the
+   * code contradicted it, so / shipped as "<tagline> — Ross King" with the
+   * brand last in <title>, og:title and twitter:title alike.
+   */
+  titleForm?: "template" | "default";
 }
 
 const {
@@ -40,11 +57,16 @@ const {
   description,
   canonical,
   ogImage = DEFAULT_OG_IMAGE,
+  ogImageAlt = DEFAULT_OG_ALT,
+  titleForm = "template",
 } = Astro.props;
 
 const canonicalUrl = new URL(canonical, Astro.site);
 const ogImageUrl = new URL(ogImage, Astro.site);
-const fullTitle = `${title} — ${siteConfig.shortName}`;
+const fullTitle =
+  titleForm === "default"
+    ? `${siteConfig.shortName} — ${title}`
+    : `${title} — ${siteConfig.shortName}`;
 ---
 
 <!doctype html>
@@ -82,12 +104,17 @@ const fullTitle = `${title} — ${siteConfig.shortName}`;
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content={String(OG_SIZE.width)} />
     <meta property="og:image:height" content={String(OG_SIZE.height)} />
+    <meta property="og:image:alt" content={ogImageAlt} />
     <meta property="og:locale" content="en_GB" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:type" content="image/png" />
+    <meta name="twitter:image:width" content={String(OG_SIZE.width)} />
+    <meta name="twitter:image:height" content={String(OG_SIZE.height)} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
 
     {/*
       Person + WebSite structured data, ported from src/lib/json-ld.ts. The Next

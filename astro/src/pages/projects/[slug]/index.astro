@@ -7,6 +7,7 @@ import Container from "../../../components/layout/Container.astro";
 import Badge from "../../../components/ui/Badge.astro";
 import Button from "../../../components/ui/Button.astro";
 import Base from "../../../layouts/Base.astro";
+import { PROJECT_OG_ALT } from "../../../lib/og-config";
 import {
   getAdjacentProjects,
   getAllProjects,
@@ -55,6 +56,7 @@ const externalLinks = [
   description={description}
   canonical={`/projects/${project.id}`}
   ogImage={`/projects/${project.id}/opengraph-image.png`}
+  ogImageAlt={PROJECT_OG_ALT}
 >
   <article>
     <Container class="py-12 sm:py-16" size="sm">

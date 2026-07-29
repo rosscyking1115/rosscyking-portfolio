@@ -1,0 +1,57 @@
+---
+import NowBuilding from "../../components/home/NowBuilding.astro";
+import Base from "../../layouts/Base.astro";
+import type { NowBuildingEntry } from "../../lib/now-building";
+
+/**
+ * Dev-only fixture routes, for components whose real data makes them render
+ * nothing.
+ *
+ * WHY THIS EXISTS. The "Now building" strip is driven by an array that is
+ * currently empty, so on the live page it renders nothing at all. That is
+ * correct behaviour — and it is also precisely why the component was missing
+ * from the Astro port for four phases without a single test failing. A
+ * component that renders nothing is indistinguishable from a component that was
+ * never written, so "the page looks right" proves nothing about it.
+ *
+ * WHY A ROUTE RATHER THAN A UNIT TEST. The app has no unit-test runner, only
+ * Playwright against `astro dev`. Adding vitest (or driving Astro's Container
+ * API from a bare node script) to render one component was more machinery than
+ * a fixture page, and would test the component through a different pipeline
+ * than the one that actually serves it.
+ *
+ * WHY IT CANNOT LEAK INTO PRODUCTION. `getStaticPaths` returns [] unless
+ * import.meta.env.DEV, and a dynamic route with no paths generates no pages —
+ * so `astro build` emits nothing here. tests/e2e/completeness.spec.ts asserts
+ * the route is absent from the built output, so the guard is tested rather
+ * than trusted.
+ *
+ * WHY NOT AN UNDERSCORE-PREFIXED DIRECTORY, which is Astro's own mechanism for
+ * keeping tests and helpers inside src/pages: `_`-prefixed files "won't be
+ * recognized by the router", full stop — including by the dev server. That
+ * excludes it from the build and from Playwright alike, which is one exclusion
+ * too many. https://docs.astro.build/en/guides/routing/#excluding-pages
+ */
+export function getStaticPaths() {
+  if (!import.meta.env.DEV) return [];
+  return [{ params: { name: "now-building" } }];
+}
+
+const FIXTURES: Record<string, readonly NowBuildingEntry[]> = {
+  "now-building": [
+    { name: "fixture-project-one", blurb: "A first line, for the fixture." },
+    { name: "fixture-project-two", blurb: "A second line, for the stagger." },
+  ],
+};
+
+const { name } = Astro.params;
+const entries = FIXTURES[name!] ?? [];
+---
+
+<Base
+  title="Fixture"
+  description="Dev-only component fixture. Not part of the built site."
+  canonical="/404"
+>
+  <NowBuilding entries={entries} />
+</Base>
