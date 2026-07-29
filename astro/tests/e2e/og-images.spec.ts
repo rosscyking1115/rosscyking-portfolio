@@ -28,6 +28,22 @@ function pngSize(buffer: Buffer): { width: number; height: number } {
 }
 
 test.describe("open graph cards", () => {
+  /**
+   * The project cards are checked in ONE sequential test rather than one test
+   * per slug, and that is deliberate.
+   *
+   * In a real build these are prerendered static PNGs with zero per-request
+   * cost. The dev server this suite runs against has no build, so it renders
+   * each card on demand through satori + `@resvg/resvg-js` — a native module
+   * that blocks the Node event loop while it rasterises. Eleven of those
+   * arriving at once under Playwright's parallelism does not merely time out;
+   * the server drops connections with `read ECONNRESET`.
+   *
+   * Verified as a harness artefact, not a defect: all ten pass in isolation and
+   * only fail inside the full suite. Requesting them in sequence removes the
+   * cause instead of hiding it behind a longer timeout, and every assertion
+   * still names its slug, so a genuine failure is just as diagnosable.
+   */
   test("the site-wide card renders at 1200x630", async ({ request }) => {
     const res = await request.get("/opengraph-image.png");
     expect(res.status()).toBe(200);
@@ -39,17 +55,25 @@ test.describe("open graph cards", () => {
     expect(body.byteLength).toBeGreaterThan(10_000);
   });
 
-  for (const slug of slugs) {
-    test(`${slug} has a card`, async ({ request }) => {
+  test("every project has a card, at the right size", async ({ request }) => {
+    test.slow();
+
+    for (const slug of slugs) {
       const res = await request.get(`/projects/${slug}/opengraph-image.png`);
       expect(res.status(), `${slug} card should return 200`).toBe(200);
-      expect(res.headers()["content-type"]).toContain("image/png");
+      expect(
+        res.headers()["content-type"],
+        `${slug} card is not a PNG`,
+      ).toContain("image/png");
 
       const body = await res.body();
-      expect(pngSize(body)).toEqual({ width: 1200, height: 630 });
+      expect(pngSize(body), `${slug} card is the wrong size`).toEqual({
+        width: 1200,
+        height: 630,
+      });
       expect(body.byteLength, `${slug} card looks empty`).toBeGreaterThan(10_000);
-    });
-  }
+    }
+  });
 
   test("every registry project is covered", () => {
     // Guards the loop above from silently becoming a no-op if the registry

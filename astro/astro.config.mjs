@@ -1,10 +1,12 @@
 // @ts-check
-import { defineConfig, envField } from "astro/config";
+import { defineConfig, envField, fontProviders } from "astro/config";
 
 import react from "@astrojs/react";
 import vercel from "@astrojs/vercel";
 
 import mdx from "@astrojs/mdx";
+
+import tailwindcss from "@tailwindcss/vite";
 
 /**
  * Migration note (risk #1 — contact form).
@@ -107,6 +109,53 @@ export default defineConfig({
     "/opengraph-image": { status: 308, destination: "/opengraph-image.png" },
   },
 
+  /**
+   * Migration note (Phase A — design foundation).
+   *
+   * The Next app loaded fonts with `next/font`: GeistSans and GeistMono from the
+   * `geist` package, Space Grotesk from next/font/google. Astro's Fonts API
+   * (stable since astro@6.0.0) replaces all three.
+   *
+   * The cssVariable names deliberately match the Next ones, so the design tokens
+   * in src/styles/global.css port across verbatim rather than being rewritten.
+   *
+   * Fontsource keeps every file self-hosted and served from _astro/fonts, which
+   * matters beyond performance: the production CSP allows `font-src 'self'
+   * data:` and no font CDN origin. A Google-hosted stylesheet would have needed
+   * the policy widened. Self-hosting keeps risk #2's header set untouched.
+   *
+   * Weights are listed explicitly rather than taking the variable-font range —
+   * only 400 is downloaded by default, and unused weights are wasted bytes on a
+   * Lighthouse gate that starts at 93.
+   *   https://docs.astro.build/en/guides/fonts/
+   */
+  fonts: [
+    {
+      provider: fontProviders.fontsource(),
+      name: "Geist",
+      cssVariable: "--font-geist-sans",
+      weights: [400, 500, 600, 700],
+      styles: ["normal"],
+      fallbacks: ["system-ui", "sans-serif"],
+    },
+    {
+      provider: fontProviders.fontsource(),
+      name: "Geist Mono",
+      cssVariable: "--font-geist-mono",
+      weights: [400, 500],
+      styles: ["normal"],
+      fallbacks: ["ui-monospace", "monospace"],
+    },
+    {
+      provider: fontProviders.fontsource(),
+      name: "Space Grotesk",
+      cssVariable: "--font-space-grotesk",
+      weights: [600, 700],
+      styles: ["normal"],
+      fallbacks: ["system-ui", "sans-serif"],
+    },
+  ],
+
   vite: {
     // @resvg/resvg-js (OG card rendering) ships a native .node binary. Vite's
     // dependency optimizer tries to prebundle it and dies with
@@ -115,7 +164,9 @@ export default defineConfig({
     // endpoints. Excluding it from prebundling and keeping it external to the
     // SSR bundle lets Node load the binary directly.
     optimizeDeps: { exclude: ["@resvg/resvg-js"] },
+
     ssr: { external: ["@resvg/resvg-js"] },
+    plugins: [tailwindcss()],
   },
   integrations: [react(), mdx()],
   adapter: vercel({ staticHeaders: true }),

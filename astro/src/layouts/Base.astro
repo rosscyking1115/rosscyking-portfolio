@@ -1,19 +1,26 @@
 ---
+import { Font } from "astro:assets";
+
 import LensScript from "../components/LensScript.astro";
+import Footer from "../components/layout/Footer.astro";
+import Nav from "../components/layout/Nav.astro";
 import ThemeScript from "../components/ThemeScript.astro";
-import ThemeToggle from "../components/ThemeToggle.astro";
 import { DEFAULT_OG_IMAGE, OG_SIZE } from "../lib/og-config";
 import { siteConfig } from "../lib/site-config";
+import "../styles/global.css";
 
 /**
- * Minimal layout, grown one step at a time alongside the migration risks.
+ * The site shell.
  *
- * Still deliberately thin: Nav, Footer, theme provider, JSON-LD and the web
- * fonts belong to the layout/component port, not to any of these branches.
- * What is here is what a page needs to render, be crawled correctly, and be
- * testable — title, description, canonical, and the Open Graph card.
+ * Order inside <head> is load-bearing, not stylistic:
+ *   1. ThemeScript and LensScript are inline and come FIRST, so the theme class
+ *      and lens attribute are on <html> before the browser has any CSS to paint
+ *      with. Move them below the stylesheet and you get a flash of the wrong
+ *      theme — see risks #5 and #6.
+ *   2. <Font /> emits the preload links and @font-face rules for Astro's Fonts
+ *      API. Self-hosted from _astro/fonts, so the CSP needs no font CDN origin.
  *
- * Title template matches the Next root layout exactly: `%s — Ross King`.
+ * Still to arrive with the page port: JSON-LD, sitemap, robots, manifest, icons.
  */
 interface Props {
   title: string;
@@ -45,12 +52,13 @@ const fullTitle = `${title} — ${siteConfig.shortName}`;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    {/*
-      Must come before any stylesheet: the class has to be on <html> before the
-      browser has anything to paint, or the wrong theme flashes. See risk #5.
-    */}
+    {/* Must precede the stylesheet — see the note above. */}
     <ThemeScript />
     <LensScript />
+
+    <Font cssVariable="--font-geist-sans" preload />
+    <Font cssVariable="--font-geist-mono" />
+    <Font cssVariable="--font-space-grotesk" preload />
 
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
@@ -74,12 +82,12 @@ const fullTitle = `${title} — ${siteConfig.shortName}`;
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
   </head>
-  <body>
-    <header>
-      <ThemeToggle />
-    </header>
-    <main>
+  <body class="flex min-h-dvh flex-col">
+    <a href="#main" class="skip-to-content">Skip to content</a>
+    <Nav />
+    <main id="main" class="flex-1">
       <slot />
     </main>
+    <Footer />
   </body>
 </html>

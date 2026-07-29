@@ -1,0 +1,59 @@
+---
+import { siteConfig } from "../../lib/site-config";
+import Container from "./Container.astro";
+
+/**
+ * Ported from src/components/layout/footer.tsx.
+ *
+ * One copy change, and it is a factual correction rather than a rewrite: the
+ * colophon said "Built with Next.js & Tailwind". It now says Astro, because it
+ * is. Everything else — links, order, wording, layout — is unchanged.
+ */
+const year = new Date().getFullYear();
+
+const links = [
+  { href: "/projects", label: "Projects" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+  { href: siteConfig.links.github, label: "GitHub", external: true },
+  { href: siteConfig.links.linkedin, label: "LinkedIn", external: true },
+  { href: "/cv.pdf", label: "CV" },
+];
+---
+
+<footer class="border-border mt-24 border-t">
+  <Container class="py-12">
+    <div class="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <a href="/" class="font-display text-lg font-bold tracking-tight">
+          {siteConfig.shortName}
+        </a>
+        <p class="text-muted-foreground mt-1.5 max-w-xs text-sm leading-relaxed">
+          Data &amp; ML engineering, with an evaluation backbone. {siteConfig.location}.
+        </p>
+      </div>
+      <nav aria-label="Footer" class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        {
+          links.map((link) => (
+            <a
+              href={link.href}
+              {...(link.external
+                ? { target: "_blank", rel: "noopener noreferrer" }
+                : {})}
+              class="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {link.label}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+
+    <div
+      class="border-border text-muted-foreground mt-8 flex flex-col gap-1 border-t pt-6 font-mono text-xs sm:flex-row sm:items-center sm:justify-between"
+    >
+      <span>© {year} {siteConfig.name}</span>
+      <span>Built with Astro &amp; Tailwind</span>
+    </div>
+  </Container>
+</footer>

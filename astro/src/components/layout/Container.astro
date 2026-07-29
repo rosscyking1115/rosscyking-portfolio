@@ -1,0 +1,30 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+import { cn } from "../../lib/utils";
+
+/**
+ * Centred max-width wrapper used by every page section.
+ * Keeps gutters consistent and content readable on wide screens.
+ *
+ * Ported from src/components/layout/container.tsx. The React version was
+ * polymorphic via `ComponentPropsWithoutRef<"div">`; nothing ever rendered it
+ * as anything but a div, so this is fixed to a div and typed with Astro's own
+ * HTMLAttributes instead of a hand-rolled index signature.
+ */
+type Props = HTMLAttributes<"div"> & {
+  size?: "sm" | "md" | "lg";
+};
+
+const sizeClasses = {
+  sm: "max-w-2xl",
+  md: "max-w-4xl",
+  lg: "max-w-6xl",
+} as const;
+
+const { size = "lg", class: className, ...rest } = Astro.props;
+---
+
+<div class={cn("mx-auto w-full px-6 sm:px-8", sizeClasses[size], className)} {...rest}>
+  <slot />
+</div>
