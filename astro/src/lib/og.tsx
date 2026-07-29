@@ -205,3 +205,44 @@ export function pngResponse(body: Buffer): Response {
     },
   });
 }
+
+/**
+ * Site favicon / PWA icon. Ported from src/app/icon.tsx and apple-icon.tsx,
+ * which used the same satori-backed renderer via next/og. Rendered at whatever
+ * size the endpoint asks for — 512 for the PWA icon, 180 for the iOS touch icon.
+ */
+export function IconCard({ size }: { size: number }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#0a0a0a",
+        color: "#ffffff",
+        fontSize: Math.round(size * 0.47),
+        fontWeight: 700,
+        letterSpacing: Math.round(size * -0.016),
+        borderRadius: "100%",
+        fontFamily: "Geist",
+      }}
+    >
+      RK
+    </div>
+  );
+}
+
+/** Render a square icon to PNG at the given edge length. */
+export async function renderIcon(size: number): Promise<Buffer> {
+  const svg = await satori(IconCard({ size }), {
+    width: size,
+    height: size,
+    fonts: await loadFonts(),
+  });
+  const png = new Resvg(svg, { fitTo: { mode: "width", value: size } })
+    .render()
+    .asPng();
+  return Buffer.from(png);
+}
