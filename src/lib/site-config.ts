@@ -17,8 +17,10 @@ export const siteConfig = {
   // cutover, and editing one without the other silently diverges the live site
   // from the one replacing it.
   titleTagline: "AI evaluation and reliability",
+  // Ross's wording (2026-07-29), to match the new titleTagline. Kept
+  // byte-identical to the Astro copy — see the titleTagline note above.
   metaDescription:
-    "MSc Artificial Intelligence candidate building data and ML systems you can audit: Spark-scale pipelines, dbt warehouses, ML forecasts, and release-gates for AI agents.",
+    "MSc Artificial Intelligence candidate working on AI evaluation and reliability: release gates for agents, honest benchmarks, and data pipelines you can audit.",
   url: "https://rosscyking.com",
   ogImage: "/og.png",
   email: "rosscyking@gmail.com",

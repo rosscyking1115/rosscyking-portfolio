@@ -841,7 +841,62 @@ Two things carried over unchanged rather than improved, and are worth knowing:
   Vercel edge. It is proven at the build-artefact level only: the preview deployment sits behind
   Vercel deployment protection and answers `302` to `vercel.com/sso-api` on every path, so it could
   not be checked on the wire. Same lesson as gate 9, where headers were compared against a
-  deployment that was still the Next build and passed tautologically.
+  deployment that was still the Next build and passed tautologically. **This is not done. Do not
+  count it as done because the build-artefact assertions are green — they cannot close it.**
+- **Correct the GitHub repo description's stack list**, at the moment cutover lands. It currently
+  reads "Next.js 16, React 19, Tailwind v4, MDX content pipeline, full test pyramid", which is
+  accurate while production is Next and becomes false the moment it is not. The positioning half was
+  updated on 2026-07-29; the stack half was deliberately left correct-for-now rather than made
+  briefly wrong to save an edit. Replace "Next.js 16, React 19" with "Astro 7, React 19" (React
+  stays — the contact form is still an island).
+
+---
+
+## 6j. OPEN DEFECT — the e2e suite saturates its own dev server
+
+**Status: worked around, not fixed. The workaround's headroom shrinks every time a test is added.**
+
+### Symptom
+
+Tests fail in a full run and pass in isolation. Which tests fail moves between runs. The ones that
+go first are always the ones waiting for something to become ready — island hydration on `/contact`,
+or a computed style that needs the stylesheet in — never the ones asserting pure server output.
+
+### Cause
+
+The suite runs against `astro dev`, because `@astrojs/vercel` does not implement the preview command:
+
+```
+[preview] The @astrojs/vercel adapter does not support the preview command.
+```
+
+So every page, OG card and icon is rendered on demand, and `@resvg/resvg-js` blocks the event loop
+while it rasterises. Past a certain concurrency the dev server cannot keep up and Playwright's waits
+expire on a server that is merely slow, not broken.
+
+### The threshold moves down as the suite grows
+
+| Date       | Suite size | Workers             | Result                                       |
+| ---------- | ---------- | ------------------- | -------------------------------------------- |
+| 2026-07-29 | ~120       | default (cores − 2) | intermittent failures across unrelated specs |
+| 2026-07-29 | ~120       | 4                   | stable                                       |
+| 2026-07-29 | 129        | 4                   | 4 failures, all passing in isolation         |
+| 2026-07-29 | 129        | 2                   | stable across two consecutive runs           |
+
+**This is the important part.** Lowering the worker count buys headroom; it does not remove the
+ceiling. The number that was safe at 120 tests was unsafe at 129. It will happen again, and the
+comment in `playwright.config.ts` deliberately says not to raise the count back to make the suite
+faster — but a `do not raise` comment is a warning, not a fix.
+
+### The real fix
+
+Serve a production build instead of `astro dev`: `vercel dev` against a linked project, which runs
+the built output and the serverless function for `/contact` rather than rendering everything on
+demand. That removes the cause rather than throttling the symptom, and it would also let the suite
+exercise the serverless wrapper that gate 9 had to check by hand.
+
+Not done here because it needs a linked Vercel project and credentials in CI, which is its own piece
+of work. Recorded so the next person meets the diagnosis rather than just the comment.
 
 ---
 

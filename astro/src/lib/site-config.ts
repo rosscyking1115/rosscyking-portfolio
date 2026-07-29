@@ -23,8 +23,9 @@ export const siteConfig = {
   // <title>, og:title, twitter:title, JSON-LD via `role`, and the OG card alt
   // text (og-config.ts interpolates it into DEFAULT_OG_ALT on every route).
   titleTagline: "AI evaluation and reliability",
+  // Ross's wording (2026-07-29), to match the new titleTagline.
   metaDescription:
-    "MSc Artificial Intelligence candidate building data and ML systems you can audit: Spark-scale pipelines, dbt warehouses, ML forecasts, and release-gates for AI agents.",
+    "MSc Artificial Intelligence candidate working on AI evaluation and reliability: release gates for agents, honest benchmarks, and data pipelines you can audit.",
   url: "https://rosscyking.com",
   ogImage: "/og.png",
   email: "rosscyking@gmail.com",
