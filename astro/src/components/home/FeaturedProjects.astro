@@ -1,0 +1,247 @@
+---
+import { ArrowRight } from "@lucide/astro";
+
+import { allLenses, DEFAULT_LENS } from "../../lib/lenses";
+import { getLensFeaturedCards, projectReadingTime, type Project } from "../../lib/projects";
+import Container from "../layout/Container.astro";
+import IndexMark from "../layout/IndexMark.astro";
+import Badge from "../ui/Badge.astro";
+import EvidenceFrame from "./EvidenceFrame.astro";
+
+/**
+ * Featured showcase with an in-place role-lens switcher.
+ *
+ * Ported from src/components/home/featured-projects.tsx. The Next version was a
+ * client component holding every lens's cards in React state; here each lens
+ * gets its own prerendered panel and CSS shows the matching one, driven by the
+ * `data-lens` attribute LensScript sets before first paint (risk #6).
+ *
+ * That means the whole showcase — flagship card, evidence frames, stack chips,
+ * metrics — ships as static HTML with no hydration.
+ */
+interface Props {
+  allCount: number;
+}
+
+const { allCount } = Astro.props;
+const lensCards = await getLensFeaturedCards();
+
+/** Mono caption for the frame title bar: the visual's host, or a run label. */
+function frameCaption(project: Project): string {
+  const source = project.data.links?.demo ?? project.data.links?.report;
+  if (source) return new URL(source).hostname;
+  return "run log";
+}
+
+const COUNT_WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven"];
+/** "Four" for 4, falling back to the digit for anything past the list. */
+const countWord = (n: number) => COUNT_WORDS[n] ?? String(n);
+
+const allLabel = `All ${allCount} projects`;
+---
+
+<Container class="pb-20">
+  <div class="border-border/70 mb-8 border-b border-dashed pb-6">
+    <div role="group" aria-label="View this portfolio by role" class="flex flex-wrap gap-2">
+      {
+        allLenses.map((lens) => (
+          <button
+            type="button"
+            data-lens-button={lens.key}
+            aria-pressed={lens.key === DEFAULT_LENS ? "true" : "false"}
+            class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors border-border bg-background text-muted-foreground hover:text-foreground aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground"
+          >
+            {lens.label}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  {
+    allLenses.map((lens) => {
+      const projects = lensCards[lens.key] ?? [];
+      const [flagship, ...rest] = projects;
+      const count = projects.length;
+      const lastNumber = String(count).padStart(2, "0");
+
+      return (
+        <div data-lens-panel={lens.key}>
+          <div class="flex items-end justify-between gap-6">
+            <div>
+              <IndexMark mark="01" label="Featured work" />
+              <h2
+                class="font-display mt-3 text-3xl font-semibold tracking-tight text-balance"
+                data-lens-headline
+              >
+                {countWord(count)} projects, shown working
+              </h2>
+              <p class="text-muted-foreground mt-2 max-w-prose text-sm leading-relaxed">
+                {`Numbered 01–${lastNumber} by what I’d want you to read first — not by date. The screenshots are the actual apps; every card links to the evidence.`}
+              </p>
+            </div>
+            <a
+              href="/projects"
+              class="text-muted-foreground hover:text-foreground hidden shrink-0 items-center gap-1.5 text-sm font-medium sm:inline-flex"
+            >
+              {allLabel}
+              <ArrowRight class="size-4" aria-hidden="true" />
+            </a>
+          </div>
+
+          {flagship && (
+            <article class="group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative mt-8 grid gap-6 rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 lg:grid-cols-5 lg:gap-8 lg:p-8">
+              <div class="flex flex-col lg:col-span-2">
+                <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
+                  <span class="text-primary">01</span>
+                  <span>
+                    {flagship.data.period} · {projectReadingTime(flagship)}
+                  </span>
+                </div>
+                <h3 class="font-display mt-4 text-2xl font-semibold tracking-tight text-balance">
+                  <a
+                    href={`/projects/${flagship.id}`}
+                    class="after:absolute after:inset-0 after:rounded-lg"
+                  >
+                    {flagship.data.title}
+                  </a>
+                </h3>
+                <p class="text-muted-foreground mt-3 line-clamp-4 text-sm leading-relaxed">
+                  {flagship.data.summary}
+                </p>
+                {flagship.data.metrics && flagship.data.metrics.length > 0 && (
+                  <dl class="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+                    {flagship.data.metrics.map((metric) => (
+                      <div>
+                        <dt class="sr-only">{metric.label}</dt>
+                        <dd class="font-mono text-sm">
+                          <span class="text-foreground font-semibold">
+                            {metric.value}
+                          </span>{" "}
+                          <span class="text-muted-foreground text-xs">
+                            {metric.label}
+                          </span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                <div class="mt-5 flex flex-wrap items-center gap-1.5">
+                  {flagship.data.stack.slice(0, 4).map((tech) => (
+                    <Badge variant="tag">{tech}</Badge>
+                  ))}
+                </div>
+                <span class="text-primary mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-medium">
+                  Read the write-up
+                  <ArrowRight
+                    class="size-3.5 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
+                </span>
+              </div>
+              <div class="lg:col-span-3">
+                <EvidenceFrame
+                  caption={frameCaption(flagship)}
+                  live={Boolean(flagship.data.links?.demo)}
+                  screenshot={flagship.data.screenshot}
+                  alt={`Screenshot of the ${flagship.data.title} live demo`}
+                  lines={flagship.data.terminal}
+                  sizes="(min-width: 1024px) 55vw, (min-width: 640px) 90vw, 100vw"
+                  eager={lens.key === DEFAULT_LENS}
+                />
+              </div>
+            </article>
+          )}
+
+          <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {rest.map((project, i) => (
+              <article class="group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex h-full flex-col rounded-lg border p-5 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5">
+                <EvidenceFrame
+                  caption={frameCaption(project)}
+                  live={Boolean(project.data.links?.demo)}
+                  screenshot={project.data.screenshot}
+                  alt={`Screenshot of the ${project.data.title} live demo`}
+                  lines={project.data.terminal}
+                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+                />
+                <div class="text-muted-foreground mt-4 flex items-center justify-between font-mono text-xs">
+                  <span class="text-primary">{String(i + 2).padStart(2, "0")}</span>
+                  <span>
+                    {project.data.period} · {projectReadingTime(project)}
+                  </span>
+                </div>
+                <h3 class="font-display mt-2 text-lg font-semibold tracking-tight">
+                  <a
+                    href={`/projects/${project.id}`}
+                    class="after:absolute after:inset-0 after:rounded-lg"
+                  >
+                    {project.data.title}
+                  </a>
+                </h3>
+                <p class="text-muted-foreground mt-2 line-clamp-3 flex-1 text-sm leading-relaxed">
+                  {project.data.summary}
+                </p>
+                <div class="mt-4 flex flex-wrap items-center gap-1.5">
+                  {project.data.stack.slice(0, 3).map((tech) => (
+                    <Badge variant="tag">{tech}</Badge>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      );
+    })
+  }
+
+  <a
+    href="/projects"
+    class="text-muted-foreground hover:text-foreground mt-6 inline-flex items-center gap-1.5 text-sm font-medium sm:hidden"
+  >
+    {allLabel}
+    <ArrowRight class="size-4" aria-hidden="true" />
+  </a>
+</Container>
+
+<style>
+  /* Only the panel matching <html data-lens> is shown. Hidden by default so
+     nothing flashes before LensScript runs. */
+  [data-lens-panel] {
+    display: none;
+  }
+  :global(html[data-lens="all"]) [data-lens-panel="all"],
+  :global(html[data-lens="data"]) [data-lens-panel="data"],
+  :global(html[data-lens="ai"]) [data-lens-panel="ai"] {
+    display: block;
+  }
+</style>
+
+<script>
+  import { DEFAULT_LENS, isLensKey, lensHref, type LensKey } from "../../lib/lenses";
+
+  const buttons = document.querySelectorAll<HTMLButtonElement>("[data-lens-button]");
+
+  function select(lens: LensKey, pushUrl: boolean) {
+    document.documentElement.dataset.lens = lens;
+    for (const button of buttons) {
+      button.setAttribute("aria-pressed", String(button.dataset.lensButton === lens));
+    }
+    if (pushUrl) {
+      // replaceState, not pushState: switching lens is a filter, not a
+      // navigation. Back should leave the page, as it did in the Next app.
+      window.history.replaceState({}, "", lensHref(lens));
+    }
+  }
+
+  // The inline head script already resolved the lens (including retired-name
+  // aliases); adopt it rather than re-parsing the URL and risking a mismatch.
+  const initial = document.documentElement.dataset.lens ?? DEFAULT_LENS;
+  select(isLensKey(initial) ? initial : DEFAULT_LENS, false);
+
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      const key = button.dataset.lensButton;
+      if (key && isLensKey(key)) select(key, true);
+    });
+  }
+</script>
