@@ -1,0 +1,39 @@
+{
+  "_comment": "Gate 10 result: Lighthouse for the deployed Astro build, measured against the Next baseline in production-lighthouse-next.json. Performance is 100 on every route and nothing regressed. Re-run with: npx lighthouse <url> --only-categories=performance,accessibility,best-practices,seo",
+  "measuredAgainst": "https://rosscyking-portfolio-astro.vercel.app",
+  "framework": "astro@7.1.3",
+  "scores": {
+    "/": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "/projects": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "/about": {
+      "performance": 100,
+      "accessibility": 98,
+      "best-practices": 100,
+      "seo": 100
+    },
+    "/contact": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 96,
+      "seo": 100
+    },
+    "/projects/tfl-data-engineering": {
+      "performance": 100,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100
+    }
+  },
+  "capturedAt": "2026-07-29T17:19:27.031Z",
+  "lighthouseVersion": "13.4.1"
+}

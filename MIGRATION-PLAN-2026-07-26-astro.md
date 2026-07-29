@@ -751,6 +751,95 @@ Proven by sabotage: making the script ignore the query parameter failed four tes
 
 ---
 
+## 6h. Phases A and B — the port itself, 2026-07-29
+
+All fifteen routes render. `content/`, `public/` and `src/` are byte-identical to where they were
+before the migration started, so rosscyking.com has been unaffected throughout.
+
+| Phase | What landed                                                  | PR                                                                    |
+| ----- | ------------------------------------------------------------ | --------------------------------------------------------------------- |
+| A     | Tailwind 4, design tokens, Astro Fonts API, layout shell     | [#67](https://github.com/rosscyking1115/rosscyking-portfolio/pull/67) |
+| B1    | `/projects` + ten write-ups, MDX, Shiki, stack filter        | [#68](https://github.com/rosscyking1115/rosscyking-portfolio/pull/68) |
+| B2    | Home — hero, proof strip, featured showcase, evidence frames | [#69](https://github.com/rosscyking1115/rosscyking-portfolio/pull/69) |
+| B3    | `/about`, sitemap, robots, manifest, icons, JSON-LD          | [#70](https://github.com/rosscyking1115/rosscyking-portfolio/pull/70) |
+
+### ✅ Gate 5 — URL parity — CLOSED
+
+The built `sitemap.xml` has an **identical URL set to production**: fourteen URLs, none missing,
+none extra. This is the criterion that replaced the brief's `check:links` (§1.1), and it is the one
+that actually proves the port did not lose a page.
+
+The sitemap is hand-rolled rather than using `@astrojs/sitemap`, because the gate compares per-entry
+`changefreq` and `priority` against what Next emits and the integration gives no per-route control
+over either.
+
+### What got smaller rather than merely ported
+
+- **The primary navigation ships zero framework JavaScript.** `usePathname()` became build-time
+  `Astro.url.pathname`; the mobile menu's `useState`/`useEffect` became ~15 lines of vanilla JS. It
+  also closes on Escape now, which the React version never did.
+- **`motion` is gone from every ported page.** Seven stacked `<FadeIn>` wrappers in the hero and the
+  staggered card reveals are all CSS keyframes, so the largest-contentful-paint element no longer
+  waits on a JS animation library.
+- **The featured showcase has no hydration.** Each lens is a prerendered panel that CSS reveals.
+- **Three dependencies disappeared:** `class-variance-authority` and `@radix-ui/react-slot` (both
+  existed only to type React variant props and let a Button render an `<a>`), and
+  `@tailwindcss/typography` — which also retires the relative-path Turbopack workaround
+  MAINTENANCE.md documents.
+- **JSON-LD is just a script tag**, retiring the React 19 workaround MAINTENANCE.md describes.
+- **Images keep `next/image`'s optimisation with one copy on disk.** The screenshots stay in
+  `public/projects/screenshots/` at the repo root, where the MDX names them, and are imported through
+  a glob at that same path — Astro emits 30 optimised WebP variants.
+
+### Findings worth keeping
+
+1. **Astro's dev toolbar breaks accessible-name locators.** It injects a button labelled "Menu" and
+   several `<h1>` elements; a bare `h1` locator resolved to five things and one test failed
+   intermittently on render timing. Now disabled under Playwright only, via `ASTRO_DISABLE_TOOLBAR`.
+2. **`is:inline` does NOT move a script to `<head>`** — it stays where its component sits. The
+   invariant worth testing is document order relative to the content it guards, not head placement.
+   My first assertion tested the wrong thing and passed for the wrong reason.
+3. **`@resvg/resvg-js` blocks the event loop.** Eleven concurrent OG renders in dev make the server
+   drop connections with `ECONNRESET` — not a timeout, which is what I assumed twice before reading
+   the error. Requested sequentially now; production serves prerendered files.
+4. **`ThemeToggle` rendered twice with the same `id`** (desktop + mobile nav), so `getElementById`
+   wired only the first and the mobile toggle was dead.
+5. **The registry's `lenses[].headline` field is unused by the Next app.** The showcase renders
+   "_N_ projects, shown working". Porting at parity means matching the component, not an unused
+   registry field.
+
+### ✅ Gate 10 — Lighthouse — CLOSED
+
+Measured against the deployed Astro build, compared with the baseline captured from production
+before any Astro code existed (§1.3):
+
+| Route             | Performance       | A11y      | Best practices    | SEO       |
+| ----------------- | ----------------- | --------- | ----------------- | --------- |
+| `/`               | 93 → **100** (+7) | 100 → 100 | 96 → **100** (+4) | 100 → 100 |
+| `/projects`       | 95 → **100** (+5) | 100 → 100 | 100 → 100         | 100 → 100 |
+| `/about`          | 96 → **100** (+4) | 98 → 98   | 100 → 100         | 100 → 100 |
+| `/contact`        | 96 → **100** (+4) | 100 → 100 | 96 → 96           | 100 → 100 |
+| `/projects/tfl-…` | 97 → **100** (+3) | 100 → 100 | 100 → 100         | 100 → 100 |
+
+**Performance is 100 on every route**, and nothing regressed anywhere. The gains are the predictable
+consequence of the things that got smaller: no framework JavaScript in the navigation, no `motion`,
+no hydration for the showcase, and prerendered OG cards and icons.
+
+Two things carried over unchanged rather than improved, and are worth knowing:
+
+- **`/about` accessibility is 98, on both stacks.** Not a migration regression — it is inherited.
+  Worth a look during the redesign phase.
+- **`/contact` best-practices is 96, on both stacks.** Also inherited; the Turnstile iframe is the
+  usual cause of this one.
+
+### Still open
+
+- **Cutover.** Promote `astro/` to the repo root, delete Next, reverse the three tooling exclusions
+  (root `tsconfig`, ESLint, Prettier), repoint the existing Vercel project — which keeps its env
+  vars, domain and analytics — then delete the temporary Astro project and the `NEXT_PUBLIC_*` pair.
+
+---
+
 ## 7. Recommended shape — unchanged from the brief, with one addition
 
 Phase 0 (IA, today) → Phase 1 (port at parity) → Phase 2 (redesign in Astro). The brief's reasoning
