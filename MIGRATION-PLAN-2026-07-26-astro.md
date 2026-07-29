@@ -516,7 +516,34 @@ failures; restoring made them green.
 the brief warned about. `vercel.json` is applied by Vercel's edge, and nothing has yet proved these
 headers reach the wire from an Astro build.
 
-### Blocker: gate 9 cannot run yet — needs Ross
+### ✅ Gate 9 — CLOSED 2026-07-29
+
+Verified against a real Astro deployment on Vercel
+(`rosscyking-portfolio-astro.vercel.app`, project Root Directory `astro`):
+
+- **All nine security headers byte-identical** to the captured production response — including the
+  508-character CSP, character for character.
+- **All thirteen redirects answer 308** to the right target, including `/for/:lens` → `/?lens=:lens`,
+  the rule that was config-parity only because `astro dev` cannot emulate Vercel's edge.
+- **Eleven OG cards** served as `image/png`, all over 10 KB.
+- **`/.well-known/security.txt`** served as `text/plain; charset=utf-8`.
+- **The contact Action works as a real serverless function** — `POST /_actions/contact/` returned
+  200 with `[{"success":1},true]`, so the whole pipeline runs on Vercel, not just in `astro dev`.
+
+Two things had to be fixed to get here, both worth remembering:
+
+1. **The first "passing" run was a false positive.** The deployment under test was still the Next app
+   (its Root Directory had not taken effect), so the header diff compared Next against a Next
+   baseline and passed vacuously. Caught only because `/opengraph-image` returned 200 while
+   `/opengraph-image.png` 404'd — Next's convention, not ours. **Any future gate-9 run must first
+   confirm which app it is talking to**; `/about` returning 404 and an `<h1>` of "Cheng-Yuan King"
+   are the cheap tells.
+2. **`vercel.json` rejected the deployment outright** over a `_comment` key: _"Invalid request:
+   should NOT have additional property `_comment`"_. Vercel validates against a published schema and
+   fails the deploy for any unknown top-level property. JSON has no comment syntax and Vercel allows
+   no substitute. Now guarded by a test.
+
+### Superseded: the blocker that got us here
 
 The existing Vercel project's Root Directory is the repo root, so a preview deployment of this branch
 builds the **Next** app. `astro/vercel.json` is never exercised. To close gate 9 one of these is
@@ -761,7 +788,8 @@ a one-route branch, not a two-week discovery on a finished site.
 
 ### Still open
 
-- **Gate 9 — needs a second Vercel project pointed at `astro/`.** Until then the security headers and
-  the `/for/:lens` redirect are config-parity only. See §6c.
+- ~~Gate 9~~ — **CLOSED 2026-07-29.** Verified on a real Astro deployment: nine headers
+  byte-identical, thirteen redirects at 308, eleven OG cards, and the contact Action running as a
+  live serverless function. See §6c.
 - **Broader positioning.** Data engineering and analytics engineering lead for now; Ross is still
   weighing the wider framing. The lens aliases above are compatible with either outcome.
