@@ -55,6 +55,10 @@ export default defineConfig({
       // No-op in CI, where CLAUDECODE is never set — this only matters when
       // the suite is run from inside a coding agent.
       CLAUDECODE: "",
+
+      // Astro's dev toolbar injects buttons and headings into every page and
+      // breaks accessible-name locators. See the note in astro.config.mjs.
+      ASTRO_DISABLE_TOOLBAR: "1",
     },
   },
 });
