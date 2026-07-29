@@ -53,6 +53,19 @@ export default defineConfig({
   output: "static",
 
   /**
+   * The dev toolbar is left on for normal development and switched off only
+   * under Playwright, which sets ASTRO_DISABLE_TOOLBAR.
+   *
+   * It injects its own UI into every dev page — including buttons labelled
+   * "Menu" and several <h1> elements ("Audit", "Settings") — which collide with
+   * accessible-name locators and made two unrelated tests fail intermittently
+   * depending on whether the toolbar had rendered yet. Scoping every selector
+   * around it would be a permanent tax on test authoring.
+   *   https://docs.astro.build/en/guides/dev-toolbar/#disabling-the-dev-toolbar
+   */
+  devToolbar: { enabled: process.env.ASTRO_DISABLE_TOOLBAR !== "1" },
+
+  /**
    * Migration note (risk #4 — redirects).
    *
    * Nine live SEO redirects ported from next.config.ts. Production answers all
@@ -155,6 +168,26 @@ export default defineConfig({
       fallbacks: ["system-ui", "sans-serif"],
     },
   ],
+
+  /**
+   * Migration note (Phase B — project write-ups).
+   *
+   * The Next app highlighted code with rehype-pretty-code wrapping Shiki, dual
+   * github-*-default themes and `keepBackground: false` so the block took the
+   * page's own surface. Astro has Shiki built in, so the plugin disappears and
+   * only the themes carry over.
+   *
+   * `defaultColor: false` is the equivalent of keepBackground: false — it stops
+   * Shiki inlining one theme's colours as the default, leaving both available as
+   * CSS variables for the .dark rules in global.css to choose between.
+   *   https://docs.astro.build/en/guides/syntax-highlighting/
+   */
+  markdown: {
+    shikiConfig: {
+      themes: { light: "github-light-default", dark: "github-dark-default" },
+      defaultColor: false,
+    },
+  },
 
   vite: {
     // @resvg/resvg-js (OG card rendering) ships a native .node binary. Vite's
