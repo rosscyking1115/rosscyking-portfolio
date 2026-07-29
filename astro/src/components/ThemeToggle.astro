@@ -2,6 +2,7 @@
 import { Monitor, Moon, Sun } from "@lucide/astro";
 
 import { buttonVariants } from "../lib/button-variants";
+import { THEME_LABELS } from "../lib/theme";
 
 /**
  * Theme toggle — cycles light → dark → system, matching the Next app's model.
@@ -15,6 +16,11 @@ import { buttonVariants } from "../lib/button-variants";
  * on <html> — the same attribute-driven trick as the lens panels. That means
  * the icon is correct on first paint, with no flash and no JS on the critical
  * path; the script only handles clicks.
+ *
+ * The label CANNOT be picked by CSS the way the icon is, so the markup ships
+ * the `system` label — the state the icon CSS also falls back to when <html>
+ * carries no data-theme — and the script corrects it on load. There is no
+ * flash to speak of: ThemeScript has already stamped data-theme in <head>.
  */
 ---
 
@@ -22,13 +28,13 @@ import { buttonVariants } from "../lib/button-variants";
   data-theme-toggle
   type="button"
   class={buttonVariants({ variant: "ghost", size: "icon" })}
-  aria-label="Change theme"
+  aria-label={THEME_LABELS.system}
+  title={THEME_LABELS.system}
   data-testid="theme-toggle"
 >
   <Sun class="theme-icon" data-theme-icon="light" aria-hidden="true" />
   <Moon class="theme-icon" data-theme-icon="dark" aria-hidden="true" />
   <Monitor class="theme-icon" data-theme-icon="system" aria-hidden="true" />
-  <span class="sr-only" data-theme-label>Theme</span>
 </button>
 
 <style>
@@ -48,9 +54,13 @@ import { buttonVariants } from "../lib/button-variants";
 </style>
 
 <script>
-  import { browserCookie, resolveTheme, type Theme } from "../lib/theme";
-
-  const ORDER: Theme[] = ["light", "dark", "system"];
+  import {
+    browserCookie,
+    resolveTheme,
+    THEME_LABELS,
+    THEME_ORDER,
+    type Theme,
+  } from "../lib/theme";
 
   // The nav renders one toggle for desktop and one for mobile, so every
   // instance has to be wired and kept in sync. An `id` would have been invalid
@@ -65,9 +75,9 @@ import { buttonVariants } from "../lib/button-variants";
     root.dataset.theme = theme;
 
     for (const button of buttons) {
-      button.setAttribute("aria-label", `Theme: ${theme}. Change theme.`);
-      const label = button.querySelector("[data-theme-label]");
-      if (label) label.textContent = theme;
+      // Names the outcome, not the current value — see THEME_LABELS.
+      button.setAttribute("aria-label", THEME_LABELS[theme]);
+      button.setAttribute("title", THEME_LABELS[theme]);
     }
   }
 
@@ -79,7 +89,7 @@ import { buttonVariants } from "../lib/button-variants";
   for (const button of buttons) {
     button.addEventListener("click", () => {
       const current = (document.documentElement.dataset.theme ?? "system") as Theme;
-      const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]!;
+      const next = THEME_ORDER[(THEME_ORDER.indexOf(current) + 1) % THEME_ORDER.length]!;
       browserCookie.set(next);
       apply(next);
     });

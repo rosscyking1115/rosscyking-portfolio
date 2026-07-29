@@ -134,6 +134,41 @@ test.describe("toggle", () => {
     await context.close();
   });
 
+  test("names the outcome, not the current state, and keeps the tooltip", async ({
+    browser,
+  }) => {
+    /**
+     * Ported affordance, asserted because it was lost once already. The Astro
+     * toggle had shipped `aria-label="Theme: light. Change theme."` and no
+     * `title` at all, where Next names WHAT THE CLICK WILL DO and repeats it as
+     * a hover tooltip. Nothing caught it: the toggle worked, the theme changed,
+     * and every existing assertion here is about `data-theme` on <html>.
+     */
+    const context = await browser.newContext({ colorScheme: "light" });
+    const page = await context.newPage();
+    await page.goto("/contact");
+
+    const toggle = themeToggle(page);
+    const expected = {
+      system: "Switch to light theme",
+      light: "Switch to dark theme",
+      dark: "Switch to system theme",
+    } as const;
+
+    for (const theme of ["system", "light", "dark"] as const) {
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      await expect(toggle, `${theme}: aria-label`).toHaveAttribute(
+        "aria-label",
+        expected[theme],
+      );
+      // The tooltip is the half that was missing entirely.
+      await expect(toggle, `${theme}: title`).toHaveAttribute("title", expected[theme]);
+      await toggle.click();
+    }
+
+    await context.close();
+  });
+
   test("writes the same cookie name and values as the Next app", async ({
     browser,
   }) => {

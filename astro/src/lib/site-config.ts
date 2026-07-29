@@ -6,13 +6,23 @@
 export const siteConfig = {
   name: "Cheng-Yuan King",
   shortName: "Ross King",
-  role: "MSc Artificial Intelligence · Data & ML Engineering",
+  role: "MSc Artificial Intelligence · AI evaluation and reliability",
   // Long-form hero/bio copy. Shown on the page; NOT used as the SEO meta tags.
   description:
     "MSc Artificial Intelligence candidate at the University of Sheffield. I build data and ML systems whose decisions you can audit: tested pipelines, honest evaluation, and numbers you can trace back to the test that produced them. Spark-scale backfills, dbt warehouses, ML forecasts, and release-gates for AI agents.",
   // SEO surface: kept short so titles/descriptions don't truncate in search.
-  // Title renders as "<shortName> — <titleTagline>" (~50 chars).
-  titleTagline: "Data & ML Engineering · AI Evaluation",
+  // Title renders as "<shortName> — <titleTagline>" (~40 chars).
+  //
+  // Ross's call (2026-07-29). His positioning closed as software engineering
+  // specialising in AI evaluation and reliability, and LinkedIn and the GitHub
+  // profile were rebuilt to match; the site had never been updated. The
+  // previous value, "Data & ML Engineering · AI Evaluation", led with the thing
+  // he had moved away from the front.
+  //
+  // This string has FIVE consumers, which is why it lives here alone: the home
+  // <title>, og:title, twitter:title, JSON-LD via `role`, and the OG card alt
+  // text (og-config.ts interpolates it into DEFAULT_OG_ALT on every route).
+  titleTagline: "AI evaluation and reliability",
   metaDescription:
     "MSc Artificial Intelligence candidate building data and ML systems you can audit: Spark-scale pipelines, dbt warehouses, ML forecasts, and release-gates for AI agents.",
   url: "https://rosscyking.com",
