@@ -71,6 +71,36 @@ const configured = new Map(
   (catchAllRule?.headers ?? []).map((h) => [h.key.toLowerCase(), h.value]),
 );
 
+/**
+ * Vercel validates vercel.json against a published schema and REJECTS THE
+ * DEPLOYMENT for any unknown top-level property — it does not warn and carry on.
+ *
+ * This cost a deploy: the file carried a `_comment` key explaining why the
+ * `/for/:lens` redirect lives here rather than in astro.config.mjs, and Vercel
+ * answered "Invalid request: should NOT have additional property `_comment`".
+ * JSON has no comment syntax and Vercel allows no substitute, so that reasoning
+ * now lives in LensScript.astro and redirects.spec.ts.
+ *
+ * Checked against the real schema at https://openapi.vercel.sh/vercel.json,
+ * which lists 40 permitted properties. The allowlist is hardcoded rather than
+ * fetched so the suite stays offline and deterministic.
+ */
+test.describe("vercel.json stays deployable", () => {
+  const ALLOWED_TOP_LEVEL = new Set(["$schema", "redirects", "headers"]);
+
+  test("has no property Vercel will reject at deploy time", () => {
+    const raw = JSON.parse(
+      readFileSync(repoUrl("../../vercel.json"), "utf8"),
+    ) as Record<string, unknown>;
+
+    const unknown = Object.keys(raw).filter((key) => !ALLOWED_TOP_LEVEL.has(key));
+    expect(
+      unknown,
+      `unknown vercel.json keys will fail the deployment: ${unknown.join(", ")}`,
+    ).toEqual([]);
+  });
+});
+
 test.describe("security header parity (config vs live production)", () => {
   test("the fixture actually captured a production response", () => {
     // Guards against a truncated or stale fixture silently making the whole
