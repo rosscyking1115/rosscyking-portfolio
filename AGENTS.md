@@ -82,8 +82,11 @@ Two cases from this migration, both stated as predictions at the time:
   was verified line-endings-only with `diff --strip-trailing-cr`, so a Linux LF checkout _should_ be
   clean. It was — confirmed by the run, not assumed from the reasoning.
 - **The Vercel build failures at cutover.** Explained from each project's `rootDirectory` plus the
-  change, and narrowed further by confirming from the diff that the repo root held no Next app and
-  that `astro/` was gone. That is a structural explanation, and it is still not the log.
+  change, and narrowed by confirming from the diff that the repo root held no Next app and that
+  `astro/` was gone. The log later confirmed it exactly — `No Next.js version detected. Make sure
+your package.json has "next" in either "dependencies" or "devDependencies"` — for the
+  Next-preset project. The second project's log was never read, so that half stays a structural
+  explanation and is recorded as such.
 
 Structural evidence narrows the space of possible causes. It does not eliminate them — a build can
 fail for a second, unrelated reason that happens to be masked by the obvious one. When the
@@ -91,8 +94,14 @@ observation finally arrives, **say explicitly whether it matched the prediction.
 that is a finding, not a footnote: an unexplained failure will not be fixed by the change you
 expected to fix it, and it surfaces on the live domain instead of in a pull request.
 
-This migration produced three findings that only observation caught, and one that only observation
-confirmed.
+Note what the log added that the reasoning could not: the build failed at framework **detection**,
+before any build command ran, which is why nothing partial was ever served. And it showed the
+dependency install succeeding — ruling out a resolution fault, while ruling out nothing downstream,
+because the build never reached `astro build` in that project at all.
+
+This migration produced three findings that only observation caught, and two predictions that only
+observation could confirm — one confirmed, one left open on purpose because the project it concerns
+is being deleted.
 
 ## This repository specifically
 
