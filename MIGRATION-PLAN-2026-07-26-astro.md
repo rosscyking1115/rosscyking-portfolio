@@ -852,6 +852,67 @@ Two things carried over unchanged rather than improved, and are worth knowing:
 
 ---
 
+## 6k. Cutover — pre-flight findings, 2026-07-30
+
+Discovery run before moving a single file. **Cutover is not the four mechanical steps the checklist
+implied.** Two of these would have shipped a broken production site.
+
+### 🔴 Blockers — things that break if `astro/` is moved as-is
+
+**1. `/cv.pdf` is not in the Astro build.** `astro/public/` contains only `favicon.ico` and
+`favicon.svg`. The CV lives in the repo-root `public/`, and the Astro app links it from three places
+— the hero button, the contact page list, and the footer. Confirmed absent from
+`.vercel/output/static/`. Every "Download CV" link would 404.
+
+**2. `google0acbb4712509578f.html` is not in the Astro build.** Google Search Console domain
+verification. Losing it does not break the site, which is exactly why it would go unnoticed.
+
+Both are fixed by the same move — the repo-root `public/` becomes the app's `public/` at cutover —
+but only if that is done deliberately rather than by deleting the Next app and taking `astro/public/`
+with it.
+
+### 🟡 Decisions the checklist did not account for
+
+**3. The vitest suite tests the Next app.** Six files under `tests/{unit,component}` cover
+`badge`/`button` (shadcn React), `contact-schema`, `email-template`, `theme-cookie` and `utils`.
+Deleting `src/` deletes what they import, and CI runs them as a required check ("Vitest (unit +
+component)"). Each has an Astro counterpart worth testing — `lib/contact-schema.ts`, `lib/theme.ts`,
+`lib/utils.ts` — so the answer is port, not delete, but it is a real piece of work and it is a
+required check either way.
+
+**4. Two of everything to reconcile**, not just move: `package.json`, `package-lock.json`,
+`tsconfig.json`, `playwright.config.ts`, `.gitignore`, `.npmrc`, `AGENTS.md`, `README.md`.
+
+**5. `.github/workflows` still builds and tests the Next app.** Needs rewriting for an Astro-only
+repo, in the same commit that removes Next, or CI fails on the cutover PR itself.
+
+**6. Next-specific files to delete:** `next.config.ts`, `next-env.d.ts`, `postcss.config.mjs`
+(Tailwind 4 goes through the Vite plugin in Astro), plus `.next/`.
+
+**7. `AGENTS.md` currently opens "This is NOT the Next.js you know"** and sends every agent to
+`node_modules/next/dist/docs/`. After cutover that instruction is actively wrong.
+
+### 🟢 Confirmed safe
+
+**Screenshots do not move.** `EvidenceFrame.astro` reaches them with
+`import.meta.glob("../../../../public/projects/screenshots/*")` — the repo-root `public/`, which is
+why they come out as optimised `_astro/*.webp` rather than copied files. At cutover the glob loses
+one `../` level and resolves to the same directory. Worth knowing: once root `public/` is also the
+Astro public dir, those images will be both optimised via the glob AND copied verbatim, which is
+harmless (the copy is the fallback the component already documents) but is duplication.
+
+**The five `../` path rewrites are as scoped:** `registry-stats.ts`, `about.astro`,
+`content.config.ts`, `lenses.ts`, plus the `EvidenceFrame` glob above.
+
+### The fail-safe window still holds
+
+Between "cutover PR merges" and "Framework Preset flipped to Astro", the project builds an Astro app
+with a Next preset. **That build fails; it does not serve something broken.** The domain keeps
+serving the last good Next deployment until the preset changes. Fail-safe, not fail-open — so the
+preset flip is prompt, not urgent.
+
+---
+
 ## 6j. OPEN DEFECT — the e2e suite saturates its own dev server
 
 **Status: worked around, not fixed. The workaround's headroom shrinks every time a test is added.**
