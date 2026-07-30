@@ -7,8 +7,10 @@ export const siteConfig = {
   shortName: "Ross King",
   role: "MSc Artificial Intelligence · AI evaluation and reliability",
   // Long-form hero/bio copy. Shown on the page; NOT used as the SEO meta tags.
+  // Ross's wording (2026-07-30). Kept byte-identical to the Astro copy — see
+  // the titleTagline note below.
   description:
-    "MSc Artificial Intelligence candidate at the University of Sheffield. I build data and ML systems whose decisions you can audit: tested pipelines, honest evaluation, and numbers you can trace back to the test that produced them. Spark-scale backfills, dbt warehouses, ML forecasts, and release-gates for AI agents.",
+    "MSc Artificial Intelligence candidate at the University of Sheffield. I build software for evaluating AI honestly: release gates for agents, benchmarks that can fail, and numbers you can trace back to the test that produced them. The same discipline runs through the data work — Spark-scale backfills, dbt warehouses and ML forecasts.",
   // SEO surface: kept short so titles/descriptions don't truncate in search.
   // Title renders as "<shortName> — <titleTagline>" (~40 chars).
   //
