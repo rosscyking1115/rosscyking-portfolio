@@ -5,6 +5,9 @@ import registry from "../../content/projects/registry.json";
  * they can never drift from the project set. Only shipped projects count; test
  * totals sum every metric whose label mentions "test" (leading integer parsed,
  * so "150+" counts as 150).
+ *
+ * Ported verbatim from src/lib/registry-stats.ts. The registry is read from the
+ * repo root, matching content.config.ts and lenses.ts — one authored list.
  */
 
 interface ProjectSpec {

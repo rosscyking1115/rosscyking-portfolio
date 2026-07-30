@@ -1,25 +1,34 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import astro from "eslint-plugin-astro";
+import tseslint from "typescript-eslint";
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
+/**
+ * Rewritten at cutover.
+ *
+ * The previous config was `eslint-config-next` (core-web-vitals + typescript),
+ * which cannot survive the removal of Next: the package is gone, and its rules
+ * judge React/Next idioms this codebase no longer contains.
+ *
+ * The replacement keeps a real lint gate rather than quietly dropping one —
+ * typescript-eslint for the `.ts`/`.tsx` that remains (the contact island, the
+ * form controls, the OG card renderer), and eslint-plugin-astro for `.astro`
+ * files, which understands the frontmatter/template split that plain TS
+ * parsing chokes on.
+ *
+ * Type checking is NOT duplicated here. `astro check` owns it, and that is what
+ * `npm run typecheck` runs.
+ */
+export default defineConfig([
   globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
+    "dist/**",
+    ".astro/**",
+    ".vercel/**",
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
     // Dev tooling (Node scripts), not application code.
     "scripts/**",
-    // The Astro app is a self-contained project with its own toolchain
-    // (`astro check`, its own tsconfig/prettier). Linting it with
-    // eslint-config-next would judge Astro code by Next's rules.
-    // Remove this when astro/ is promoted to the repo root.
-    "astro/**",
   ]),
+  tseslint.configs.recommended,
+  astro.configs.recommended,
 ]);
-
-export default eslintConfig;

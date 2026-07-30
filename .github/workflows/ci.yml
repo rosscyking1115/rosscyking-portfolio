@@ -13,6 +13,14 @@ concurrency:
 permissions:
   contents: read
 
+# Rewritten at cutover, in the same commit that removed Next — a workflow still
+# running `next build` would fail on the cutover PR itself.
+#
+# The NEXT_PUBLIC_SITE_URL env on every job is gone. Astro reads PUBLIC_SITE_URL
+# through `astro:env`, and it is declared optional, so CI does not need to set
+# it: `site` in astro.config.mjs is what canonical URLs and the sitemap are
+# built from, and that is committed.
+
 jobs:
   quality:
     name: Lint, typecheck, build
@@ -28,10 +36,10 @@ jobs:
       - run: npm run validate:projects
       - run: npm run format:check
       - run: npm run lint
+      # `astro check` rather than `tsc --noEmit`: it type-checks the .astro
+      # frontmatter and templates too, which tsc cannot see.
       - run: npm run typecheck
       - run: npm run build
-        env:
-          NEXT_PUBLIC_SITE_URL: https://rosscyking.com
 
   unit:
     name: Vitest (unit + component)
@@ -67,12 +75,9 @@ jobs:
       - run: npm ci
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
-      - run: npm run build
-        env:
-          NEXT_PUBLIC_SITE_URL: https://rosscyking.com
+      # `test:e2e` runs `astro build && playwright test`, so the build is not
+      # repeated as a separate step here.
       - run: npm run test:e2e
-        env:
-          NEXT_PUBLIC_SITE_URL: https://rosscyking.com
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4

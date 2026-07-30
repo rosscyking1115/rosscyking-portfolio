@@ -4,26 +4,29 @@
 
 [![rosscyking.com — home](docs/site-home.png)](https://rosscyking.com)
 
-Personal portfolio for Cheng-Yuan (Ross) King — built with Next.js 16, React 19,
-TypeScript, Tailwind CSS v4, and shadcn-style components on Radix primitives.
+Personal portfolio for Cheng-Yuan (Ross) King — built with Astro 7, TypeScript
+and Tailwind CSS v4.
 
-Static-first site with serverless functions for the contact form. Deployed on
-Vercel free tier. Full test pyramid: Vitest, React Testing Library, Playwright,
-axe-core. Hardened security headers and rate-limited API routes.
+Static-first: every route is prerendered except `/contact`, which is rendered on
+demand because Astro Actions called from a form require a server. Deployed on
+Vercel free tier. Full test pyramid: Vitest, Astro's Container API, Playwright,
+axe-core. Hardened security headers and a rate-limited contact action.
 
 ## Stack
 
-- **Framework**: Next.js 16 (App Router) + React 19 + TypeScript strict
-- **Styling**: Tailwind CSS v4 with CSS-variable design tokens
-- **Theme**: `next-themes` (light / dark / system, persisted in localStorage)
-- **Components**: shadcn-style on `@radix-ui/*` primitives, copied into `src/components/ui`
-- **Animation**: `motion` (formerly Framer Motion)
-- **Icons**: `lucide-react`
-- **Forms**: `react-hook-form` + `zod`
+- **Framework**: Astro 7 + TypeScript strict, `output: 'static'` with the Vercel adapter
+- **Islands**: React 19, used for exactly one thing — the contact form
+- **Styling**: Tailwind CSS v4 (Vite plugin) with CSS-variable design tokens
+- **Theme**: inline `is:inline` head script + CSS attribute selectors, cookie-persisted
+  (light / dark / system, no flash, no framework JavaScript)
+- **Components**: `.astro` components; the shadcn class strings were ported verbatim
+- **Animation**: CSS `@keyframes` (the `motion` dependency is gone)
+- **Icons**: `@lucide/astro`
+- **Forms**: Astro Actions + `react-hook-form` + `zod`
 - **Email**: Resend
 - **Bot protection**: Cloudflare Turnstile
 - **Rate limiting**: Upstash Ratelimit + Redis
-- **Tests**: Vitest, Testing Library, Playwright, axe-core
+- **Tests**: Vitest (unit + Container API), Playwright, axe-core
 - **CI**: GitHub Actions
 
 ## Getting started
@@ -39,7 +42,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open <http://localhost:3000>.
+Open <http://localhost:4321>.
 
 ## Scripts
 
@@ -48,12 +51,12 @@ Open <http://localhost:3000>.
 | `npm run dev`          | Start the dev server with hot reload |
 | `npm run new:project`  | Scaffold a new project write-up      |
 | `npm run build`        | Production build                     |
-| `npm run start`        | Run the production build locally     |
+| `npm run preview`      | Preview the production build locally |
 | `npm run lint`         | ESLint                               |
 | `npm run lint:fix`     | ESLint with autofix                  |
 | `npm run format`       | Prettier write                       |
 | `npm run format:check` | Prettier check (used in CI)          |
-| `npm run typecheck`    | `tsc --noEmit`                       |
+| `npm run typecheck`    | `astro check`                        |
 | `npm run check:links`  | Check project links for rot          |
 | `npm run shots`        | Capture live-demo screenshots        |
 | `npm run test`         | Vitest unit + component tests        |
@@ -108,29 +111,31 @@ Updating a project is just editing its file. To remove one, delete the file.
 
 ```
 src/
-├─ app/                 # Next.js App Router pages, API routes, layout
-│  ├─ globals.css       # Tailwind v4 directives + CSS-variable design tokens
-│  ├─ layout.tsx        # Root layout: ThemeProvider, Nav, Footer
-│  └─ page.tsx          # Home
+├─ pages/               # File-based routes; also robots.txt, sitemap.xml,
+│                       # the OG/icon image endpoints, and 404.astro
+├─ actions/             # Astro Actions — the contact pipeline
+├─ layouts/Base.astro   # Site shell: head, Nav, Footer, analytics
 ├─ components/
-│  ├─ home/             # Hero, featured projects, skills cluster
-│  ├─ about/            # Experience timeline, CV download
-│  ├─ contact/          # Contact form
+│  ├─ home/             # Hero, featured projects, evidence frames, now-building
+│  ├─ about/            # Experience timeline, credential lists
 │  ├─ projects/         # Stack filter
-│  ├─ motion/           # FadeIn entrance wrapper (reduced-motion safe)
-│  ├─ layout/           # Container, Nav, Footer, ThemeProvider, ThemeToggle
-│  └─ ui/               # shadcn-style primitives (Button, Badge, Input, …)
-├─ lib/                 # projects loader (zod), site-config, skills,
-│                       # experience, certifications, contact schema, env
+│  ├─ layout/           # Container, Nav, Footer, Section, IndexMark
+│  ├─ ui/               # Button, Badge (.astro) + form controls (React)
+│  ├─ ThemeScript.astro # Inline no-flash theme script
+│  └─ LensScript.astro  # Inline role-lens script
+├─ lib/                 # projects loader (zod), site-config, skills, experience,
+│                       # certifications, contact schema, OG rendering
+├─ styles/global.css    # Tailwind v4 + CSS-variable design tokens
+└─ content.config.ts    # Content collection pointed at ../content/projects
 content/                # MDX content (projects/, about.mdx)
-public/                 # Static assets (CV, OG images, favicons)
-scripts/                # new-project scaffold, link checker
+public/                 # Static assets (CV, screenshots, favicons, verification)
+scripts/                # new-project scaffold, link checker, screenshotter
 .github/workflows/      # CI pipelines
 ```
 
 ## Design tokens
 
-Tokens live in `src/app/globals.css` as CSS variables under `:root` (light) and
+Tokens live in `src/styles/global.css` as CSS variables under `:root` (light) and
 `.dark` (dark), then mapped into Tailwind's theme via `@theme inline`. Edit the
 variable values to retheme the entire site without touching components.
 
