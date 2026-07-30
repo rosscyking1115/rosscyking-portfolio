@@ -870,6 +870,27 @@ are fixed and verified **in the built output** rather than in intent:
 .vercel/output/static/google0acbb4712509578f.html      53 bytes
 ```
 
+### The pattern, stated once — this is the third silent drop, not an incident
+
+Analytics is the **third** thing this migration found that was simply absent, after `/contact`
+shipping unstyled (#72) and the "Now building" strip never being ported (#73). The shape is
+identical every time:
+
+| What was missing           | Why the suite stayed green                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `/contact` design system   | The form worked. Every gate tested behaviour.                                                       |
+| "Now building" strip       | Its array is empty, so it renders nothing — indistinguishable from a component that does not exist. |
+| Analytics + Speed Insights | The site builds, deploys and serves a perfectly good page.                                          |
+
+**A test suite verifies that what exists behaves correctly. It says nothing about what should exist
+and does not.** A component that renders nothing passes. An empty array renders nothing and passes.
+A missing analytics script serves a perfectly good page. None of the three was caught by a test
+going red; all three were caught by diffing old against new.
+
+The countermeasures now in the repo — `tests/e2e/completeness.spec.ts`, the dev-only fixture route,
+and the porting guidance at the top of `AGENTS.md` — exist because of these three, and the guidance
+is in AGENTS.md rather than only here so the next port meets it without reading the plan.
+
 ### A third blocker §6k missed
 
 **Vercel Web Analytics and Speed Insights were never ported.** The Next root layout rendered

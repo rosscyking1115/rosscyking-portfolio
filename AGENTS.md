@@ -41,6 +41,35 @@ specs fail on ambiguous locators. Run `astro dev status` before diagnosing an od
 
 <!-- END:astro-agent-rules -->
 
+## If you are porting or migrating anything, read this first
+
+**A test suite verifies that what exists behaves correctly. It says nothing about what should
+exist and does not.**
+
+This migration found the same defect three separate times, and the suite was green for all three:
+
+| What was missing                                    | Why nothing failed                                                                             |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `/contact` shipped with no design system applied    | The form worked. Every gate tested behaviour.                                                  |
+| The "Now building" strip was never ported           | Its data array is empty, so it renders nothing — identical to a component that does not exist. |
+| Vercel Analytics + Speed Insights were never ported | The site builds, deploys and serves a perfectly good page. The numbers just stop arriving.     |
+
+All three shipped a working site with something missing. All three were invisible to 129 passing
+e2e tests. **All three were caught by diffing the old implementation against the new one — never by
+a test going red.**
+
+So when porting:
+
+1. **Diff the old against the new at the file level**, component by component and dependency by
+   dependency. Do not rely on the pages looking right.
+2. **Treat "renders nothing" as unverified, not as verified.** An empty array, a falsy guard and a
+   deleted file all produce identical output. If real data would make it appear, test it with a
+   fixture — see `src/pages/dev-fixtures/[name].astro`.
+3. **Third-party scripts and side effects are the easiest thing to lose**, because nothing renders
+   and nothing errors. Analytics, error reporting, verification files, `robots.txt`, redirects.
+4. **Assert absence, not just behaviour.** `tests/e2e/completeness.spec.ts` exists for this and is
+   the model to copy: each assertion names the finding it would have caught.
+
 ## This repository specifically
 
 - **`content/` is the source of truth for prose and is edited deliberately.** `registry.json` is
