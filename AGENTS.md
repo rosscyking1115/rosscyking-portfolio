@@ -103,6 +103,29 @@ This migration produced three findings that only observation caught, and two pre
 observation could confirm — one confirmed, one left open on purpose because the project it concerns
 is being deleted.
 
+### Never remove `framework` from `vercel.json`
+
+A deploy that depends on a setting invisible from the code is not reproducible from the repository.
+
+`vercel.json` pins `"framework": "astro"`. Per Vercel's docs that key **"overrides the Framework in
+Project Settings"**, so it is the only thing preventing a dashboard preset — set once, by hand,
+possibly years ago, by someone who has forgotten — from deciding how this repo builds.
+
+It was missing at cutover, and the deployment failed with `No Next.js version detected` against a
+repository containing no Next at all. **The same defect appeared independently on another Astro
+site, from the same cause:** stripping `framework` alongside `buildCommand` and `outputDirectory`
+when adding the adapter, on the reasoning that "the adapter owns the output". That reasoning is
+correct for those two keys and wrong for this one — the adapter controls what is produced, not
+which builder Vercel selects.
+
+`tests/e2e/headers.spec.ts` asserts the key is present and equals `astro`. That is an
+absence-assertion, in the same family as `completeness.spec.ts`: its removal is silent in the repo
+and surfaces only as a failed deploy.
+
+`vercel.json` permits **no comments** — Vercel rejects the whole deployment for any unknown
+top-level property, and a `_comment` key cost a deploy once already. So the reasoning lives here
+and in the spec, never in the file.
+
 ## This repository specifically
 
 - **`content/` is the source of truth for prose and is edited deliberately.** `registry.json` is

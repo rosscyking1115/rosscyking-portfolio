@@ -86,7 +86,24 @@ const configured = new Map(
  * fetched so the suite stays offline and deterministic.
  */
 test.describe("vercel.json stays deployable", () => {
-  const ALLOWED_TOP_LEVEL = new Set(["$schema", "redirects", "headers"]);
+  /**
+   * `framework` is load-bearing and must never be removed.
+   *
+   * It is the only thing stopping the dashboard's Framework Preset from
+   * deciding how this repo builds. Per Vercel's docs the key "overrides the
+   * Framework in Project Settings", so with it absent the project's saved
+   * preset wins — which is exactly how the cutover deployment failed with
+   * "No Next.js version detected" against a repo containing no Next at all.
+   *
+   * The same defect appeared independently on another Astro site, from the same
+   * cause: stripping `framework` alongside `buildCommand` and `outputDirectory`
+   * when adding the adapter. That reasoning — "the adapter owns the output" —
+   * is right for those two and wrong for this one.
+   *
+   * The value is checked below rather than assumed: "astro" is one of the 73
+   * slugs the published schema permits.
+   */
+  const ALLOWED_TOP_LEVEL = new Set(["$schema", "framework", "redirects", "headers"]);
 
   test("has no property Vercel will reject at deploy time", () => {
     const raw = JSON.parse(readFileSync(repoUrl("../../vercel.json"), "utf8")) as Record<
@@ -99,6 +116,22 @@ test.describe("vercel.json stays deployable", () => {
       unknown,
       `unknown vercel.json keys will fail the deployment: ${unknown.join(", ")}`,
     ).toEqual([]);
+  });
+
+  test("pins the framework, so the dashboard preset cannot decide how this builds", () => {
+    // Absence, not behaviour. Every other assertion in this file checks that a
+    // value is correct; this one checks that a key EXISTS, because its removal
+    // is silent in the repo and only shows up as a failed deploy — which is
+    // precisely how the cutover build failed.
+    const raw = JSON.parse(readFileSync(repoUrl("../../vercel.json"), "utf8")) as Record<
+      string,
+      unknown
+    >;
+
+    expect(
+      raw.framework,
+      "vercel.json must pin framework, or Project Settings decides the build",
+    ).toBe("astro");
   });
 });
 
