@@ -3,7 +3,8 @@ import { twMerge } from "tailwind-merge";
 
 /**
  * Conditionally join Tailwind class names while merging conflicting utilities.
- * Used by every component that accepts a `className` prop.
+ * Ported verbatim from the Next app — every component that accepts a
+ * `class`/`className` prop uses it.
  */
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));

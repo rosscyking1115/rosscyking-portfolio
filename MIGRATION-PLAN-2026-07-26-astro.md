@@ -834,9 +834,17 @@ Two things carried over unchanged rather than improved, and are worth knowing:
 
 ### Still open
 
-- **Cutover.** Promote `astro/` to the repo root, delete Next, reverse the three tooling exclusions
-  (root `tsconfig`, ESLint, Prettier), repoint the existing Vercel project — which keeps its env
-  vars, domain and analytics — then delete the temporary Astro project and the `NEXT_PUBLIC_*` pair.
+- **Cutover — code half DONE (see §6l), platform half is Ross's.** `astro/` is promoted, Next is
+  deleted, the tooling exclusions are reversed. Still outstanding and his alone: flip the Vercel
+  Framework Preset to Astro, delete the temporary `-astro` project and the `NEXT_PUBLIC_*` pair.
+- **Delete two stale local directories.** `.next/` and `astro/` survive in the working tree as
+  untracked build artefacts. Neither is in git, so CI and the deployment are unaffected, but both
+  are picked up by a local `eslint .` (16k phantom errors from minified bundles) and by
+  `astro check`. `git clean -fdx .next astro` — left for Ross because the tooling here refuses to
+  force-delete untracked files.
+- **Rewrite `MAINTENANCE.md` and `REPRODUCE-KIT.md`.** Both still document the Next build end to
+  end. Each now carries a staleness banner rather than a quiet half-correction, but the rewrite is
+  real follow-up work.
 - **One `curl` against production after cutover**, to confirm the 404 answers correctly on a real
   Vercel edge. It is proven at the build-artefact level only: the preview deployment sits behind
   Vercel deployment protection and answers `302` to `vercel.com/sso-api` on every path, so it could
@@ -849,6 +857,163 @@ Two things carried over unchanged rather than improved, and are worth knowing:
   updated on 2026-07-29; the stack half was deliberately left correct-for-now rather than made
   briefly wrong to save an edit. Replace "Next.js 16, React 19" with "Astro 7, React 19" (React
   stays — the contact form is still an island).
+
+---
+
+## 6l. Cutover — the code half, landed 2026-07-30
+
+§6k's discovery held up. Both blockers were verified independently before anything moved, and both
+are fixed and verified **in the built output** rather than in intent:
+
+```
+.vercel/output/static/cv.pdf                      210,188 bytes
+.vercel/output/static/google0acbb4712509578f.html      53 bytes
+```
+
+### The pattern, stated once — this is the third silent drop, not an incident
+
+Analytics is the **third** thing this migration found that was simply absent, after `/contact`
+shipping unstyled (#72) and the "Now building" strip never being ported (#73). The shape is
+identical every time:
+
+| What was missing           | Why the suite stayed green                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `/contact` design system   | The form worked. Every gate tested behaviour.                                                       |
+| "Now building" strip       | Its array is empty, so it renders nothing — indistinguishable from a component that does not exist. |
+| Analytics + Speed Insights | The site builds, deploys and serves a perfectly good page.                                          |
+
+**A test suite verifies that what exists behaves correctly. It says nothing about what should exist
+and does not.** A component that renders nothing passes. An empty array renders nothing and passes.
+A missing analytics script serves a perfectly good page. None of the three was caught by a test
+going red; all three were caught by diffing old against new.
+
+The countermeasures now in the repo — `tests/e2e/completeness.spec.ts`, the dev-only fixture route,
+and the porting guidance at the top of `AGENTS.md` — exist because of these three, and the guidance
+is in AGENTS.md rather than only here so the next port meets it without reading the plan.
+
+### A third blocker §6k missed
+
+**Vercel Web Analytics and Speed Insights were never ported.** The Next root layout rendered
+`<Analytics />` and `<SpeedInsights />`; the Astro app had neither the packages nor the components.
+Nothing would have failed — the site builds, deploys and serves — the numbers would simply have
+stopped arriving. Found by diffing the two layouts, not by anything going red.
+
+Restored as components, not via the adapter's `webAnalytics` flag: per the adapter docs that option
+is for `@vercel/analytics` 1.3.x and earlier, and the installed version is 2.0.1. Verified in the
+built HTML — `/_vercel/insights/script.js` and `/_vercel/speed-insights/script.js` are both emitted.
+
+### What "two of everything to reconcile" actually meant
+
+The Astro `package.json` had **no** eslint, prettier, husky, lint-staged, vitest, `@types/node` or
+`gray-matter`. Taking it wholesale would have silently deleted five CI gates and broken
+`validate:projects`. The merged file keeps every script the pipeline calls.
+
+`eslint-config-next` cannot survive the removal of Next, so ESLint was rewritten on
+typescript-eslint + eslint-plugin-astro. That surfaced 12 genuine findings in the three `is:inline`
+head scripts (`var`, unused catch bindings). They were fixed in the code rather than suppressed by
+config — `var` → `let` inside an IIFE and ES2019 optional catch binding are semantically identical
+here, and theme.spec.ts / lenses.spec.ts prove it.
+
+`vitest.config.ts` is excluded from `astro check`: Astro types `getViteConfig`'s argument as Vite's
+`UserConfig`, which has no `test` key, so the documented usage fails ts(2353). `mergeConfig` is not
+a way out — `getViteConfig` returns a lazy config function and merging it breaks the Vite server.
+Excluding one tooling file beats casting the error away.
+
+### The vitest suite: 30 in, 30 out
+
+| Was                    | Now                 | Note                                  |
+| ---------------------- | ------------------- | ------------------------------------- |
+| `utils` 4              | `utils` 4           | import path only                      |
+| `theme-cookie` 3       | `theme` 3           | import path only                      |
+| `email-template` 5     | `email-template` 5  | import path only                      |
+| `contact-schema` 10    | `contact-schema` 10 | one assertion **inverted**, see below |
+| `badge` 3 + `button` 5 | `ui-components` 8   | React → Astro Container API           |
+
+The inverted one: the Next test asserted the schema **rejected** a filled honeypot. Astro validates
+an action's input before the handler and answers a failure with 400 plus the field name — which
+tells a bot exactly what caught it. `.max(0)` therefore lives in the handler now, and "the schema
+does not reject this" became a load-bearing property worth asserting. Kept and inverted with the
+reason in the file, not deleted.
+
+Three Button behaviours did not survive: `onClick`, disabled-click suppression and `asChild`. An
+`.astro` Button ships no JavaScript and `asChild` was a Radix Slot feature. The element-swap it
+produced **is** still covered (`href` → `<a>`, otherwise `<button>`); interaction coverage lives in
+the e2e suite, which drives a real browser.
+
+### Verified, not asserted
+
+- `npm run build` — clean; `cv.pdf`, the verification file, `.well-known/security.txt`, favicons and
+  `404.html` all present in `.vercel/output/static/`
+- Screenshots still optimise through the shortened glob — 28 `_astro/*.webp`
+- `astro check` — **0 errors**
+- `vitest` — **30/30**
+- `playwright` — **129/129**
+- `validate:projects` — 10 projects, no drift
+- `eslint` — clean on the real tree
+- `format:check` — the 23 flagged files are **line-endings-only** (Windows CRLF checkout), verified
+  file-by-file with `diff --strip-trailing-cr`; zero genuine differences, so a Linux CI checkout
+  passes
+
+---
+
+## 6k. Cutover — pre-flight findings, 2026-07-30
+
+Discovery run before moving a single file. **Cutover is not the four mechanical steps the checklist
+implied.** Two of these would have shipped a broken production site.
+
+### 🔴 Blockers — things that break if `astro/` is moved as-is
+
+**1. `/cv.pdf` is not in the Astro build.** `astro/public/` contains only `favicon.ico` and
+`favicon.svg`. The CV lives in the repo-root `public/`, and the Astro app links it from three places
+— the hero button, the contact page list, and the footer. Confirmed absent from
+`.vercel/output/static/`. Every "Download CV" link would 404.
+
+**2. `google0acbb4712509578f.html` is not in the Astro build.** Google Search Console domain
+verification. Losing it does not break the site, which is exactly why it would go unnoticed.
+
+Both are fixed by the same move — the repo-root `public/` becomes the app's `public/` at cutover —
+but only if that is done deliberately rather than by deleting the Next app and taking `astro/public/`
+with it.
+
+### 🟡 Decisions the checklist did not account for
+
+**3. The vitest suite tests the Next app.** Six files under `tests/{unit,component}` cover
+`badge`/`button` (shadcn React), `contact-schema`, `email-template`, `theme-cookie` and `utils`.
+Deleting `src/` deletes what they import, and CI runs them as a required check ("Vitest (unit +
+component)"). Each has an Astro counterpart worth testing — `lib/contact-schema.ts`, `lib/theme.ts`,
+`lib/utils.ts` — so the answer is port, not delete, but it is a real piece of work and it is a
+required check either way.
+
+**4. Two of everything to reconcile**, not just move: `package.json`, `package-lock.json`,
+`tsconfig.json`, `playwright.config.ts`, `.gitignore`, `.npmrc`, `AGENTS.md`, `README.md`.
+
+**5. `.github/workflows` still builds and tests the Next app.** Needs rewriting for an Astro-only
+repo, in the same commit that removes Next, or CI fails on the cutover PR itself.
+
+**6. Next-specific files to delete:** `next.config.ts`, `next-env.d.ts`, `postcss.config.mjs`
+(Tailwind 4 goes through the Vite plugin in Astro), plus `.next/`.
+
+**7. `AGENTS.md` currently opens "This is NOT the Next.js you know"** and sends every agent to
+`node_modules/next/dist/docs/`. After cutover that instruction is actively wrong.
+
+### 🟢 Confirmed safe
+
+**Screenshots do not move.** `EvidenceFrame.astro` reaches them with
+`import.meta.glob("../../../../public/projects/screenshots/*")` — the repo-root `public/`, which is
+why they come out as optimised `_astro/*.webp` rather than copied files. At cutover the glob loses
+one `../` level and resolves to the same directory. Worth knowing: once root `public/` is also the
+Astro public dir, those images will be both optimised via the glob AND copied verbatim, which is
+harmless (the copy is the fallback the component already documents) but is duplication.
+
+**The five `../` path rewrites are as scoped:** `registry-stats.ts`, `about.astro`,
+`content.config.ts`, `lenses.ts`, plus the `EvidenceFrame` glob above.
+
+### The fail-safe window still holds
+
+Between "cutover PR merges" and "Framework Preset flipped to Astro", the project builds an Astro app
+with a Next preset. **That build fails; it does not serve something broken.** The domain keeps
+serving the last good Next deployment until the preset changes. Fail-safe, not fail-open — so the
+preset flip is prompt, not urgent.
 
 ---
 

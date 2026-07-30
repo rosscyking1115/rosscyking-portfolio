@@ -10,15 +10,19 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# build output
+dist/
 
-# next.js
-/.next/
-/out/
+# generated types
+.astro/
 
-# production
-/build
+# TRANSITIONAL — delete these two lines once the stale directories are gone.
+# Cutover left `.next/` and `astro/` in the working tree as untracked build
+# artefacts. Neither is in git, but without an ignore entry a `git add -A`
+# stages ~15k files from .next/ by accident. Run `git clean -fdx .next astro`,
+# then remove this block. Tracked in MIGRATION-PLAN §"Still open".
+.next/
+astro/
 
 # misc
 .DS_Store
@@ -28,24 +32,30 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but keep the documented template. The bare `.env*` above matches at every
+# depth, so this negation is what makes the example trackable. Carried over
+# from astro/.gitignore at cutover.
+!.env.example
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
-
 
 # testing
 coverage
 playwright-report
 test-results
 playwright/.cache
+
+# jetbrains
+.idea/
 
 # Internal PMO handoff docs — never publish
 HANDOFF-*.md

@@ -1,3 +1,7 @@
+/**
+ * Ported verbatim from the Next app's src/lib/skills.ts — the only change is the
+ * type import path. This is authored data, not derived content, so it moves as-is.
+ */
 export interface SkillGroup {
   label: string;
   items: readonly string[];

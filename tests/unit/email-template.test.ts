@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderContactEmail } from "@/lib/email-template";
+import { renderContactEmail } from "../../src/lib/email-template";
 
 const baseInput = {
   name: "Jane Doe",

@@ -1,6 +1,4 @@
-import "server-only";
-
-import type { ContactFormValues } from "@/lib/contact-schema";
+import type { ContactFormValues } from "./contact-schema";
 
 interface EmailTemplateInput extends ContactFormValues {
   receivedAt: Date;
@@ -10,6 +8,10 @@ interface EmailTemplateInput extends ContactFormValues {
 /**
  * Plain HTML email body sent to the portfolio owner.
  * Inline styles only — many email clients strip <style> blocks.
+ *
+ * Ported verbatim from the Next app. The only change is dropping
+ * `import "server-only"`: Astro has no equivalent, and this module is
+ * imported solely by the action, which never reaches a client bundle.
  */
 export function renderContactEmail(input: EmailTemplateInput): {
   subject: string;

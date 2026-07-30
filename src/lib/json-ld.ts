@@ -1,4 +1,4 @@
-import { siteConfig } from "@/lib/site-config";
+import { siteConfig } from "./site-config";
 
 /**
  * Person structured data (schema.org). Surfaced in Google's Knowledge Graph,
