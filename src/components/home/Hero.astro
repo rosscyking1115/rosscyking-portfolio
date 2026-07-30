@@ -15,7 +15,20 @@ import ProofStrip from "./ProofStrip.astro";
  * delay, so the hero — the largest-contentful-paint element on the site — no
  * longer waits on a JavaScript animation library to become visible.
  */
-const ROLES = ["Data Engineering", "ML Engineering", "AI Safety & Evaluation"] as const;
+/**
+ * Order is the message, not an alphabetisation.
+ *
+ * These read left to right and a scanner stops at the first one, so the lead
+ * chip is doing the same job as the <title>. It used to read "Data Engineering
+ * · ML Engineering · AI Safety & Evaluation", which put the thing Ross moved
+ * away from first and the thing he moved to last — the metadata said one thing
+ * and the two largest signals on the page said another.
+ */
+const ROLES = [
+  "AI Evaluation & Reliability",
+  "ML Engineering",
+  "Data Engineering",
+] as const;
 ---
 
 <Container class="pt-16 pb-16 sm:pt-24 sm:pb-20">

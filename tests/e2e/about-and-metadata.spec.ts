@@ -17,7 +17,7 @@ test.describe("about page", () => {
     await page.goto("/about");
 
     await expect(page.locator("main h1")).toHaveText(
-      "I build data and ML systems you can audit.",
+      "I build software for evaluating AI honestly.",
     );
 
     // The registration marks are the page's structure. Losing one means a
