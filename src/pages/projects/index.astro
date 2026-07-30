@@ -1,0 +1,147 @@
+---
+import { ArrowRight, Search } from "@lucide/astro";
+
+import Container from "../../components/layout/Container.astro";
+import IndexMark from "../../components/layout/IndexMark.astro";
+import ProjectFilter from "../../components/projects/ProjectFilter.astro";
+import Badge from "../../components/ui/Badge.astro";
+import Base from "../../layouts/Base.astro";
+import {
+  getFilterStacks,
+  getNumberedProjects,
+  projectReadingTime,
+} from "../../lib/projects";
+
+/**
+ * Ported from src/app/projects/page.tsx.
+ *
+ * Every card for every project is rendered; ProjectFilter hides the ones that
+ * do not match `?stack=`, before first paint. See the note in that component
+ * for why the filtering moved from the server to a CSS rule.
+ *
+ * `data-stack` carries `|`-delimited values so the filter can match a stack
+ * containing spaces. `data-project` is the hook the filter and its tests use.
+ */
+const numbered = await getNumberedProjects();
+const filterStacks = await getFilterStacks();
+const total = numbered.length;
+---
+
+<Base
+  title="Projects"
+  description="Evaluation harnesses, AI-safety work, and data products — each with a full write-up of the methods and numbers."
+  canonical="/projects"
+>
+  <Container class="py-12 sm:py-16">
+    <IndexMark mark="Index">
+      {/* The filter script rewrites this when ?stack= narrows the list. */}
+      <span slot="label" data-project-count>
+        {total} project{total === 1 ? "" : "s"}
+      </span>
+    </IndexMark>
+    <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+      Projects
+    </h1>
+    <p class="text-muted-foreground mt-3 max-w-prose text-lg leading-relaxed text-pretty">
+      Evaluation harnesses, AI-safety work, and data products. Filter by stack — every
+      card links to a full write-up with the methods and numbers.
+    </p>
+
+    <div class="border-border mt-8 border-y py-4">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <span
+          class="text-muted-foreground shrink-0 font-mono text-xs tracking-wider uppercase"
+        >
+          Filter by stack
+        </span>
+        <ProjectFilter stacks={filterStacks} />
+      </div>
+    </div>
+
+    <ul class="mt-8 grid gap-4 sm:grid-cols-2" data-projects-grid>
+      {
+        numbered.map(({ project, index }, i) => (
+          <li
+            data-project
+            data-stack={`|${project.data.stack.join("|")}|`}
+            class="reveal"
+            style={`--reveal-delay: ${i * 40}ms`}
+          >
+            <article class="group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex h-full flex-col rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5">
+              <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
+                <span class="text-primary" data-catalogue>
+                  {String(index).padStart(2, "0")}
+                </span>
+                <span>
+                  {project.data.period} · {projectReadingTime(project)}
+                </span>
+              </div>
+              <h2 class="font-display mt-4 text-lg font-semibold tracking-tight">
+                <a
+                  href={`/projects/${project.id}`}
+                  class="after:absolute after:inset-0 after:rounded-lg"
+                >
+                  {project.data.title}
+                </a>
+              </h2>
+              <p class="text-muted-foreground mt-2 line-clamp-3 flex-1 text-sm leading-relaxed">
+                {project.data.summary}
+              </p>
+              <div class="mt-5 flex flex-wrap gap-1.5">
+                {project.data.stack.slice(0, 4).map((tech) => (
+                  <Badge variant="tag">{tech}</Badge>
+                ))}
+              </div>
+              <span class="text-primary mt-5 inline-flex items-center gap-1.5 text-sm font-medium">
+                Read write-up
+                <ArrowRight
+                  class="size-3.5 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </span>
+            </article>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div
+      data-projects-empty
+      hidden
+      class="border-border mt-8 flex flex-col items-center justify-center rounded-lg border border-dashed py-20 text-center"
+    >
+      <Search class="text-muted-foreground size-8" aria-hidden="true" />
+      <p class="mt-4 text-sm font-medium">No projects with that stack — yet.</p>
+      <p class="text-muted-foreground mt-1 text-sm">
+        Try another filter, or <a
+          href="/projects"
+          class="text-primary font-medium underline-offset-2 hover:underline">clear it</a
+        >.
+      </p>
+    </div>
+  </Container>
+</Base>
+
+<style>
+  /*
+    Replaces the <FadeIn> wrapper, which pulled in `motion` — the Next app's
+    only use of a JS animation library. Same staggered rise, in CSS, with no
+    JavaScript at all. The global prefers-reduced-motion block in global.css
+    already collapses this to nothing for anyone who asks.
+  */
+  .reveal {
+    animation: reveal 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

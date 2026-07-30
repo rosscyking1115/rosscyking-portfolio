@@ -1,161 +1,114 @@
-import "server-only";
-
-import { promises as fs } from "node:fs";
-import path from "node:path";
-
-import matter from "gray-matter";
+import { getCollection, type CollectionEntry } from "astro:content";
 import readingTime from "reading-time";
-import { z } from "zod";
 
-import { DEFAULT_LENS, getLens, LENS_KEYS, type LensKey } from "@/lib/lenses";
-import type { FeaturedCard, LoadedProject, ProjectMeta } from "@/types/project";
+/**
+ * Project queries, ported from the Next app's src/lib/projects.ts.
+ *
+ * The Next version hand-rolled the loader: fs.readdir, gray-matter, a zod parse
+ * and a module-level cache. All of that is now the content collection defined
+ * in src/content.config.ts, so what is left here is only the querying.
+ *
+ * The ordering and draft rules are carried over exactly, because they are
+ * observable: projects sort newest-first by `publishedAt`, and drafts are
+ * authored in dev but never published.
+ */
 
-const PROJECTS_DIR = path.join(process.cwd(), "content/projects");
+export type Project = CollectionEntry<"projects">;
 
-const frontMatterSchema = z.object({
-  title: z.string().min(1),
-  summary: z.string().min(1),
-  stack: z.array(z.string().min(1)).min(1),
-  role: z.string().optional(),
-  period: z.string().min(1),
-  publishedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD"),
-  featured: z.boolean().optional(),
-  featuredOrder: z.number().optional(),
-  /** Work-in-progress: visible in `next dev`, hidden from production builds. */
-  draft: z.boolean().optional(),
-  /**
-   * Live-demo screenshot for the featured showcase, e.g.
-   * "/projects/screenshots/<slug>.png". Captured via `npm run shots`.
-   */
-  screenshot: z.string().startsWith("/").optional(),
-  /**
-   * Terminal-readout lines shown in the featured showcase when a project has
-   * no UI to screenshot (e.g. an HPC/CLI project). Keep to 3-4 short lines.
-   */
-  terminal: z.array(z.string().min(1)).max(5).optional(),
-  /** Optional headline numbers shown as an inline metric strip on the detail page. */
-  metrics: z
-    .array(z.object({ value: z.string().min(1), label: z.string().min(1) }))
-    .optional(),
-  links: z
-    .object({
-      github: z.string().url().optional(),
-      demo: z.string().url().optional(),
-      paper: z.string().url().optional(),
-      report: z.string().url().optional(),
-      pypi: z.string().url().optional(),
-    })
-    .optional(),
-});
+/** Reading time, computed the same way and with the same package as the Next app. */
+export function projectReadingTime(entry: Project): string {
+  return readingTime(entry.body ?? "").text;
+}
 
-let cache: LoadedProject[] | null = null;
-
-async function loadAll(): Promise<LoadedProject[]> {
-  if (cache && process.env.NODE_ENV === "production") return cache;
-
-  const files = await fs.readdir(PROJECTS_DIR);
-  const mdxFiles = files.filter((file) => file.endsWith(".mdx"));
-
-  const loaded = await Promise.all(
-    mdxFiles.map(async (file) => {
-      const slug = file.replace(/\.mdx$/, "");
-      const raw = await fs.readFile(path.join(PROJECTS_DIR, file), "utf8");
-      const { data, content } = matter(raw);
-
-      const parsed = frontMatterSchema.safeParse(data);
-      if (!parsed.success) {
-        throw new Error(
-          `Invalid front matter in content/projects/${file}: ${parsed.error.message}`,
-        );
-      }
-
-      return {
-        slug,
-        ...parsed.data,
-        content,
-        readingTime: readingTime(content).text,
-      } satisfies LoadedProject;
-    }),
+/**
+ * Every publishable project, newest first.
+ *
+ * `import.meta.env.PROD` stands in for the Next version's
+ * `process.env.NODE_ENV === "production"` check. Drafts stay visible while
+ * writing and disappear from the build.
+ */
+export async function getAllProjects(): Promise<Project[]> {
+  const projects = await getCollection("projects", ({ data }) =>
+    import.meta.env.PROD ? !data.draft : true,
   );
-
-  // Drafts are authored and previewed in `next dev` but never published.
-  const visible =
-    process.env.NODE_ENV === "production"
-      ? loaded.filter((project) => !project.draft)
-      : loaded;
-
-  visible.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
-  cache = visible;
-  return visible;
-}
-
-export async function getAllProjects(): Promise<LoadedProject[]> {
-  return loadAll();
-}
-
-export async function getProjectMeta(): Promise<ProjectMeta[]> {
-  const all = await loadAll();
-  return all.map(({ content, readingTime, ...meta }) => meta);
-}
-
-export async function getProjectBySlug(slug: string): Promise<LoadedProject | null> {
-  const all = await loadAll();
-  return all.find((p) => p.slug === slug) ?? null;
+  return projects.sort((a, b) => b.data.publishedAt.localeCompare(a.data.publishedAt));
 }
 
 /**
- * Featured projects for a role lens, in the registry's declared order. The
- * lens's `featured` slug list (from content/projects/registry.json) is the
- * source of truth; `validate:projects` guarantees every slug exists and is
- * shipped, so the map below never drops or reorders silently.
+ * Catalogue numbers, assigned over the FULL list so a project keeps its number
+ * when the gallery is filtered — the Next page did the same, deliberately.
  */
-export async function getFeaturedProjects(
-  lens: LensKey = DEFAULT_LENS,
-): Promise<LoadedProject[]> {
-  const all = await loadAll();
-  const bySlug = new Map(all.map((project) => [project.slug, project]));
-  return getLens(lens)
-    .featured.map((slug) => bySlug.get(slug))
-    .filter((project): project is LoadedProject => Boolean(project));
+export async function getNumberedProjects(): Promise<
+  Array<{ project: Project; index: number }>
+> {
+  const all = await getAllProjects();
+  return all.map((project, i) => ({ project, index: i + 1 }));
 }
 
 /**
- * Featured cards for every lens, keyed by lens. Built server-side and handed
- * to the client switcher so lenses can re-rank in place without navigation.
- * The MDX body is dropped; reading time is kept.
+ * Stacks worth offering as filters: those shared by two or more projects,
+ * most common first, capped at ten. Ported verbatim — it keeps the chip bar
+ * from turning into a wall of one-offs.
  */
-export async function getLensFeaturedCards(): Promise<Record<LensKey, FeaturedCard[]>> {
-  const all = await loadAll();
-  const bySlug = new Map(all.map((project) => [project.slug, project]));
-  const toCard = ({ content, ...card }: LoadedProject): FeaturedCard => card;
+export async function getFilterStacks(): Promise<string[]> {
+  const all = await getAllProjects();
+  const frequency = new Map<string, number>();
+  for (const project of all) {
+    for (const stack of project.data.stack) {
+      frequency.set(stack, (frequency.get(stack) ?? 0) + 1);
+    }
+  }
+  return [...frequency.entries()]
+    .filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([stack]) => stack)
+    .slice(0, 10);
+}
+
+/** The neighbours either side of a project, for the prev/next footer nav. */
+export async function getAdjacentProjects(slug: string): Promise<{
+  prev: Project | null;
+  next: Project | null;
+}> {
+  const all = await getAllProjects();
+  const index = all.findIndex((project) => project.id === slug);
+  if (index === -1) return { prev: null, next: null };
+  return {
+    prev: all[index - 1] ?? null,
+    next: all[index + 1] ?? null,
+  };
+}
+
+/** Trim a project summary to a search-friendly meta description (~155 chars). */
+export function toMetaDescription(text: string, max = 155): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max);
+  const lastSpace = slice.lastIndexOf(" ");
+  return `${slice.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd()}…`;
+}
+
+/**
+ * Featured cards for every lens, keyed by lens, in the registry's declared
+ * order. Ported from `getLensFeaturedCards` in the Next app's src/lib/projects.ts.
+ *
+ * The Next version built this so a React client component could re-rank in
+ * place without navigating. Here it feeds one prerendered panel per lens, which
+ * CSS shows or hides — same idea, no hydration.
+ *
+ * `validate:projects` guarantees every lens slug exists and is shipped, so the
+ * lookup below can never silently drop a card.
+ */
+export async function getLensFeaturedCards(): Promise<Record<string, Project[]>> {
+  const { LENS_KEYS, getLens } = await import("./lenses");
+  const all = await getAllProjects();
+  const bySlug = new Map(all.map((project) => [project.id, project]));
 
   return Object.fromEntries(
     LENS_KEYS.map((key) => [
       key,
       getLens(key)
         .featured.map((slug) => bySlug.get(slug))
-        .filter((project): project is LoadedProject => Boolean(project))
-        .map(toCard),
+        .filter((project): project is Project => Boolean(project)),
     ]),
-  ) as Record<LensKey, FeaturedCard[]>;
-}
-
-export async function getAllStacks(): Promise<string[]> {
-  const all = await loadAll();
-  const set = new Set<string>();
-  for (const project of all) {
-    for (const tech of project.stack) set.add(tech);
-  }
-  return Array.from(set).sort();
-}
-
-/** Adjacent projects (next/prev) for the detail page footer. */
-export async function getAdjacentProjects(slug: string) {
-  const all = await loadAll();
-  const index = all.findIndex((p) => p.slug === slug);
-  if (index === -1) return { prev: null, next: null };
-  return {
-    prev: index > 0 ? all[index - 1] : null,
-    next: index < all.length - 1 ? all[index + 1] : null,
-  };
+  );
 }

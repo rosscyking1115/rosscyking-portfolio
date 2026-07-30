@@ -1,0 +1,55 @@
+---
+/**
+ * No-flash theme application (migration risk #5).
+ *
+ * The Next app read the `theme` cookie server-side and rendered the right class
+ * into the HTML. A prerendered Astro page cannot: there is no request at build
+ * time, so the same HTML is served to everyone. Without this, every visitor
+ * whose theme is not the default gets a flash of the wrong one on first paint.
+ *
+ * Astro's docs carry no dark-mode or theme recipe — checked, not assumed; there
+ * is no such entry on the official recipes index. So this is a deliberate
+ * implementation rather than a documented pattern.
+ *
+ * Three things make it work, and all three are load-bearing:
+ *
+ *   1. `is:inline` keeps the script in the document rather than bundling it into
+ *      an external module. A bundled script is deferred, which means it runs
+ *      after first paint — exactly the flash this exists to prevent.
+ *      https://docs.astro.build/en/guides/client-side-scripts/
+ *   2. It must render BEFORE any stylesheet in <head>, so the class is on
+ *      <html> before the browser has anything to paint.
+ *   3. It is wrapped in try/catch. If it throws, the page renders unstyled-ish
+ *      forever; a swallowed error just means the default theme.
+ *
+ * CSP coupling: this needs `script-src 'unsafe-inline'`, which the production
+ * policy already allows (see vercel.json, risk #2). If that is ever tightened
+ * to hashes, this script must be hashed with it or the site breaks in the dark.
+ */
+---
+
+<script is:inline>
+  (function () {
+    try {
+      const match = document.cookie.match(/(?:^|;\s*)theme=([^;]+)/);
+      let stored = match ? decodeURIComponent(match[1]) : null;
+      if (stored !== "light" && stored !== "dark" && stored !== "system") {
+        stored = "system";
+      }
+      const resolved =
+        stored === "system"
+          ? window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"
+          : stored;
+
+      document.documentElement.classList.toggle("dark", resolved === "dark");
+      document.documentElement.style.colorScheme = resolved;
+      // Read back by the toggle so it starts in the right state without
+      // re-deriving any of this.
+      document.documentElement.dataset.theme = stored;
+    } catch {
+      /* Theme is cosmetic — never let it take down the page. */
+    }
+  })();
+</script>

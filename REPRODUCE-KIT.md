@@ -2,6 +2,14 @@
 
 > Drop this file into a fresh chat and the model can rebuild the same eight-phase
 > portfolio for **any** person, on **any** domain, with **any** stack focus.
+
+> [!WARNING]
+> **Stale as of the Astro cutover (2026-07-30).** This document still describes
+> the Next.js 16 build — commands, folder layout, `NEXT_PUBLIC_*` variables and
+> the App Router structure. The site now runs Astro 7; see `README.md` and
+> `AGENTS.md` for current instructions, and `MIGRATION-PLAN-2026-07-26-astro.md`
+> for what changed. Rewriting this file is tracked as follow-up work — it was
+> left visibly stale rather than quietly half-corrected.
 > The recipe is opinionated on infra (Next.js + Vercel + Resend + Turnstile +
 > Upstash) but agnostic on identity.
 

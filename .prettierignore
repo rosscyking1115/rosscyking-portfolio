@@ -1,6 +1,5 @@
-.next
-out
-build
+dist
+.astro
 node_modules
 coverage
 playwright-report
@@ -12,7 +11,3 @@ package-lock.json
 
 # Google Search Console verification file — must remain byte-identical.
 public/google*.html
-
-# Migration: the Astro app is a self-contained project with its own toolchain.
-# Remove this when astro/ is promoted to the repo root.
-astro

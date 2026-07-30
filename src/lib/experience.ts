@@ -1,4 +1,8 @@
-import type { ExperienceItem } from "@/types/experience";
+/**
+ * Ported verbatim from the Next app's src/lib/experience.ts — the only change is the
+ * type import path. This is authored data, not derived content, so it moves as-is.
+ */
+import type { ExperienceItem } from "../types/experience";
 
 /**
  * Education timeline shown on the /about page.
