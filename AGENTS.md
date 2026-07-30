@@ -70,6 +70,30 @@ So when porting:
 4. **Assert absence, not just behaviour.** `tests/e2e/completeness.spec.ts` exists for this and is
    the model to copy: each assertion names the finding it would have caught.
 
+### A prediction from configuration is a hypothesis, not a result
+
+The same distinction, one level up. Reading a config and reasoning forward tells you what _should_
+happen; only running the thing tells you what _does_. Keep the two labelled differently, because the
+cost of confirming is usually one command or one click.
+
+Two cases from this migration, both stated as predictions at the time:
+
+- **`format:check` on CI.** 23 files were flagged locally on a Windows CRLF working tree. Every one
+  was verified line-endings-only with `diff --strip-trailing-cr`, so a Linux LF checkout _should_ be
+  clean. It was — confirmed by the run, not assumed from the reasoning.
+- **The Vercel build failures at cutover.** Explained from each project's `rootDirectory` plus the
+  change, and narrowed further by confirming from the diff that the repo root held no Next app and
+  that `astro/` was gone. That is a structural explanation, and it is still not the log.
+
+Structural evidence narrows the space of possible causes. It does not eliminate them — a build can
+fail for a second, unrelated reason that happens to be masked by the obvious one. When the
+observation finally arrives, **say explicitly whether it matched the prediction.** If it did not,
+that is a finding, not a footnote: an unexplained failure will not be fixed by the change you
+expected to fix it, and it surfaces on the live domain instead of in a pull request.
+
+This migration produced three findings that only observation caught, and one that only observation
+confirmed.
+
 ## This repository specifically
 
 - **`content/` is the source of truth for prose and is edited deliberately.** `registry.json` is
