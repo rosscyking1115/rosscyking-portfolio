@@ -1,5 +1,6 @@
 ---
 import NowBuilding from "../../components/home/NowBuilding.astro";
+import Container from "../../components/layout/Container.astro";
 import Base from "../../layouts/Base.astro";
 import type { NowBuildingEntry } from "../../lib/now-building";
 
@@ -34,7 +35,7 @@ import type { NowBuildingEntry } from "../../lib/now-building";
  */
 export function getStaticPaths() {
   if (!import.meta.env.DEV) return [];
-  return [{ params: { name: "now-building" } }];
+  return [{ params: { name: "now-building" } }, { params: { name: "headlines" } }];
 }
 
 const FIXTURES: Record<string, readonly NowBuildingEntry[]> = {
@@ -43,6 +44,68 @@ const FIXTURES: Record<string, readonly NowBuildingEntry[]> = {
     { name: "fixture-project-two", blurb: "A second line, for the stagger." },
   ],
 };
+
+/**
+ * Hero headline candidates, set in the real hero typography.
+ *
+ * Copy decisions at display size cannot be made from a list in a pull request:
+ * `text-6xl` with `tracking-tight` and `text-balance` changes where lines break,
+ * how much ink a comma is worth, and whether a highlighted phrase lands. This
+ * renders every candidate in the exact classes Hero.astro uses so the choice is
+ * made by looking rather than by imagining.
+ *
+ * `lead` is the plain opening, `mark` is the phrase that takes text-primary.
+ */
+const HEADLINES: { id: string; lead: string; mark: string; note: string }[] = [
+  {
+    id: "current",
+    lead: "I turn ambiguous data and AI problems into",
+    mark: "measurable systems.",
+    note: "Current. Leads with data — the thing the positioning moved away from.",
+  },
+  {
+    id: "A",
+    lead: "I build AI systems and",
+    mark: "prove whether they work.",
+    note: "Your first shape. Shortest.",
+  },
+  {
+    id: "B",
+    lead: "I build AI systems and prove,",
+    mark: "honestly,",
+    note: "Your second shape — highlight on the differentiating word. (…whether they work.)",
+  },
+  {
+    id: "D",
+    lead: "I build AI systems and",
+    mark: "measure whether they work.",
+    note: "A, with Hamel Husain's verb. 'Measure' is engineering; 'prove' is rhetoric.",
+  },
+  {
+    id: "E",
+    lead: "I work on",
+    mark: "AI evaluation and reliability.",
+    note: "Chip Huyen's shape. Names the field outright. Shortest and most confident.",
+  },
+  {
+    id: "F",
+    lead: "I build AI systems and the",
+    mark: "evidence that they work.",
+    note: "Ties to 'evidence you can trace back' already used on /about.",
+  },
+  {
+    id: "G",
+    lead: "I make AI systems measurable, and their",
+    mark: "failures visible.",
+    note: "Names the unglamorous half. Closest to what the projects actually do.",
+  },
+  {
+    id: "H",
+    lead: "I build release gates for AI systems, so you know",
+    mark: "before it ships.",
+    note: "Most specific to the actual work. Longest — check the line breaks.",
+  },
+];
 
 const { name } = Astro.params;
 const entries = FIXTURES[name!] ?? [];
@@ -53,5 +116,31 @@ const entries = FIXTURES[name!] ?? [];
   description="Dev-only component fixture. Not part of the built site."
   canonical="/404"
 >
-  <NowBuilding entries={entries} />
+  {name === "now-building" && <NowBuilding entries={entries} />}
+
+  {
+    name === "headlines" && (
+      <Container class="py-12">
+        <p class="text-muted-foreground mb-10 font-mono text-xs tracking-wider uppercase">
+          Hero headline candidates &middot; real type, real widths &middot; toggle the
+          theme
+        </p>
+        <div class="flex flex-col gap-12">
+          {HEADLINES.map((h) => (
+            <div class="border-border border-t pt-6">
+              <p class="text-muted-foreground mb-3 font-mono text-[11px]">
+                [ {h.id} ] {h.note}
+              </p>
+              <div class="max-w-3xl">
+                <h2 class="font-display text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+                  {h.lead} <span class="text-primary">{h.mark}</span>
+                  {h.id === "B" && " whether they work."}
+                </h2>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Container>
+    )
+  }
 </Base>
