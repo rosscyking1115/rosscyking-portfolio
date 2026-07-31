@@ -105,24 +105,89 @@ test.describe("completeness — featured showcase (finding #5)", () => {
     // Would have caught: three <FadeIn> wrappers dropped when motion was
     // swapped for CSS, with no replacement. Hero and /projects got .reveal;
     // this component got nothing, and every card sat static.
+    //
+    // BROADENED, not weakened. This test used to read the stagger off
+    // `animationDelay` alone. The cards now use a view() timeline, where the
+    // offsets live in `animationRange` and `animationDelay` is 0 for every card
+    // — the finding above would still be caught, but the assertion would fail
+    // on a working page. Worse, `animationDelay` is still REPORTED by
+    // getComputedStyle under a progress timeline even though nothing honours
+    // it, so leaving the check as it was would have kept it green for a reason
+    // unrelated to what it claims to test.
+    //
+    // So it asserts the intent instead: every card has an entrance, and the
+    // cards do not all arrive together — by whichever mechanism is in force.
     await page.goto("/");
 
     const cards = page.locator('[data-lens-panel="all"] article');
     await expect(cards).not.toHaveCount(0);
 
-    const names = await cards.evaluateAll((els) =>
-      els.map((el) => getComputedStyle(el).animationName),
+    const motion = await cards.evaluateAll((els) =>
+      els.map((el) => {
+        const style = getComputedStyle(el);
+        return {
+          name: style.animationName,
+          delay: style.animationDelay,
+          range: `${style.animationRangeStart} ${style.animationRangeEnd}`,
+          timeline: style.animationTimeline,
+        };
+      }),
     );
-    for (const [i, name] of names.entries()) {
-      expect(name, `card ${i} has no entrance animation`).not.toBe("none");
+
+    for (const [i, card] of motion.entries()) {
+      expect(card.name, `card ${i} has no entrance animation`).not.toBe("none");
     }
 
-    // The stagger is the point: identical delays would mean the cards all
-    // arrive at once, which is not what the FadeIn wrappers did.
-    const delays = await cards.evaluateAll((els) =>
-      els.map((el) => getComputedStyle(el).animationDelay),
+    // Scroll-driven where supported, load-time stagger where not. Either way
+    // the offsets have to differ between cards.
+    const offsets = motion.map((card) =>
+      card.timeline === "auto" ? card.delay : card.range,
     );
-    expect(new Set(delays).size).toBeGreaterThan(1);
+    expect(
+      new Set(offsets).size,
+      "every card arrives at the same moment — the stagger is gone",
+    ).toBeGreaterThan(1);
+  });
+
+  test("reduced motion removes the entrance outright, delay included", async ({
+    browser,
+  }) => {
+    // Would have caught the state this pass found: the global reduce block in
+    // global.css collapsed `animation-duration` but never touched
+    // `animation-delay`, and `fill-mode: both` holds an element at opacity 0
+    // for the whole delay. A visitor who asks for less motion still got the
+    // staggered pop-in, just with instant tweens — the <h1> transparent for
+    // 167ms and the proof strip for 360ms. Nothing failed, because the site
+    // did have a prefers-reduced-motion block; it just did not finish the job.
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("/");
+
+    const animated = await page.evaluate(() =>
+      [...document.querySelectorAll(".reveal, .reveal-on-scroll")]
+        .map((el) => ({
+          cls: el.className,
+          name: getComputedStyle(el).animationName,
+        }))
+        .filter((el) => el.name !== "none"),
+    );
+    expect(
+      animated,
+      `elements still animating under prefers-reduced-motion: ${animated
+        .map((el) => el.cls)
+        .join(", ")}`,
+    ).toEqual([]);
+
+    // The observable consequence, asserted directly rather than inferred from
+    // the CSS: nothing is being held transparent.
+    const opacities = await page.evaluate(() =>
+      [...document.querySelectorAll(".reveal, .reveal-on-scroll")].map((el) =>
+        Number(getComputedStyle(el).opacity),
+      ),
+    );
+    for (const opacity of opacities) expect(opacity).toBe(1);
+
+    await context.close();
   });
 });
 

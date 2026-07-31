@@ -179,6 +179,85 @@
   );
 }
 
+/* ---------- Entrance reveal ----------
+ * ONE declaration for the whole site.
+ *
+ * Four components each carried their own copy of this keyframe in a scoped
+ * <style> block, at three different value pairs — Hero 500ms/10px,
+ * FeaturedProjects and /projects 400ms/8px, NowBuilding 400ms/8px with no
+ * stagger at all. Scoped styles cannot cross a component boundary, which is why
+ * the copies existed; a class in the global sheet has no such limit and cannot
+ * drift.
+ *
+ * Two variants:
+ *   .reveal            plays on load. For content above the fold, where there
+ *                      is no scroll to drive anything.
+ *   .reveal-on-scroll  is driven by the element's own view() progress where the
+ *                      browser supports scroll-driven animations, so a card
+ *                      arrives when you reach it instead of firing off screen.
+ *                      Where it does not, the @supports block simply does not
+ *                      apply and the element keeps the load-time behaviour —
+ *                      which is what every browser did before this.
+ *     https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timeline
+ *
+ * The range ends early on purpose. `cover 14%` is reached by anything with a
+ * meaningful amount of itself on screen, so an element that is already well in
+ * view at load renders at its end state rather than half-faded; only something
+ * just peeking over the fold has any distance left to travel. Ending on `cover`
+ * rather than `entry` also covers the case that breaks the naive recipe: an
+ * element TALLER than the viewport never completes `entry`, and would sit
+ * permanently transparent.
+ *
+ * REDUCED MOTION. The whole block sits inside `prefers-reduced-motion:
+ * no-preference`, so the animation is never applied at all. The global reduce
+ * block in the base layer collapses `animation-duration`, but it does NOT reset
+ * `animation-delay`, and `fill-mode: both` holds an element at opacity 0 for
+ * the whole of that delay — so before this, a reduced-motion visitor still got
+ * the full staggered pop-in, just with instant tweens. Measured on the old
+ * markup: the <h1> stayed transparent for 167ms and the proof strip for 360ms.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal,
+  .reveal-on-scroll {
+    animation: reveal var(--reveal-duration, 480ms) cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  @supports (animation-timeline: view()) {
+    .reveal-on-scroll {
+      animation-timeline: view();
+      animation-range: cover 0% cover calc(14% + var(--reveal-shift, 0%));
+      animation-duration: auto;
+      animation-delay: 0s;
+    }
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(var(--reveal-distance, 10px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Stretched-link cards ----------
+ * A card whose title link carries `after:inset-0` is entirely clickable, but
+ * the focus ring still lands on the title text — measured at 308x23 inside a
+ * 536x269 card. The hit area and the focus indicator should be the same shape,
+ * so the ring moves to the card and the inner link's own ring is suppressed.
+ * `outline` rather than a ring, so it does not fight the card's shadow. */
+.linked-card:has(a:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.linked-card a:focus-visible {
+  box-shadow: none;
+}
+
 /* ---------- Long-form project write-up (.doc) ----------
  * Replaces the typography plugin for project bodies so headings, lists, code,
  * and tables follow the redesign exactly. Each <h2> is auto-numbered with a

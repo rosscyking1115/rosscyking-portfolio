@@ -26,7 +26,7 @@ const { entries = nowBuilding } = Astro.props;
   entries.length > 0 && (
     <aside
       aria-label="Now building"
-      class="reveal border-border mt-10 border-t border-dashed pt-6"
+      class="reveal-on-scroll border-border mt-10 border-t border-dashed pt-6"
     >
       <IndexMark mark="//" label="Now building" />
       <ul class="mt-4 flex flex-col gap-2.5">
@@ -48,21 +48,11 @@ const { entries = nowBuilding } = Astro.props;
   )
 }
 
-<style>
-  /* Matches the reveal in FeaturedProjects.astro; scoped styles do not cross
-     component boundaries, so the keyframes are declared where they are used. */
-  .reveal {
-    animation: reveal 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  @keyframes reveal {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-</style>
+{
+  /*
+    The reveal lives in src/styles/global.css. This component used to declare a
+    fourth copy of the keyframe, with no stagger and its own duration, on the
+    reasoning that scoped styles do not cross component boundaries — true, and
+    the reason a global class is the right home for it.
+  */
+}

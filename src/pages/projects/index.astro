@@ -58,16 +58,16 @@ const total = numbered.length;
       </div>
     </div>
 
-    <ul class="mt-8 grid gap-4 sm:grid-cols-2" data-projects-grid>
+    <ul class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-projects-grid>
       {
         numbered.map(({ project, index }, i) => (
           <li
             data-project
             data-stack={`|${project.data.stack.join("|")}|`}
-            class="reveal"
-            style={`--reveal-delay: ${i * 40}ms`}
+            class="reveal-on-scroll min-w-0"
+            style={`--reveal-delay: ${i * 40}ms; --reveal-shift: ${(i % 3) * 5}%`}
           >
-            <article class="group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex h-full flex-col rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5">
+            <article class="linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex h-full flex-col rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5">
               <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
                 <span class="text-primary" data-catalogue>
                   {String(index).padStart(2, "0")}
@@ -122,26 +122,21 @@ const total = numbered.length;
   </Container>
 </Base>
 
-<style>
+{
   /*
-    Replaces the <FadeIn> wrapper, which pulled in `motion` — the Next app's
-    only use of a JS animation library. Same staggered rise, in CSS, with no
-    JavaScript at all. The global prefers-reduced-motion block in global.css
-    already collapses this to nothing for anyone who asks.
-  */
-  .reveal {
-    animation: reveal 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: var(--reveal-delay, 0ms);
-  }
+    The reveal replaced the <FadeIn> wrapper, which pulled in `motion` — the
+    Next app's only use of a JS animation library. It now lives in
+    src/styles/global.css rather than in a scoped block here, which is where
+    three other copies of the same keyframe used to sit.
 
-  @keyframes reveal {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-</style>
+    A ten-card gallery is mostly below the fold at any width, so these use the
+    scroll-driven variant: a card arrives as you reach it instead of every card
+    animating at once before you can see most of them.
+
+    The third column arrives at xl, not lg. These cards are text only — no
+    evidence frame to fill the width — so they need more measure than the home
+    page's 3-up does. At a 1024px viewport the container is 976px and three
+    columns would leave each summary about 40 characters a line; at xl the
+    container is at its 1152px cap and they get about 45.
+  */
+}

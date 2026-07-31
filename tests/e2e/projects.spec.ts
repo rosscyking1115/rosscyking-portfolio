@@ -148,7 +148,13 @@ test.describe("write-ups", () => {
 
     // Pinned metrics come from the MDX front matter, which validate-projects
     // gates against registry.json — a stale number fails CI before it ships.
-    const metrics = page.locator(".font-mono.text-2xl");
+    //
+    // Located by `data-metric-value`, not by `.font-mono.text-2xl`. The class
+    // string was a styling detail standing in for a contract: the values are
+    // now `text-lg sm:text-2xl`, because at 320px each cell is ~90px and
+    // `90.91%` in 24px mono was being clipped by the wrapper's overflow. The
+    // metric was still rendered and still correct; only the class had moved.
+    const metrics = page.locator("[data-metric-value]");
     await expect(metrics).not.toHaveCount(0);
     await expect(metrics.first()).not.toBeEmpty();
 
