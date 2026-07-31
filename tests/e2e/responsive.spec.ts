@@ -110,6 +110,66 @@ test.describe("no content is clipped", () => {
   }
 });
 
+/**
+ * The third failure mode: a page whose width is decided by something that only
+ * exists in production.
+ *
+ * /contact scrolled sideways on the live site at 320px and 360px, and the whole
+ * suite was clean. Cloudflare Turnstile's `flexible` widget floors at a 300px
+ * min-width; the form's content box at 320px is 222px; grid items default to
+ * `min-width: auto`, so that floor became the width of the column, the column
+ * became the width of the page, and the page overflowed by 54px.
+ *
+ * Nothing here could see it. PUBLIC_TURNSTILE_SITE_KEY is unset in development,
+ * so the widget branch renders NOTHING locally and every assertion passed on
+ * its absence — the exact trap AGENTS.md documents for the "Now building"
+ * strip, one level further out, because this time the missing thing belongs to
+ * a third party and cannot be fixtured with a prop.
+ *
+ * So this asserts the GUARANTEE rather than the widget: whatever the slot is
+ * handed, it is contained. That is `overflow-x-auto` on the slot, and it holds
+ * even if Cloudflare changes what `compact` measures — which is the failure
+ * this cannot otherwise be protected from, since the dimensions are theirs.
+ *
+ * The stand-in is honest about being one. It reproduces the single property
+ * that caused the defect (a hard 300px min-width) and nothing else.
+ */
+test.describe("a third-party widget cannot set the page width", () => {
+  for (const width of [320, 360, 390]) {
+    test(`/contact contains an oversized widget at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto("/contact");
+      await page.locator("form").waitFor();
+
+      const overflowed = await page.evaluate(() => {
+        const form = document.querySelector("form");
+        if (!form) return "no form";
+
+        // The real slot when the key is set; otherwise build the same shape, so
+        // this test does the same work in both environments.
+        let slot = document.querySelector<HTMLElement>("[data-turnstile-slot]");
+        if (!slot) {
+          slot = document.createElement("div");
+          slot.className = "mt-5 min-w-0 overflow-x-auto";
+          slot.dataset.turnstileSlot = "";
+          form.append(slot);
+        }
+        const widget = document.createElement("div");
+        widget.style.minWidth = "300px";
+        widget.style.height = "65px";
+        slot.append(widget);
+
+        return document.documentElement.scrollWidth;
+      });
+
+      expect(
+        overflowed,
+        "a 300px widget is setting the width of the page — the slot is not containing it",
+      ).toBeLessThanOrEqual(width + 1);
+    });
+  }
+});
+
 for (const width of WIDTHS) {
   test.describe(`at ${width}px`, () => {
     for (const route of ROUTES) {

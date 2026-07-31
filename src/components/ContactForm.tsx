@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Turnstile } from "@marsidev/react-turnstile";
 import { actions, isInputError } from "astro:actions";
 import { PUBLIC_TURNSTILE_SITE_KEY } from "astro:env/client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { Toaster, toast } from "sonner";
 
@@ -41,6 +41,46 @@ export function ContactForm() {
 
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  /**
+   * Turnstile's widget size, chosen by how much room the form actually has.
+   *
+   * `flexible` fills its container but floors at a 300px min-width, and at a
+   * 320px viewport the form's content box is 222px. The widget therefore forced
+   * its grid column to 350px and /contact scrolled sideways on every phone up
+   * to 360px, with the form still 8px wider than its column at 390px.
+   *
+   * This was found on the LIVE SITE, not locally, and the reason is the whole
+   * point: PUBLIC_TURNSTILE_SITE_KEY is unset in development, so this branch
+   * renders nothing here and every gate passed on its absence. AGENTS.md calls
+   * this out one level down — "renders nothing" is unverified, not verified.
+   *
+   * `compact` measures 150x140 with no min-width at all (measured against the
+   * real widget, not read off the docs), so it fits any phone. It is used only
+   * where `flexible` will not: a 150px box in a 530px form is a downgrade.
+   *
+   * The breakpoint is a media query rather than a measurement of the container,
+   * because the container is the thing the widget is distorting — reading its
+   * width once `flexible` has floored it to 350px would report "there is room"
+   * and keep the bug. In viewport terms the form's content box is the viewport
+   * less 48px of page gutter, 48px of form padding and 2px of border, so 300px
+   * of room arrives at 398px. 400 is the round number above it.
+   *
+   * Re-picked on resize, but never once a token has been earned: changing
+   * `size` remounts the widget, which would silently discard a challenge the
+   * visitor has already passed.
+   */
+  const [widgetSize, setWidgetSize] = useState<"flexible" | "compact" | null>(null);
+  const solved = Boolean(turnstileToken);
+
+  useEffect(() => {
+    if (!PUBLIC_TURNSTILE_SITE_KEY || solved) return;
+    const query = window.matchMedia("(min-width: 400px)");
+    const pick = () => setWidgetSize(query.matches ? "flexible" : "compact");
+    pick();
+    query.addEventListener("change", pick);
+    return () => query.removeEventListener("change", pick);
+  }, [solved]);
 
   const onSubmit = (values: ContactFormValues) => {
     if (PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken) {
@@ -160,14 +200,23 @@ export function ContactForm() {
         </Field>
       </div>
 
-      {PUBLIC_TURNSTILE_SITE_KEY && (
-        <div className="mt-5">
+      {/*
+        `overflow-x-auto` is the guarantee, and `widgetSize` above is only the
+        good manners. Choosing `compact` keeps the widget comfortable on a
+        phone, but its dimensions belong to Cloudflare and can change without
+        this repo hearing about it. The scroll container means that whatever
+        size arrives, it is contained here instead of setting the width of the
+        page — which is precisely what went wrong. It is inert at every size the
+        widget actually renders today: 150px inside a 222px box needs no scroll.
+      */}
+      {PUBLIC_TURNSTILE_SITE_KEY && widgetSize && (
+        <div className="mt-5 min-w-0 overflow-x-auto" data-turnstile-slot>
           <Turnstile
             siteKey={PUBLIC_TURNSTILE_SITE_KEY}
             onSuccess={setTurnstileToken}
             onExpire={() => setTurnstileToken(null)}
             onError={() => setTurnstileToken(null)}
-            options={{ theme: "auto", size: "flexible" }}
+            options={{ theme: "auto", size: widgetSize }}
           />
         </div>
       )}

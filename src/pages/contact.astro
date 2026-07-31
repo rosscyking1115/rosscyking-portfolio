@@ -57,9 +57,24 @@ const links = [
   canonical="/contact"
 >
   <Container class="py-12 sm:py-16">
+    {
+      /*
+        `min-w-0` on both columns. Grid items default to `min-width: auto`, so
+        the column cannot shrink below its widest child's min-content — and one
+        child, the Turnstile widget, carries a hard 300px floor. Stacked on a
+        phone both items share one column, so that floor set the width of the
+        intro copy as well and the whole page scrolled sideways.
+
+        The same defect as the home page's evidence frames, from the same
+        default, on the one page where the offending child only exists in
+        production. The widget also picks its own size now — see ContactForm —
+        but this is the structural half: no single child should be able to
+        decide the page's width.
+      */
+    }
     <div class="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
       {/* Intro + links */}
-      <div class="max-w-prose">
+      <div class="max-w-prose min-w-0">
         <IndexMark mark="Contact" label="Sheffield, UK · GMT" />
         <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
           Let&rsquo;s talk.
@@ -119,7 +134,9 @@ const links = [
       </div>
 
       {/* Form */}
-      <ContactForm client:load />
+      <div class="min-w-0">
+        <ContactForm client:load />
+      </div>
     </div>
   </Container>
 </Base>
