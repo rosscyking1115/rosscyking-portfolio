@@ -4,7 +4,7 @@
   "lenses": {
     "all": {
       "label": "All work",
-      "headline": "Data & ML systems whose decisions you can audit.",
+      "headline": "Systems whose decisions you can audit.",
       "featured": [
         "tfl-data-engineering",
         "england-wales-housing-decision-support",

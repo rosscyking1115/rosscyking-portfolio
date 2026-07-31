@@ -35,7 +35,7 @@ test.describe("hero", () => {
     await page.goto("/");
 
     await expect(page.locator("main h1")).toContainText(
-      "I turn ambiguous data and AI problems into",
+      "I work on AI evaluation and reliability.",
     );
     await expect(page.getByText(/Available for full-time roles/i)).toBeVisible();
 

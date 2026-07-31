@@ -37,21 +37,26 @@ export default defineConfig({
    * computed styles that need the stylesheet in.
    *
    * The symptom is unrelated specs failing intermittently; the tell is that
-   * every one of them passes in isolation. Seen at the default count around
-   * ~120 tests, then again at 4 workers around ~129. Two is stable.
+   * every one of them passes in isolation, AND that a second full run fails a
+   * different set. Both were observed at 130 tests on 2 workers.
    *
-   * Do not raise this to make the suite faster. The saturation point moves down
-   * as tests are added, and a flaky gate is not a gate.
+   * Now 1 everywhere, CI included, because the headroom ran out for the third
+   * time: safe at ~120 on the default count, then 4, then 2, and 2 stopped
+   * being safe the moment the suite reached 130. §6j predicted exactly this —
+   * "the workaround's headroom shrinks with every test added, so it will fail
+   * again" — and it did, one PR later.
    *
-   * THIS IS A WORKAROUND, NOT A SETTING. It throttles the symptom and leaves the
-   * cause in place, and its headroom shrinks with every test added — the count
-   * that was safe at ~120 tests was not safe at 129. The real fix is serving a
-   * production build via `vercel dev` against a linked project, so the suite
-   * runs the built output instead of rendering every page on demand.
-   * Diagnosis, the threshold table, and why it was not fixed here:
+   * Do not raise this to make the suite faster. A flaky gate is not a gate, and
+   * every previous value was chosen because it looked stable at the time.
+   *
+   * THIS IS STILL A WORKAROUND, AND IT IS NOW OUT OF ROAD. Serialising hides
+   * the cause completely and costs ~1.2 min a run; there is nothing left to
+   * lower. The real fix is serving a production build via `vercel dev` against
+   * a linked project, so the suite runs built output instead of rendering every
+   * page on demand. Diagnosis and the threshold table:
    * MIGRATION-PLAN-2026-07-26-astro.md §6j.
    */
-  workers: process.env.CI ? 1 : 2,
+  workers: 1,
   reporter: process.env.CI ? [["html"], ["github"]] : "html",
   timeout: 30_000,
 

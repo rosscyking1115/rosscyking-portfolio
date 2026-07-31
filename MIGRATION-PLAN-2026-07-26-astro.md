@@ -1047,6 +1047,16 @@ expire on a server that is merely slow, not broken.
 | 2026-07-29 | ~120       | 4                   | stable                                       |
 | 2026-07-29 | 129        | 4                   | 4 failures, all passing in isolation         |
 | 2026-07-29 | 129        | 2                   | stable across two consecutive runs           |
+| 2026-07-30 | 130        | 2                   | 2 failures, **a different 2 on each run**    |
+| 2026-07-30 | 130        | 1                   | stable                                       |
+
+**The prediction below came true one PR later, at one extra test.** Two workers survived 129 and
+failed at 130. The tell was sharper this time: not only did every failure pass in isolation, but a
+second full run failed a _different_ pair — load, not defects, confirmed twice over.
+
+Workers are now **1 everywhere, CI included.** That hides the cause completely and costs about
+1.2 minutes a run. It is also the end of the road: there is nothing left to lower, so the next time
+the suite outgrows the machine there is no knob, only the real fix.
 
 **This is the important part.** Lowering the worker count buys headroom; it does not remove the
 ceiling. The number that was safe at 120 tests was unsafe at 129. It will happen again, and the
