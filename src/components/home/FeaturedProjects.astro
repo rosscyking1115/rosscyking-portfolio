@@ -110,7 +110,7 @@ const allLabel = `All ${allCount} projects`;
             </div>
             <a
               href="/projects"
-              class="text-muted-foreground hover:text-foreground hidden shrink-0 items-center gap-1.5 text-sm font-medium sm:inline-flex"
+              class="text-muted-foreground hover:text-foreground hidden shrink-0 items-center gap-1.5 py-1 text-sm font-medium sm:inline-flex"
             >
               {allLabel}
               <ArrowRight class="size-4" aria-hidden="true" />
@@ -118,8 +118,8 @@ const allLabel = `All ${allCount} projects`;
           </div>
 
           {flagship && (
-            <article class="reveal group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative mt-8 grid gap-6 rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 lg:grid-cols-5 lg:gap-8 lg:p-8">
-              <div class="flex flex-col lg:col-span-2">
+            <article class="reveal-on-scroll linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative mt-8 grid gap-6 rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 lg:grid-cols-5 lg:gap-8 lg:p-8">
+              <div class="flex min-w-0 flex-col lg:col-span-2">
                 <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
                   <span class="text-primary">01</span>
                   <span>
@@ -167,7 +167,14 @@ const allLabel = `All ${allCount} projects`;
                   />
                 </span>
               </div>
-              <div class="lg:col-span-3">
+              {/*
+                `order-first` below lg. Stacked, the source order put the
+                evidence frame AFTER "Read the write-up" — so on a phone the
+                screenshot arrived below the card's own call to action, while
+                every other card on the page leads with its frame. At lg the
+                source order is restored and the frame returns to the right.
+              */}
+              <div class="order-first min-w-0 lg:order-none lg:col-span-3">
                 <EvidenceFrame
                   caption={frameCaption(flagship)}
                   live={Boolean(flagship.data.links?.demo)}
@@ -184,8 +191,8 @@ const allLabel = `All ${allCount} projects`;
           <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((project, i) => (
               <article
-                class="reveal group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex h-full flex-col rounded-lg border p-5 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5"
-                style={`--reveal-delay: ${i * 80}ms`}
+                class="reveal-on-scroll linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex h-full min-w-0 flex-col rounded-lg border p-5 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5"
+                style={`--reveal-delay: ${i * 80}ms; --reveal-shift: ${i * 5}%`}
               >
                 <EvidenceFrame
                   caption={frameCaption(project)}
@@ -227,7 +234,7 @@ const allLabel = `All ${allCount} projects`;
 
   <a
     href="/projects"
-    class="text-muted-foreground hover:text-foreground mt-6 inline-flex items-center gap-1.5 text-sm font-medium sm:hidden"
+    class="text-muted-foreground hover:text-foreground mt-6 inline-flex items-center gap-1.5 py-1 text-sm font-medium sm:hidden"
   >
     {allLabel}
     <ArrowRight class="size-4" aria-hidden="true" />
@@ -238,33 +245,28 @@ const allLabel = `All ${allCount} projects`;
 
 <style>
   /*
-    Entrance reveal, matching Hero.astro and projects/index.astro.
+    The entrance reveal lives in src/styles/global.css and is shared with Hero,
+    NowBuilding and /projects. This file used to hold its own copy of the
+    keyframe — one of four, at three different value pairs.
 
     The Next component wrapped the flagship card, each grid card (staggered by
     STAGGER_STEP = 0.08s) and the Now-building aside in <FadeIn>. When `motion`
     was swapped for CSS, Hero and /projects got this treatment and this file was
     missed, so the whole showcase landed with no entrance at all.
 
-    Because a hidden lens panel is display:none, its animation does not run
-    until the panel is shown — which means switching lens replays the reveal,
-    the same behaviour the React version got for free by remounting on a new
-    key. Reduced motion is handled globally in global.css.
-  */
-  .reveal {
-    animation: reveal 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: var(--reveal-delay, 0ms);
-  }
+    Two behaviour notes on the move to `.reveal-on-scroll`:
 
-  @keyframes reveal {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
+      - The cards are below the fold at every desktop width, so they now arrive
+        as you reach them rather than firing before anyone can see them.
+        `--reveal-shift` staggers the grid the way `--reveal-delay` staggers the
+        load-time fallback, so a row does not land in lockstep.
+      - A hidden lens panel is display:none, so its animation did not run until
+        the panel was shown — which meant switching lens REPLAYED the reveal.
+        Under a view timeline a card already on screen is at the end of its
+        range, so switching lens now swaps the content without re-animating it.
+        That is a change, and the better one: a filter is not a navigation, and
+        the old behaviour flashed the whole showcase on every click.
+  */
 
   /* Only the panel matching <html data-lens> is shown. Hidden by default so
      nothing flashes before LensScript runs. */

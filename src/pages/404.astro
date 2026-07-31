@@ -35,10 +35,19 @@ import Base from "../layouts/Base.astro";
   description="That page doesn’t exist or has been moved."
   canonical="/404"
 >
+  {
+    /*
+      `index` rather than `eyebrow`, so the mark renders as `[ 404 ]` through
+      IndexMark like every other page's does. This was the only route in the
+      site setting a bare uppercase eyebrow instead — and the one place where a
+      bracketed index is literally true rather than a stylistic flourish. The
+      word itself is unchanged.
+    */
+  }
   <Section
     headingAs="h1"
     size="lg"
-    eyebrow="404"
+    index="404"
     heading="Page not found"
     description="The page you’re looking for doesn’t exist or has been moved."
   >
@@ -46,5 +55,6 @@ import Base from "../layouts/Base.astro";
       <Button href="/projects">Back to projects</Button>
       <Button href="/" variant="outline">Go home</Button>
     </div>
+    <div class="ruler mt-12" aria-hidden="true"></div>
   </Section>
 </Base>

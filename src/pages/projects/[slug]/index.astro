@@ -143,10 +143,24 @@ const externalLinks = [
 
       {
         metrics && metrics.length > 0 && (
-          <div class="bg-border border-border grid grid-cols-3 gap-px overflow-hidden rounded-lg border">
+          /*
+            The type scales with the cell, because it did not and the numbers
+            were being CUT OFF. At 320px each of the three cells is about 90px
+            wide, and `90.91%` set in 24px mono needs 65px plus 32px of padding
+            — so it overflowed into its neighbour and the parent's
+            `overflow-hidden` silently clipped the `%`. Clipped overflow is
+            invisible to a scrollWidth check, which is why the responsive gate
+            passed on this page: nothing scrolls, the content just disappears.
+          */
+          <div
+            class="bg-border border-border grid grid-cols-3 gap-px overflow-hidden rounded-lg border"
+            data-metrics
+          >
             {metrics.map((metric) => (
-              <div class="bg-background p-4 text-center">
-                <div class="font-mono text-2xl font-medium">{metric.value}</div>
+              <div class="bg-background px-2 py-4 text-center sm:p-4">
+                <div class="font-mono text-lg font-medium sm:text-2xl" data-metric-value>
+                  {metric.value}
+                </div>
                 <div class="text-muted-foreground mt-1 font-mono text-[11px] tracking-wider uppercase">
                   {metric.label}
                 </div>

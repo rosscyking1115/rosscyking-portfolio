@@ -13,7 +13,18 @@ import ProofStrip from "./ProofStrip.astro";
  *
  * The seven stacked <FadeIn> wrappers become one CSS keyframe with a staggered
  * delay, so the hero — the largest-contentful-paint element on the site — no
- * longer waits on a JavaScript animation library to become visible.
+ * longer waits on a JavaScript animation library to become visible. `.reveal`
+ * itself now lives in src/styles/global.css; this file used to declare its own
+ * copy of the keyframe at values no other component shared.
+ *
+ * TWO COLUMNS AT lg, and the reason is a measurement rather than a preference.
+ * The container is 1152px and the hero column was capped at 768px, left
+ * aligned — 384px of empty right-hand column on every desktop, and the same
+ * 768px made the standfirst an 85-character line. One number causing two
+ * problems in opposite directions. The measure column is now 40rem, which puts
+ * the paragraph at roughly 68 characters, and the proof readout occupies the
+ * space that was previously blank. Below lg the two stack in DOM order, which
+ * is exactly what the single-column version already did.
  */
 /**
  * Order is the message, not an alphabetisation.
@@ -32,106 +43,105 @@ const ROLES = [
 ---
 
 <Container class="pt-16 pb-16 sm:pt-24 sm:pb-20">
-  <div class="max-w-3xl">
-    <span
-      class="reveal border-border bg-background inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-xs font-medium"
-    >
-      <span class="relative flex size-2">
-        <span
-          class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60"
-        ></span>
-        <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+  <div
+    class="grid gap-10 lg:grid-cols-[minmax(0,40rem)_minmax(0,1fr)] lg:items-end lg:gap-14"
+  >
+    <div>
+      <span
+        class="reveal border-border bg-background inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-xs font-medium"
+      >
+        <span class="relative flex size-2">
+          <span
+            class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60"
+          ></span>
+          <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
+        </span>
+        {siteConfig.availability}
       </span>
-      {siteConfig.availability}
-    </span>
 
-    {/* Wrapped rather than styled directly: IndexMark takes `class`, not `style`. */}
-    <div class="reveal" style="--reveal-delay: 60ms">
-      <IndexMark mark={siteConfig.shortName} label="Sheffield, UK" class="mt-7" />
-    </div>
+      {/* Wrapped rather than styled directly: IndexMark takes `class`, not `style`. */}
+      <div class="reveal" style="--reveal-delay: 60ms">
+        <IndexMark mark={siteConfig.shortName} label="Sheffield, UK" class="mt-7" />
+      </div>
 
-    <h1
-      class="reveal font-display mt-4 text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
-      style="--reveal-delay: 120ms"
-    >
-      I work on <span class="text-primary">AI evaluation and reliability.</span>
-    </h1>
+      <h1
+        class="reveal font-display mt-4 text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+        style="--reveal-delay: 120ms"
+      >
+        I work on <span class="text-primary">AI evaluation and reliability.</span>
+      </h1>
 
-    <p
-      class="reveal text-muted-foreground mt-6 max-w-prose text-lg leading-relaxed text-pretty"
-      style="--reveal-delay: 180ms"
-    >
-      {siteConfig.description}
-    </p>
+      <p
+        class="reveal text-muted-foreground mt-6 max-w-prose text-lg leading-relaxed text-pretty"
+        style="--reveal-delay: 180ms"
+      >
+        {siteConfig.description}
+      </p>
 
-    <div
-      class="reveal mt-6 flex flex-wrap items-center gap-x-2 gap-y-1.5"
-      style="--reveal-delay: 240ms"
-    >
-      <span class="text-muted-foreground font-mono text-xs tracking-wider uppercase">
-        Roles&nbsp;→
-      </span>
       {
-        ROLES.map((role) => (
-          <span class="bg-muted rounded px-2 py-0.5 font-mono text-[11px]">{role}</span>
-        ))
+        /*
+        The caption takes its own line below sm — the same structure as the lens
+        switcher's "Viewing as →". Flat, it shared line one with the first chip
+        and the other two dropped beneath it, so the label read as an orphan
+        rather than as the row's heading.
+      */
       }
+      <div
+        class="reveal mt-6 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-1.5"
+        style="--reveal-delay: 240ms"
+      >
+        <span class="text-muted-foreground font-mono text-xs tracking-wider uppercase">
+          Roles&nbsp;→
+        </span>
+        <div class="flex flex-wrap gap-1.5 sm:contents">
+          {
+            ROLES.map((role) => (
+              <span class="bg-muted rounded px-2 py-0.5 font-mono text-[11px]">
+                {role}
+              </span>
+            ))
+          }
+        </div>
+      </div>
+
+      <div
+        class="reveal mt-8 flex flex-wrap items-center gap-3"
+        style="--reveal-delay: 300ms"
+      >
+        <Button href="/projects">
+          View projects
+          <ArrowRight aria-hidden="true" />
+        </Button>
+        <Button href="/cv.pdf" variant="outline" download="Cheng-Yuan-King-CV.pdf">
+          <Download aria-hidden="true" />
+          Download CV
+        </Button>
+        <Button
+          href={siteConfig.links.github}
+          variant="ghost"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <BrandIcon name="github" class="size-4" />
+          GitHub
+        </Button>
+        <Button
+          href={siteConfig.links.linkedin}
+          variant="ghost"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <BrandIcon name="linkedin" class="size-4" />
+          LinkedIn
+        </Button>
+      </div>
     </div>
 
-    <div
-      class="reveal mt-8 flex flex-wrap items-center gap-3"
-      style="--reveal-delay: 300ms"
-    >
-      <Button href="/projects">
-        View projects
-        <ArrowRight aria-hidden="true" />
-      </Button>
-      <Button href="/cv.pdf" variant="outline" download="Cheng-Yuan-King-CV.pdf">
-        <Download aria-hidden="true" />
-        Download CV
-      </Button>
-      <Button
-        href={siteConfig.links.github}
-        variant="ghost"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <BrandIcon name="github" class="size-4" />
-        GitHub
-      </Button>
-      <Button
-        href={siteConfig.links.linkedin}
-        variant="ghost"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <BrandIcon name="linkedin" class="size-4" />
-        LinkedIn
-      </Button>
-    </div>
-
-    <div class="reveal mt-10" style="--reveal-delay: 360ms">
+    {/* The readout fills what was the dead right-hand column at lg. */}
+    <div class="reveal" style="--reveal-delay: 360ms">
       <ProofStrip />
     </div>
   </div>
 
   <div class="ruler mt-16" aria-hidden="true"></div>
 </Container>
-
-<style>
-  .reveal {
-    animation: reveal 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: var(--reveal-delay, 0ms);
-  }
-
-  @keyframes reveal {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-</style>

@@ -28,13 +28,22 @@ const { mark, label, class: className } = Astro.props;
 const hasLabelSlot = Astro.slots.has("label");
 ---
 
+{
+  /*
+    `flex-wrap` plus `whitespace-nowrap` on the bracket, because at 320px
+    `[ CONTACT ] —— SHEFFIELD, UK · GMT` broke mid-token: the closing bracket
+    dropped to a second line on its own, leaving `[ CONTACT` above `]`. The mark
+    is one glyph group and must never split; the LABEL is the part allowed to
+    wrap to its own line when there is no room beside the rule.
+  */
+}
 <div
   class={cn(
-    "text-muted-foreground flex items-center gap-3 font-mono text-xs tracking-wider uppercase",
+    "text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs tracking-wider uppercase",
     className,
   )}
 >
-  <span class="text-primary">[ {mark} ]</span>
-  <span class="bg-border h-px w-8" aria-hidden="true"></span>
+  <span class="text-primary whitespace-nowrap">[ {mark} ]</span>
+  <span class="bg-border h-px w-8 shrink-0" aria-hidden="true"></span>
   {hasLabelSlot ? <slot name="label" /> : label && <span>{label}</span>}
 </div>

@@ -5,7 +5,25 @@ import { proofStats } from "../../lib/registry-stats";
  * A row of headline proof, read from the registry at build time so it can't go
  * stale. Rendered as an instrument readout in the site's mono voice.
  *
- * Ported verbatim from src/components/home/proof-strip.tsx.
+ * Ported from src/components/home/proof-strip.tsx, then re-set.
+ *
+ * The ported version put all three numbers in 14px grey mono at the foot of the
+ * hero, separated by middots. Two problems, one of them not a matter of taste:
+ *
+ *   - "1,256 tests" is the single most credible number on the site and it was
+ *     set like a footnote, while /projects/[slug] renders far less load-bearing
+ *     metrics at font-mono text-2xl in a bordered 3-up. The site already knew
+ *     how to set a number; the hero simply was not using it. This is that same
+ *     treatment, so the two read as one system rather than two.
+ *   - The middots were `mr-4` siblings that wrapped WITH their item, so on a
+ *     phone the second and third lines each began with a hanging separator and
+ *     an indent. The hairlines here are gaps in a `bg-border` grid — the exact
+ *     mechanism the project-page metrics use — so there is nothing to wrap.
+ *
+ * DOM ORDER IS LOAD-BEARING. `<dd>` holds the value and the label in that
+ * order, with a real space between them, because tests/e2e/home.spec.ts asserts
+ * `toContainText("1,256 tests across them")` against `textContent` — which
+ * neither inserts whitespace between adjacent elements nor reorders them.
  */
 const items = [
   { value: String(proofStats.shipped), label: "projects shipped" },
@@ -14,22 +32,36 @@ const items = [
 ];
 ---
 
+{
+  /*
+    THREE LAYOUTS, because one does not fit all three places this sits.
+
+      below sm  one stat per row, number and label on a shared baseline. A
+                three-column grid at 320px gives each cell 90px, which wrapped
+                the labels to two and three lines at different depths —
+                "PROJECTS / SHIPPED" beside "TESTS / ACROSS / THEM" — and read
+                as an accident rather than a readout. On a full-width row every
+                label fits on one line.
+      sm        three across, under the buttons. Cells are ~197px, wide enough
+                for the longest label on one line.
+      lg        one column again, stacked, in the hero's right-hand rail.
+  */
+}
 <dl
-  class="text-muted-foreground flex flex-wrap items-baseline gap-x-6 gap-y-2 font-mono text-xs"
+  class="bg-border border-border grid gap-px overflow-hidden rounded-lg border sm:grid-cols-3 lg:grid-cols-1"
   data-proof-strip
 >
   {
-    items.map((item, i) => (
-      <div class="flex items-baseline gap-2">
-        {i > 0 && (
-          <span class="text-border mr-4" aria-hidden="true">
-            ·
-          </span>
-        )}
+    items.map((item) => (
+      <div class="bg-background px-4 py-3 sm:py-3.5">
         <dt class="sr-only">{item.label}</dt>
-        <dd>
-          <span class="text-foreground text-sm font-semibold">{item.value}</span>{" "}
-          <span class="tracking-wide">{item.label}</span>
+        <dd class="flex items-baseline justify-between gap-3 sm:block">
+          <span class="font-mono text-2xl leading-none font-medium tracking-tight">
+            {item.value}
+          </span>{" "}
+          <span class="text-muted-foreground font-mono text-[11px] leading-snug tracking-wider uppercase sm:mt-2 sm:block">
+            {item.label}
+          </span>
         </dd>
       </div>
     ))

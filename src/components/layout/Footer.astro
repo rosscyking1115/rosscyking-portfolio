@@ -21,11 +21,23 @@ const links = [
 ];
 ---
 
-<footer class="border-border mt-24 border-t">
+{
+  /*
+    `mt-24` became `mt-8`. The margin was page-independent and stacked on top of
+    whatever bottom padding the page already had — 80px on home, 64px on the
+    rest, 112px on /404 — so the gap above the rule ran to 176-208px and read
+    as a hole rather than as separation. 32px here leaves 96-112px in total,
+    which is generous without being a gap in the page.
+  */
+}
+<footer class="border-border mt-8 border-t">
   <Container class="py-12">
     <div class="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <a href="/" class="font-display text-lg font-bold tracking-tight">
+        <a
+          href="/"
+          class="font-display inline-block py-1 text-lg font-bold tracking-tight"
+        >
           {siteConfig.shortName}
         </a>
         <p class="text-muted-foreground mt-1.5 max-w-xs text-sm leading-relaxed">
@@ -34,13 +46,32 @@ const links = [
           }.
         </p>
       </div>
-      <nav aria-label="Footer" class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      {
+        /*
+          `py-1` takes every link from 20px to 28px tall — WCAG 2.2 AA (2.5.8)
+          asks for 24. These were the smallest touch targets on the site.
+
+          A three-column grid below lg, because six links wrapped five-and-one
+          and left "CV" orphaned on a line of its own. Two rows of three is the
+          same wrap, arranged on purpose.
+
+          The switch to a flex row waits for lg rather than sm. From sm the
+          footer is two columns, so the nav only gets about half the container:
+          at 768px that is ~350px against the 384px the six links and their gaps
+          need, and "CV" orphaned all over again. lg is the first width where
+          the row genuinely fits.
+        */
+      }
+      <nav
+        aria-label="Footer"
+        class="-my-1 grid grid-cols-3 gap-x-4 text-sm lg:flex lg:flex-wrap lg:gap-x-6"
+      >
         {
           links.map((link) => (
             <a
               href={link.href}
               {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              class="text-muted-foreground hover:text-foreground transition-colors"
+              class="text-muted-foreground hover:text-foreground inline-block min-w-6 py-1 transition-colors"
             >
               {link.label}
             </a>
