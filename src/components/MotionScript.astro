@@ -13,20 +13,15 @@
  * a critical-priority mistake, so there is exactly one here and the CSS classes
  * are gone.
  *
- * ── Two behaviours, and the split is a performance decision ──────────────────
+ * ── What this owns, and what it deliberately does not ────────────────────────
  *
- *   [data-motion="rise"]   Load-time entrance. TRANSFORM ONLY — no opacity.
- *   [data-motion="focus"]  Scroll-linked, scrubbed, bidirectional.
+ * GSAP owns `[data-motion="focus"]`: the scroll-linked, scrubbed, bidirectional
+ * card reveal, everywhere it appears.
  *
- * The hero uses `rise`, and the reason it does not touch opacity is Largest
- * Contentful Paint. An element at `opacity: 0` has not been painted, so LCP is
- * not recorded until it becomes visible — gating the headline on a fade would
- * push the site's LCP behind GSAP's download and execution. Animating only
- * `transform` leaves the headline painted at full colour from first paint and
- * merely slides it into place, so LCP fires when the HTML does. Hero.astro's
- * own comment records that the migration deliberately stopped the hero waiting
- * on a JS animation library; this keeps that property while still letting GSAP
- * own the motion.
+ * It does NOT own the hero. That animates through `.rise` in global.css,
+ * transform-only, so the headline paints immediately and nothing above the fold
+ * waits on this file. Putting the hero on GSAP was tried and measured, and the
+ * numbers are in the comment on the loader below.
  *
  * ── Nothing is hidden by CSS, on purpose ─────────────────────────────────────
  *
@@ -41,35 +36,77 @@
 ---
 
 <script>
-  import { gsap } from "gsap";
-  import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-  gsap.registerPlugin(ScrollTrigger);
-
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   /**
-   * Reduced motion is handled by doing nothing at all, which is stronger than
-   * shortening the durations: no element is ever hidden, so there is no state
-   * to animate out of and nothing is held transparent. The CSS version had a
-   * bug of exactly that shape — it reset `animation-duration` but not
-   * `animation-delay`, so elements stayed invisible through the delay.
+   * GSAP is imported DYNAMICALLY, and that is the whole point of this file's
+   * shape. Measured on a Vercel preview with GSAP on the critical path:
+   *
+   *     mobile (4x CPU)   99 -> 96,  LCP 1,808ms -> 2,588ms
+   *     desktop          100 -> 100, LCP   413ms ->   584ms
+   *
+   * The profile attributed 959ms of bootup to this chunk — GSAP's parse and
+   * execute, not its download. Desktop never noticed, but 2,588ms crosses
+   * Google's 2.5s "good" LCP threshold, and this site gets opened from phones.
+   *
+   * So nothing here runs during initial load. The hero animates in CSS (`.rise`
+   * in global.css, transform-only), and GSAP is fetched once the main thread is
+   * idle after `load`, or on the first scroll — whichever comes first. Every
+   * element it touches is below the fold, so waiting costs nothing.
+   *
+   * There is no flash to guard against, and the reason is worth stating because
+   * it is not obvious: ScrollTrigger's `scrub` derives progress from POSITION,
+   * so an element already on screen when GSAP initialises computes to a high
+   * opacity immediately. It can never be handed a visible element and hide it.
    */
-  function init() {
-    if (reduceMotion.matches) return;
+  function whenIdle(run: () => void) {
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      run();
+    };
 
-    const rise = gsap.utils.toArray<HTMLElement>('[data-motion="rise"]');
-    if (rise.length > 0) {
-      gsap.from(rise, {
-        y: 14,
-        duration: 0.5,
-        ease: "power3.out",
-        stagger: 0.06,
-        clearProps: "transform",
-      });
-    }
+    // First scroll wins if the visitor is quicker than the idle callback.
+    window.addEventListener("scroll", start, { once: true, passive: true });
 
-    for (const el of gsap.utils.toArray<HTMLElement>('[data-motion="focus"]')) {
+    const schedule = () => {
+      // Read off a widened reference: `"x" in window` narrows `window` to
+      // `never` in the else branch, so `window.setTimeout` stops type-checking.
+      const idle = (
+        window as Window & {
+          requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+        }
+      ).requestIdleCallback;
+      if (idle) idle(start, { timeout: 2500 });
+      else setTimeout(start, 1200);
+    };
+
+    if (document.readyState === "complete") schedule();
+    else window.addEventListener("load", schedule, { once: true });
+  }
+
+  /**
+   * Reduced motion is handled by never loading GSAP at all — stronger than
+   * shortening durations, and it also spares those visitors the download. No
+   * element is ever hidden, so there is nothing to animate out of.
+   *
+   * The CSS version had a bug of exactly this shape: it reset
+   * `animation-duration` but never `animation-delay`, and `fill-mode: both`
+   * held elements at opacity 0 through the delay, so a visitor who asked for
+   * less motion still got the staggered pop-in with instant tweens.
+   */
+  async function init() {
+    const targets = document.querySelectorAll<HTMLElement>('[data-motion="focus"]');
+    if (targets.length === 0) return;
+
+    const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+      import("gsap"),
+      import("gsap/ScrollTrigger"),
+    ]);
+    gsap.registerPlugin(ScrollTrigger);
+
+    for (const el of targets) {
       gsap
         .timeline({
           scrollTrigger: {
@@ -82,9 +119,9 @@
         // Proportions, not seconds — under `scrub` the timeline is mapped onto
         // the element's pass through the viewport, so these are shares of that
         // distance. The 1 : 2.6 : 1 split keeps a card fully opaque for the
-        // middle ~57% of its travel, which is the whole time it is actually
-        // readable. Shorten the hold and you are fading text someone is reading,
-        // which is a contrast problem rather than a taste one.
+        // middle ~57% of its travel, which is the whole time it is readable.
+        // Shorten the hold and you are fading text someone is reading, which is
+        // a contrast problem rather than a taste one.
         .fromTo(
           el,
           { opacity: 0, y: 32 },
@@ -102,5 +139,5 @@
     document.addEventListener("lens:change", () => ScrollTrigger.refresh());
   }
 
-  init();
+  if (!reduceMotion.matches) whenIdle(init);
 </script>

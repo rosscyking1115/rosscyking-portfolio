@@ -179,8 +179,44 @@
   );
 }
 
-/* ---------- Motion ----------
- * There is no motion CSS here any more, and that is the point.
+/* ---------- Hero entrance ----------
+ * The ONLY motion CSS on the site, and it exists for a measured reason.
+ *
+ * The hero was briefly GSAP-driven too. On a Vercel preview that cost 3
+ * Lighthouse points and +780ms of LCP on throttled mobile, because GSAP's
+ * parse and execute is 959ms of main-thread work on a 4x-throttled CPU and it
+ * sat on the critical path. Desktop was unaffected (100 -> 100), but 2,588ms
+ * crosses Google's 2.5s "good" LCP boundary, and this is a site recruiters open
+ * from a phone.
+ *
+ * Moving the hero back to CSS lets GSAP load lazily instead — see
+ * MotionScript.astro. The visual result is identical, because this animates
+ * TRANSFORM ONLY, exactly as the GSAP version did.
+ *
+ * Never add opacity here. An element at opacity 0 has not been painted, so LCP
+ * is not recorded until it becomes visible; fading the headline would put the
+ * site's largest contentful paint behind whatever is animating it. The element
+ * starts offset and fully opaque, so it paints immediately and merely slides.
+ * tests/e2e/completeness.spec.ts asserts every hero element sits at opacity 1.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(14px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* ---------- Scroll motion ----------
+ * There is no scroll-motion CSS here, and that is the point.
  *
  * This block used to hold `.reveal`, `.reveal-on-scroll` and `.reveal-focus`,
  * built on CSS scroll-driven animations. They were replaced wholesale by GSAP

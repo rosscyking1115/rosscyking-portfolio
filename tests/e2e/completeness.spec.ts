@@ -179,12 +179,14 @@ test.describe("completeness — featured showcase (finding #5)", () => {
     page,
   }) => {
     // The hero is the largest-contentful-paint element. An element at opacity 0
-    // has not been painted, so fading it in would push LCP behind GSAP's
-    // download and execution. The hero animates TRANSFORM ONLY for that reason,
-    // and this is the assertion that stops someone "tidying" it into a fade.
+    // has not been painted, so fading it in would push LCP behind whatever
+    // animates it. The hero animates TRANSFORM ONLY, in CSS, for that reason —
+    // putting it on GSAP was tried and cost 3 Lighthouse points and +780ms of
+    // LCP on throttled mobile. This is the assertion that stops someone
+    // "tidying" it into a fade, or moving it back onto the JS motion system.
     await page.goto("/");
     await page.waitForTimeout(600);
-    const hero = page.locator('[data-motion="rise"]');
+    const hero = page.locator(".rise");
     await expect(hero).not.toHaveCount(0);
 
     const opacities = await hero.evaluateAll((els) =>

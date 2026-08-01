@@ -16,7 +16,7 @@ import ProofStrip from "./ProofStrip.astro";
  * longer waits on a JavaScript animation library to become visible.
  *
  * GSAP now owns the motion again (Ross's call, 2026-08-01) — but the property
- * above is preserved deliberately: the hero's `data-motion="rise"` animates
+ * above is preserved deliberately: the hero's `.rise` animates
  * TRANSFORM ONLY, never opacity, so the headline is painted at full colour on
  * first paint and LCP is not gated on the script. See MotionScript.astro.
  *
@@ -51,8 +51,7 @@ const ROLES = [
   >
     <div>
       <span
-        data-motion="rise"
-        class="border-border bg-background inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-xs font-medium"
+        class="rise border-border bg-background inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-xs font-medium"
       >
         <span class="relative flex size-2">
           <span
@@ -64,20 +63,20 @@ const ROLES = [
       </span>
 
       {/* Wrapped rather than styled directly: IndexMark takes `class`, not `style`. */}
-      <div data-motion="rise">
+      <div style="--rise-delay: 60ms" class="rise">
         <IndexMark mark={siteConfig.shortName} label="Sheffield, UK" class="mt-7" />
       </div>
 
       <h1
-        data-motion="rise"
-        class="font-display mt-4 text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+        style="--rise-delay: 120ms"
+        class="rise font-display mt-4 text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
       >
         I work on <span class="text-primary">AI evaluation and reliability.</span>
       </h1>
 
       <p
-        data-motion="rise"
-        class="text-muted-foreground mt-6 max-w-prose text-lg leading-relaxed text-pretty"
+        style="--rise-delay: 180ms"
+        class="rise text-muted-foreground mt-6 max-w-prose text-lg leading-relaxed text-pretty"
       >
         {siteConfig.description}
       </p>
@@ -91,8 +90,8 @@ const ROLES = [
       */
       }
       <div
-        data-motion="rise"
-        class="mt-6 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-1.5"
+        style="--rise-delay: 240ms"
+        class="rise mt-6 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-1.5"
       >
         <span class="text-muted-foreground font-mono text-xs tracking-wider uppercase">
           Roles&nbsp;→
@@ -108,7 +107,10 @@ const ROLES = [
         </div>
       </div>
 
-      <div data-motion="rise" class="mt-8 flex flex-wrap items-center gap-3">
+      <div
+        style="--rise-delay: 300ms"
+        class="rise mt-8 flex flex-wrap items-center gap-3"
+      >
         <Button href="/projects">
           View projects
           <ArrowRight aria-hidden="true" />
@@ -139,7 +141,7 @@ const ROLES = [
     </div>
 
     {/* The readout fills what was the dead right-hand column at lg. */}
-    <div data-motion="rise">
+    <div style="--rise-delay: 360ms" class="rise">
       <ProofStrip />
     </div>
   </div>
