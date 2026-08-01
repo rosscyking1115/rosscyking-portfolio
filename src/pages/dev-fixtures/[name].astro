@@ -1,8 +1,19 @@
 ---
+import { ArrowRight } from "@lucide/astro";
+
+import EvidenceFrame from "../../components/home/EvidenceFrame.astro";
 import NowBuilding from "../../components/home/NowBuilding.astro";
 import Container from "../../components/layout/Container.astro";
+import IndexMark from "../../components/layout/IndexMark.astro";
+import Badge from "../../components/ui/Badge.astro";
 import Base from "../../layouts/Base.astro";
+import { DEFAULT_LENS } from "../../lib/lenses";
 import type { NowBuildingEntry } from "../../lib/now-building";
+import {
+  getLensFeaturedCards,
+  projectReadingTime,
+  type Project,
+} from "../../lib/projects";
 
 /**
  * Dev-only fixture routes, for components whose real data makes them render
@@ -35,7 +46,11 @@ import type { NowBuildingEntry } from "../../lib/now-building";
  */
 export function getStaticPaths() {
   if (!import.meta.env.DEV) return [];
-  return [{ params: { name: "now-building" } }, { params: { name: "headlines" } }];
+  return [
+    { params: { name: "now-building" } },
+    { params: { name: "headlines" } },
+    { params: { name: "featured-cards" } },
+  ];
 }
 
 const FIXTURES: Record<string, readonly NowBuildingEntry[]> = {
@@ -107,6 +122,27 @@ const HEADLINES: { id: string; lead: string; mark: string; note: string }[] = [
   },
 ];
 
+/**
+ * Featured-card layout comparison.
+ *
+ * Two candidate shapes for the featured showcase, rendered side by side with
+ * the real projects at real widths, because a layout argument settles in ten
+ * seconds of looking and never settles in prose.
+ *
+ *   A — one full-container card per project, frame always on the right.
+ *   B — two-up inside one panel, header stacked above the frame (the shape
+ *       zeon.studio uses for its agency showcase).
+ *
+ * Both carry `.reveal-on-scroll`, so scrolling shows the real entrance too.
+ */
+const featured: Project[] =
+  ((await getLensFeaturedCards())[DEFAULT_LENS] as Project[] | undefined) ?? [];
+
+const frameCaption = (project: Project): string => {
+  const source = project.data.links?.demo ?? project.data.links?.report;
+  return source ? new URL(source).hostname : "run log";
+};
+
 const { name } = Astro.params;
 const entries = FIXTURES[name!] ?? [];
 ---
@@ -139,6 +175,153 @@ const entries = FIXTURES[name!] ?? [];
               </div>
             </div>
           ))}
+        </div>
+      </Container>
+    )
+  }
+
+  {
+    name === "featured-cards" && (
+      <Container class="py-12">
+        <p class="text-muted-foreground mb-2 font-mono text-xs tracking-wider uppercase">
+          Featured card layouts &middot; real projects, real widths &middot; scroll to see
+          the entrance
+        </p>
+
+        <div class="ruler mt-10 mb-6" aria-hidden="true" />
+        <IndexMark mark="A" label="One card per project — frame always right" />
+        <p class="text-muted-foreground mt-2 max-w-prose text-sm leading-relaxed">
+          Every project gets the full container. The frame takes three of five columns, so
+          it lands around 632px — larger than today's flagship, and double today's smaller
+          cards. The metrics sit in the text column beside the evidence.
+        </p>
+
+        <div class="mt-8 flex flex-col gap-6">
+          {featured.map((project, i) => (
+            <article
+              class="reveal-on-scroll linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative grid gap-6 rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 lg:grid-cols-5 lg:gap-8 lg:p-8"
+              style={`--reveal-shift: ${i * 4}%`}
+            >
+              <div class="flex min-w-0 flex-col lg:col-span-2">
+                <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
+                  <span class="text-primary">{String(i + 1).padStart(2, "0")}</span>
+                  <span>
+                    {project.data.period} · {projectReadingTime(project)}
+                  </span>
+                </div>
+                <h3 class="font-display mt-4 text-2xl font-semibold tracking-tight text-balance">
+                  {project.data.title}
+                </h3>
+                <p class="text-muted-foreground mt-3 line-clamp-4 text-sm leading-relaxed">
+                  {project.data.summary}
+                </p>
+                {project.data.metrics && project.data.metrics.length > 0 && (
+                  <dl class="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+                    {project.data.metrics.map((metric) => (
+                      <div>
+                        <dt class="sr-only">{metric.label}</dt>
+                        <dd class="font-mono text-sm">
+                          <span class="text-foreground font-semibold">
+                            {metric.value}
+                          </span>{" "}
+                          <span class="text-muted-foreground text-xs">
+                            {metric.label}
+                          </span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                <div class="mt-5 flex flex-wrap items-center gap-1.5">
+                  {project.data.stack.slice(0, 4).map((tech) => (
+                    <Badge variant="tag">{tech}</Badge>
+                  ))}
+                </div>
+                <span class="text-primary mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-medium">
+                  Read the write-up
+                  <ArrowRight class="size-3.5" aria-hidden="true" />
+                </span>
+              </div>
+              <div class="order-first min-w-0 lg:order-none lg:col-span-3">
+                <EvidenceFrame
+                  caption={frameCaption(project)}
+                  live={Boolean(project.data.links?.demo)}
+                  screenshot={project.data.screenshot}
+                  alt={`Screenshot of the ${project.data.title} live demo`}
+                  lines={project.data.terminal}
+                  sizes="(min-width: 1024px) 55vw, (min-width: 640px) 90vw, 100vw"
+                />
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div class="ruler mt-20 mb-6" aria-hidden="true" />
+        <IndexMark mark="B" label="Two up in one panel — header above the frame" />
+        <p class="text-muted-foreground mt-2 max-w-prose text-sm leading-relaxed">
+          The zeon.studio shape, in this site's language. Frames land around 600px. Note
+          what happens to the numbers: with the header stacked above the image there is no
+          column for them, so they either crowd the header or drop out. Note also the odd
+          cell — three projects in a two-up grid.
+        </p>
+
+        <div class="border-border bg-muted/30 mt-8 rounded-lg border p-5">
+          <div class="grid gap-6 lg:grid-cols-2">
+            {featured.map((project, i) => (
+              <article
+                class="reveal-on-scroll linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex min-w-0 flex-col rounded-lg border p-5 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5"
+                style={`--reveal-shift: ${i * 4}%`}
+              >
+                <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
+                  <span class="text-primary">{String(i + 1).padStart(2, "0")}</span>
+                  <span>
+                    {project.data.period} · {projectReadingTime(project)}
+                  </span>
+                </div>
+                <h3 class="font-display mt-3 text-xl font-semibold tracking-tight text-balance">
+                  {project.data.title}
+                </h3>
+                {project.data.metrics && project.data.metrics.length > 0 && (
+                  <dl class="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+                    {project.data.metrics.map((metric) => (
+                      <div>
+                        <dt class="sr-only">{metric.label}</dt>
+                        <dd class="font-mono text-sm">
+                          <span class="text-foreground font-semibold">
+                            {metric.value}
+                          </span>{" "}
+                          <span class="text-muted-foreground text-xs">
+                            {metric.label}
+                          </span>
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    {project.data.stack.slice(0, 3).map((tech) => (
+                      <Badge variant="tag">{tech}</Badge>
+                    ))}
+                  </div>
+                  <span class="text-primary inline-flex shrink-0 items-center gap-1.5 text-sm font-medium">
+                    Read
+                    <ArrowRight class="size-3.5" aria-hidden="true" />
+                  </span>
+                </div>
+                <div class="mt-4 min-w-0">
+                  <EvidenceFrame
+                    caption={frameCaption(project)}
+                    live={Boolean(project.data.links?.demo)}
+                    screenshot={project.data.screenshot}
+                    alt={`Screenshot of the ${project.data.title} live demo`}
+                    lines={project.data.terminal}
+                    sizes="(min-width: 1024px) 45vw, 90vw"
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </Container>
     )

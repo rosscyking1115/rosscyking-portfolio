@@ -101,90 +101,145 @@ test.describe("completeness — title order (finding #3)", () => {
 });
 
 test.describe("completeness — featured showcase (finding #5)", () => {
-  test("every visible card carries the reveal animation", async ({ page }) => {
-    // Would have caught: three <FadeIn> wrappers dropped when motion was
-    // swapped for CSS, with no replacement. Hero and /projects got .reveal;
-    // this component got nothing, and every card sat static.
-    //
-    // BROADENED, not weakened. This test used to read the stagger off
-    // `animationDelay` alone. The cards now use a view() timeline, where the
-    // offsets live in `animationRange` and `animationDelay` is 0 for every card
-    // — the finding above would still be caught, but the assertion would fail
-    // on a working page. Worse, `animationDelay` is still REPORTED by
-    // getComputedStyle under a progress timeline even though nothing honours
-    // it, so leaving the check as it was would have kept it green for a reason
-    // unrelated to what it claims to test.
-    //
-    // So it asserts the intent instead: every card has an entrance, and the
-    // cards do not all arrive together — by whichever mechanism is in force.
+  /**
+   * These assertions have now been rewritten three times, and it is worth being
+   * explicit about why rather than letting the history look like churn.
+   *
+   * The FINDING never changed: three <FadeIn> wrappers were dropped when motion
+   * was swapped for CSS, and the featured showcase shipped with no entrance at
+   * all while the suite stayed green. What changed each time is the MECHANISM —
+   * CSS one-shot, then a CSS view() timeline, now GSAP + ScrollTrigger. Each
+   * rewrite moved the assertion closer to the observable behaviour and further
+   * from the implementation, because an assertion pinned to a mechanism fails
+   * on a working page the moment the mechanism is replaced.
+   *
+   * So these test what a visitor experiences: the cards are hidden before you
+   * reach them, they resolve when you do, and they un-resolve if you go back.
+   * That is true of any correct implementation and false of a broken one.
+   */
+  test("featured cards are hidden until reached, and resolve when reached", async ({
+    page,
+  }) => {
     await page.goto("/");
-
-    const cards = page.locator('[data-lens-panel="all"] article');
+    const cards = page.locator('[data-lens-panel="all"] [data-motion="focus"]');
     await expect(cards).not.toHaveCount(0);
+    // GSAP sets the initial state on init; give it a frame to run.
+    await page.waitForTimeout(600);
 
-    const motion = await cards.evaluateAll((els) =>
-      els.map((el) => {
-        const style = getComputedStyle(el);
-        return {
-          name: style.animationName,
-          delay: style.animationDelay,
-          range: `${style.animationRangeStart} ${style.animationRangeEnd}`,
-          timeline: style.animationTimeline,
-        };
-      }),
-    );
+    const opacityOf = () =>
+      cards.evaluateAll((els) => els.map((el) => Number(getComputedStyle(el).opacity)));
 
-    for (const [i, card] of motion.entries()) {
-      expect(card.name, `card ${i} has no entrance animation`).not.toBe("none");
-    }
-
-    // Scroll-driven where supported, load-time stagger where not. Either way
-    // the offsets have to differ between cards.
-    const offsets = motion.map((card) =>
-      card.timeline === "auto" ? card.delay : card.range,
-    );
+    const atTop = await opacityOf();
     expect(
-      new Set(offsets).size,
-      "every card arrives at the same moment — the stagger is gone",
-    ).toBeGreaterThan(1);
+      Math.min(...atTop),
+      "no featured card is hidden on load — the entrance is missing",
+    ).toBeLessThan(0.5);
+
+    await cards.last().scrollIntoViewIfNeeded();
+    await page.waitForTimeout(700);
+    const scrolled = await opacityOf();
+    expect(
+      Math.max(...scrolled),
+      "scrolling to a card did not resolve it",
+    ).toBeGreaterThan(0.9);
   });
 
-  test("reduced motion removes the entrance outright, delay included", async ({
+  test("the reveal is scroll-linked, not a one-shot", async ({ page }) => {
+    // Would have caught a regression to a play-once animation: a one-shot holds
+    // its end state forever, so scrolling back up leaves the card fully opaque.
+    // Reversibility is the property Ross specified — progress is a function of
+    // scroll POSITION, not of elapsed time.
+    await page.goto("/");
+    const cards = page.locator('[data-lens-panel="all"] [data-motion="focus"]');
+    await page.waitForTimeout(600);
+
+    const opacityOf = () =>
+      cards.evaluateAll((els) => els.map((el) => Number(getComputedStyle(el).opacity)));
+
+    const before = await opacityOf();
+    await cards.last().scrollIntoViewIfNeeded();
+    await page.waitForTimeout(700);
+    const during = await opacityOf();
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(700);
+    const after = await opacityOf();
+
+    expect(Math.max(...during), "cards never resolved").toBeGreaterThan(
+      Math.max(...before),
+    );
+    for (const [i, value] of after.entries()) {
+      expect(
+        Math.abs(value - before[i]!),
+        `card ${i} did not un-resolve on scrolling back — ${before[i]} then ${value}`,
+      ).toBeLessThan(0.1);
+    }
+  });
+
+  test("the hero never animates opacity, so LCP is not gated on the script", async ({
+    page,
+  }) => {
+    // The hero is the largest-contentful-paint element. An element at opacity 0
+    // has not been painted, so fading it in would push LCP behind GSAP's
+    // download and execution. The hero animates TRANSFORM ONLY for that reason,
+    // and this is the assertion that stops someone "tidying" it into a fade.
+    await page.goto("/");
+    await page.waitForTimeout(600);
+    const hero = page.locator('[data-motion="rise"]');
+    await expect(hero).not.toHaveCount(0);
+
+    const opacities = await hero.evaluateAll((els) =>
+      els.map((el) => Number(getComputedStyle(el).opacity)),
+    );
+    for (const [i, opacity] of opacities.entries()) {
+      expect(opacity, `hero element ${i} is transparent — LCP is now behind GSAP`).toBe(
+        1,
+      );
+    }
+  });
+
+  test("with no JavaScript at all, the page is readable rather than blank", async ({
     browser,
   }) => {
-    // Would have caught the state this pass found: the global reduce block in
-    // global.css collapsed `animation-duration` but never touched
-    // `animation-delay`, and `fill-mode: both` holds an element at opacity 0
-    // for the whole delay. A visitor who asks for less motion still got the
-    // staggered pop-in, just with instant tweens — the <h1> transparent for
-    // 167ms and the proof strip for 360ms. Nothing failed, because the site
-    // did have a prefers-reduced-motion block; it just did not finish the job.
-    const context = await browser.newContext({ reducedMotion: "reduce" });
+    // The property: NOTHING is hidden by CSS. GSAP applies the initial hidden
+    // state itself at init, so if the script never runs — JS disabled, chunk
+    // 404s, an error in a dependency — no element was ever hidden and the page
+    // renders complete and static. Without it, one failed request ships a page
+    // of invisible cards.
+    //
+    // Asserted with JavaScript disabled rather than by blocking the chunk,
+    // because this suite runs against `astro dev`, which INLINES component
+    // scripts into the HTML — there is no request to intercept. Blocking by URL
+    // passes against a build and silently fails here, which is a worse test
+    // than no test. Disabling JS reproduces the same end state in both.
+    const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/");
 
-    const animated = await page.evaluate(() =>
-      [...document.querySelectorAll(".reveal, .reveal-on-scroll")]
-        .map((el) => ({
-          cls: el.className,
-          name: getComputedStyle(el).animationName,
-        }))
-        .filter((el) => el.name !== "none"),
-    );
-    expect(
-      animated,
-      `elements still animating under prefers-reduced-motion: ${animated
-        .map((el) => el.cls)
-        .join(", ")}`,
-    ).toEqual([]);
+    const opacities = await page
+      .locator("[data-motion]")
+      .evaluateAll((els) => els.map((el) => Number(getComputedStyle(el).opacity)));
+    expect(opacities.length, "no motion elements rendered at all").toBeGreaterThan(0);
+    for (const opacity of opacities) expect(opacity).toBe(1);
 
-    // The observable consequence, asserted directly rather than inferred from
-    // the CSS: nothing is being held transparent.
-    const opacities = await page.evaluate(() =>
-      [...document.querySelectorAll(".reveal, .reveal-on-scroll")].map((el) =>
-        Number(getComputedStyle(el).opacity),
-      ),
-    );
+    await context.close();
+  });
+
+  test("reduced motion hides nothing and animates nothing", async ({ browser }) => {
+    // The CSS version had a bug of exactly this shape: it reset
+    // `animation-duration` but never `animation-delay`, and `fill-mode: both`
+    // held elements at opacity 0 for the whole delay — so a visitor who asked
+    // for less motion still got the staggered pop-in, just with instant tweens.
+    // Measured at the time: the <h1> transparent for 167ms, the proof strip for
+    // 360ms. MotionScript now returns early instead, so nothing is ever hidden.
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.waitForTimeout(900);
+
+    const opacities = await page
+      .locator("[data-motion]")
+      .evaluateAll((els) => els.map((el) => Number(getComputedStyle(el).opacity)));
+    expect(opacities.length).toBeGreaterThan(0);
     for (const opacity of opacities) expect(opacity).toBe(1);
 
     await context.close();

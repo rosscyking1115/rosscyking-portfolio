@@ -1,0 +1,106 @@
+---
+/**
+ * The site's one motion system.
+ *
+ * Replaces the CSS `.reveal` / `.reveal-on-scroll` / `.reveal-focus` classes
+ * outright. Ross's call (2026-08-01), taken with the costs in front of him:
+ * GSAP gives the same bidirectional focus effect in EVERY browser, where the
+ * CSS scroll-timeline version only worked where `animation-timeline` is
+ * supported and degraded to a one-shot elsewhere. That reverses the Part 2
+ * brief's "do not add an animation library", deliberately.
+ *
+ * The motion-performance skill is explicit that mixing two animation systems is
+ * a critical-priority mistake, so there is exactly one here and the CSS classes
+ * are gone.
+ *
+ * ── Two behaviours, and the split is a performance decision ──────────────────
+ *
+ *   [data-motion="rise"]   Load-time entrance. TRANSFORM ONLY — no opacity.
+ *   [data-motion="focus"]  Scroll-linked, scrubbed, bidirectional.
+ *
+ * The hero uses `rise`, and the reason it does not touch opacity is Largest
+ * Contentful Paint. An element at `opacity: 0` has not been painted, so LCP is
+ * not recorded until it becomes visible — gating the headline on a fade would
+ * push the site's LCP behind GSAP's download and execution. Animating only
+ * `transform` leaves the headline painted at full colour from first paint and
+ * merely slides it into place, so LCP fires when the HTML does. Hero.astro's
+ * own comment records that the migration deliberately stopped the hero waiting
+ * on a JS animation library; this keeps that property while still letting GSAP
+ * own the motion.
+ *
+ * ── Nothing is hidden by CSS, on purpose ─────────────────────────────────────
+ *
+ * The initial hidden state for `focus` elements is set by GSAP itself, at init.
+ * If the script never runs — network failure, JS disabled, an error in a
+ * dependency — nothing ever hid the content, so the page renders complete and
+ * static. That is the whole failure mode handled, without an inline pre-paint
+ * class or a release timeout. It is safe to do this way precisely BECAUSE every
+ * `focus` element is below the fold: there is no window in which a visitor sees
+ * them un-hidden and then watches them disappear.
+ */
+---
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  /**
+   * Reduced motion is handled by doing nothing at all, which is stronger than
+   * shortening the durations: no element is ever hidden, so there is no state
+   * to animate out of and nothing is held transparent. The CSS version had a
+   * bug of exactly that shape — it reset `animation-duration` but not
+   * `animation-delay`, so elements stayed invisible through the delay.
+   */
+  function init() {
+    if (reduceMotion.matches) return;
+
+    const rise = gsap.utils.toArray<HTMLElement>('[data-motion="rise"]');
+    if (rise.length > 0) {
+      gsap.from(rise, {
+        y: 14,
+        duration: 0.5,
+        ease: "power3.out",
+        stagger: 0.06,
+        clearProps: "transform",
+      });
+    }
+
+    for (const el of gsap.utils.toArray<HTMLElement>('[data-motion="focus"]')) {
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: el,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        })
+        // Proportions, not seconds — under `scrub` the timeline is mapped onto
+        // the element's pass through the viewport, so these are shares of that
+        // distance. The 1 : 2.6 : 1 split keeps a card fully opaque for the
+        // middle ~57% of its travel, which is the whole time it is actually
+        // readable. Shorten the hold and you are fading text someone is reading,
+        // which is a contrast problem rather than a taste one.
+        .fromTo(
+          el,
+          { opacity: 0, y: 32 },
+          { opacity: 1, y: 0, duration: 1, ease: "none" },
+        )
+        .to(el, { opacity: 1, y: 0, duration: 2.6, ease: "none" })
+        .to(el, { opacity: 0, y: -32, duration: 1, ease: "none" });
+    }
+
+    // Screenshots settle after first paint and change every trigger's geometry.
+    window.addEventListener("load", () => ScrollTrigger.refresh());
+
+    // Switching lens swaps which panel is display:none, so every measurement
+    // taken while it was hidden is wrong. FeaturedProjects dispatches this.
+    document.addEventListener("lens:change", () => ScrollTrigger.refresh());
+  }
+
+  init();
+</script>

@@ -19,11 +19,11 @@ import { expect, test } from "@playwright/test";
  * dark tokens are a separate set of values.
  *
  * REDUCED MOTION IS SET ON PURPOSE, and it is not a way of dodging anything.
- * Cards below the fold sit at opacity 0 until their scroll-driven reveal runs,
+ * Cards below the fold sit at opacity 0 until GSAP resolves them on scroll,
  * and axe blends opacity into the foreground colour before measuring — so an
  * un-scrolled card reports its body text at 1.13:1 against the page. That is a
  * measurement of a transient animation frame, not of the design. With reduced
- * motion the reveal does not apply at all (see global.css), so every element is
+ * motion MotionScript returns early and hides nothing, so every element is
  * scanned at the state it actually settles in — which is also exactly the state
  * a reduced-motion visitor sees for the whole visit.
  */

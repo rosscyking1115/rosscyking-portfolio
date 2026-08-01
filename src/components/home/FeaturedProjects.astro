@@ -89,7 +89,7 @@ const allLabel = `All ${allCount} projects`;
   {
     allLenses.map((lens) => {
       const projects = lensCards[lens.key] ?? [];
-      const [flagship, ...rest] = projects;
+
       const count = projects.length;
       const lastNumber = String(count).padStart(2, "0");
 
@@ -117,112 +117,99 @@ const allLabel = `All ${allCount} projects`;
             </a>
           </div>
 
-          {flagship && (
-            <article class="reveal-on-scroll linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative mt-8 grid gap-6 rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 lg:grid-cols-5 lg:gap-8 lg:p-8">
-              <div class="flex min-w-0 flex-col lg:col-span-2">
-                <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
-                  <span class="text-primary">01</span>
-                  <span>
-                    {flagship.data.period} · {projectReadingTime(flagship)}
-                  </span>
-                </div>
-                <h3 class="font-display mt-4 text-2xl font-semibold tracking-tight text-balance">
-                  <a
-                    href={`/projects/${flagship.id}`}
-                    class="after:absolute after:inset-0 after:rounded-lg"
-                  >
-                    {flagship.data.title}
-                  </a>
-                </h3>
-                <p class="text-muted-foreground mt-3 line-clamp-4 text-sm leading-relaxed">
-                  {flagship.data.summary}
-                </p>
-                {flagship.data.metrics && flagship.data.metrics.length > 0 && (
-                  <dl class="mt-5 flex flex-wrap gap-x-6 gap-y-2">
-                    {flagship.data.metrics.map((metric) => (
-                      <div>
-                        <dt class="sr-only">{metric.label}</dt>
-                        <dd class="font-mono text-sm">
-                          <span class="text-foreground font-semibold">
-                            {metric.value}
-                          </span>{" "}
-                          <span class="text-muted-foreground text-xs">
-                            {metric.label}
-                          </span>
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-                <div class="mt-5 flex flex-wrap items-center gap-1.5">
-                  {flagship.data.stack.slice(0, 4).map((tech) => (
-                    <Badge variant="tag">{tech}</Badge>
-                  ))}
-                </div>
-                <span class="text-primary mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-medium">
-                  Read the write-up
-                  <ArrowRight
-                    class="size-3.5 transition-transform group-hover:translate-x-0.5"
-                    aria-hidden="true"
-                  />
-                </span>
-              </div>
-              {/*
-                `order-first` below lg. Stacked, the source order put the
-                evidence frame AFTER "Read the write-up" — so on a phone the
-                screenshot arrived below the card's own call to action, while
-                every other card on the page leads with its frame. At lg the
-                source order is restored and the frame returns to the right.
-              */}
-              <div class="order-first min-w-0 lg:order-none lg:col-span-3">
-                <EvidenceFrame
-                  caption={frameCaption(flagship)}
-                  live={Boolean(flagship.data.links?.demo)}
-                  screenshot={flagship.data.screenshot}
-                  alt={`Screenshot of the ${flagship.data.title} live demo`}
-                  lines={flagship.data.terminal}
-                  sizes="(min-width: 1024px) 55vw, (min-width: 640px) 90vw, 100vw"
-                  eager={lens.key === DEFAULT_LENS}
-                />
-              </div>
-            </article>
-          )}
+          {/*
+            ONE CARD SHAPE, repeated. This was a flagship card plus a two- or
+            three-up grid, and the split had stopped earning itself.
 
-          <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {rest.map((project, i) => (
+            The grid rendered its evidence frames at 308px on every desktop
+            width — measured — against 598px for the flagship. These screenshots
+            are dense dashboards with 11px labels, so at 308px they were
+            decorative images, which is exactly what EvidenceFrame's own comment
+            says they must never be, under a heading promising "shown working".
+            The layout was also built for four featured projects; with three,
+            sizing card 01 above the rest only repeated what the 01 / 02 / 03
+            registration marks already say.
+
+            Every card now takes the full container and gives the frame three of
+            five columns — about 600px at the 1152px cap, so the SMALLEST frame
+            here is larger than the old flagship's. Same side every time: the
+            marks carry the sequence, so alternating sides would be decoration.
+
+            No `hover:-translate-y` on these, deliberately — see the note on
+            MotionScript. GSAP owns the transform on these cards, so a hover
+            translate would be fought over by two systems; they keep the shadow
+            and border-colour hover instead.
+          */}
+          <div class="mt-8 flex flex-col gap-6">
+            {projects.map((project, i) => (
               <article
-                class="reveal-on-scroll linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex h-full min-w-0 flex-col rounded-lg border p-5 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5"
-                style={`--reveal-delay: ${i * 80}ms; --reveal-shift: ${i * 5}%`}
+                data-motion="focus"
+                class="linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative grid gap-6 rounded-lg border p-6 shadow-xs transition-[box-shadow,border-color] duration-200 lg:grid-cols-5 lg:gap-8 lg:p-8"
               >
-                <EvidenceFrame
-                  caption={frameCaption(project)}
-                  live={Boolean(project.data.links?.demo)}
-                  screenshot={project.data.screenshot}
-                  alt={`Screenshot of the ${project.data.title} live demo`}
-                  lines={project.data.terminal}
-                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
-                />
-                <div class="text-muted-foreground mt-4 flex items-center justify-between font-mono text-xs">
-                  <span class="text-primary">{String(i + 2).padStart(2, "0")}</span>
-                  <span>
-                    {project.data.period} · {projectReadingTime(project)}
+                <div class="flex min-w-0 flex-col lg:col-span-2">
+                  <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
+                    <span class="text-primary">{String(i + 1).padStart(2, "0")}</span>
+                    <span>
+                      {project.data.period} · {projectReadingTime(project)}
+                    </span>
+                  </div>
+                  <h3 class="font-display mt-4 text-2xl font-semibold tracking-tight text-balance">
+                    <a
+                      href={`/projects/${project.id}`}
+                      class="after:absolute after:inset-0 after:rounded-lg"
+                    >
+                      {project.data.title}
+                    </a>
+                  </h3>
+                  <p class="text-muted-foreground mt-3 line-clamp-4 text-sm leading-relaxed">
+                    {project.data.summary}
+                  </p>
+                  {project.data.metrics && project.data.metrics.length > 0 && (
+                    <dl class="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+                      {project.data.metrics.map((metric) => (
+                        <div>
+                          <dt class="sr-only">{metric.label}</dt>
+                          <dd class="font-mono text-sm">
+                            <span class="text-foreground font-semibold">
+                              {metric.value}
+                            </span>{" "}
+                            <span class="text-muted-foreground text-xs">
+                              {metric.label}
+                            </span>
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                  <div class="mt-5 flex flex-wrap items-center gap-1.5">
+                    {project.data.stack.slice(0, 4).map((tech) => (
+                      <Badge variant="tag">{tech}</Badge>
+                    ))}
+                  </div>
+                  <span class="text-primary mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-medium">
+                    Read the write-up
+                    <ArrowRight
+                      class="size-3.5 transition-transform group-hover:translate-x-0.5"
+                      aria-hidden="true"
+                    />
                   </span>
                 </div>
-                <h3 class="font-display mt-2 text-lg font-semibold tracking-tight">
-                  <a
-                    href={`/projects/${project.id}`}
-                    class="after:absolute after:inset-0 after:rounded-lg"
-                  >
-                    {project.data.title}
-                  </a>
-                </h3>
-                <p class="text-muted-foreground mt-2 line-clamp-3 flex-1 text-sm leading-relaxed">
-                  {project.data.summary}
-                </p>
-                <div class="mt-4 flex flex-wrap items-center gap-1.5">
-                  {project.data.stack.slice(0, 3).map((tech) => (
-                    <Badge variant="tag">{tech}</Badge>
-                  ))}
+                {/*
+                  `order-first` below lg. Stacked, the source order put the
+                  evidence frame AFTER "Read the write-up", so on a phone the
+                  screenshot arrived below the card's own call to action. At lg
+                  the source order is restored and the frame returns to the right.
+                */}
+                <div class="order-first min-w-0 lg:order-none lg:col-span-3">
+                  <EvidenceFrame
+                    caption={frameCaption(project)}
+                    live={Boolean(project.data.links?.demo)}
+                    screenshot={project.data.screenshot}
+                    alt={`Screenshot of the ${project.data.title} live demo`}
+                    lines={project.data.terminal}
+                    sizes="(min-width: 1024px) 55vw, (min-width: 640px) 90vw, 100vw"
+                    eager={lens.key === DEFAULT_LENS && i === 0}
+                  />
                 </div>
               </article>
             ))}
@@ -245,27 +232,21 @@ const allLabel = `All ${allCount} projects`;
 
 <style>
   /*
-    The entrance reveal lives in src/styles/global.css and is shared with Hero,
-    NowBuilding and /projects. This file used to hold its own copy of the
-    keyframe — one of four, at three different value pairs.
+    Motion for these cards lives in src/components/MotionScript.astro, not
+    here and not in CSS. They carry `data-motion="focus"`, and GSAP scrubs a
+    rise / hold / recede timeline across each card's pass through the viewport,
+    so a card resolves as you reach it and recedes as it leaves — reversibly,
+    because progress is tied to scroll position rather than to time.
 
-    The Next component wrapped the flagship card, each grid card (staggered by
-    STAGGER_STEP = 0.08s) and the Now-building aside in <FadeIn>. When `motion`
-    was swapped for CSS, Hero and /projects got this treatment and this file was
-    missed, so the whole showcase landed with no entrance at all.
+    The Next component wrapped the flagship card, each grid card and the
+    Now-building aside in <FadeIn>. When `motion` was swapped for CSS, Hero and
+    /projects got that treatment and this file was missed, so the whole showcase
+    landed with no entrance at all. That is the finding completeness.spec.ts
+    guards.
 
-    Two behaviour notes on the move to `.reveal-on-scroll`:
-
-      - The cards are below the fold at every desktop width, so they now arrive
-        as you reach them rather than firing before anyone can see them.
-        `--reveal-shift` staggers the grid the way `--reveal-delay` staggers the
-        load-time fallback, so a row does not land in lockstep.
-      - A hidden lens panel is display:none, so its animation did not run until
-        the panel was shown — which meant switching lens REPLAYED the reveal.
-        Under a view timeline a card already on screen is at the end of its
-        range, so switching lens now swaps the content without re-animating it.
-        That is a change, and the better one: a filter is not a navigation, and
-        the old behaviour flashed the whole showcase on every click.
+    A hidden lens panel is display:none, so every ScrollTrigger measured while
+    it was hidden is wrong. `select()` below dispatches `lens:change` and
+    MotionScript refreshes on it.
   */
 
   /* Only the panel matching <html data-lens> is shown. Hidden by default so
@@ -290,6 +271,9 @@ const allLabel = `All ${allCount} projects`;
     for (const button of buttons) {
       button.setAttribute("aria-pressed", String(button.dataset.lensButton === lens));
     }
+    // Panels swap display, so ScrollTrigger's cached geometry is now stale.
+    document.dispatchEvent(new CustomEvent("lens:change"));
+
     if (pushUrl) {
       // replaceState, not pushState: switching lens is a filter, not a
       // navigation. Back should leave the page, as it did in the Next app.

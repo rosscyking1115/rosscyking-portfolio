@@ -26,7 +26,8 @@ const { entries = nowBuilding } = Astro.props;
   entries.length > 0 && (
     <aside
       aria-label="Now building"
-      class="reveal-on-scroll border-border mt-10 border-t border-dashed pt-6"
+      data-motion="focus"
+      class="border-border mt-10 border-t border-dashed pt-6"
     >
       <IndexMark mark="//" label="Now building" />
       <ul class="mt-4 flex flex-col gap-2.5">

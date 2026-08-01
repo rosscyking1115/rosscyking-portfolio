@@ -25,6 +25,14 @@ import { cn } from "../../lib/utils";
  * are imported through a glob pointing at the same root directory, so there is
  * still exactly ONE copy of each file and the MDX path stays the lookup key.
  * A missing import falls back to a plain <img> rather than failing the build.
+ *
+ * ── The terminal variant is sized by content, not by ratio ───────────────────
+ * Screenshots are held to 16:10 so every card crops identically. A terminal has
+ * no image to crop, and holding it to the same ratio left a five-line run log
+ * floating in a 600px-wide box with the bottom third empty — invisible while
+ * the cards were 308px, obvious the moment they went full width. It now takes
+ * a min-height and grows with its content, so a short log is compact and a long
+ * one is never clipped.
  */
 const screenshots = import.meta.glob<{ default: ImageMetadata }>(
   "../../../public/projects/screenshots/*.{png,jpg,jpeg,webp,avif}",
@@ -121,7 +129,7 @@ const image = key ? screenshots[key]!.default : undefined;
     ) : (
       lines &&
       lines.length > 0 && (
-        <div class="bg-card flex aspect-[16/10] flex-col justify-center gap-2 px-5 font-mono text-[11px] leading-relaxed sm:px-6 sm:text-xs">
+        <div class="bg-card flex min-h-[13rem] flex-col justify-center gap-2 px-5 py-6 font-mono text-[11px] leading-relaxed sm:px-6 sm:text-xs">
           {lines.map((line) => (
             <p
               class={

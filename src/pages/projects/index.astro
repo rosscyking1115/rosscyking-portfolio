@@ -60,12 +60,12 @@ const total = numbered.length;
 
     <ul class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-projects-grid>
       {
-        numbered.map(({ project, index }, i) => (
+        numbered.map(({ project, index }) => (
           <li
             data-project
             data-stack={`|${project.data.stack.join("|")}|`}
-            class="reveal-on-scroll min-w-0"
-            style={`--reveal-delay: ${i * 40}ms; --reveal-shift: ${(i % 3) * 5}%`}
+            data-motion="focus"
+            class="min-w-0"
           >
             <article class="linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative flex h-full flex-col rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5">
               <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
@@ -124,14 +124,9 @@ const total = numbered.length;
 
 {
   /*
-    The reveal replaced the <FadeIn> wrapper, which pulled in `motion` — the
-    Next app's only use of a JS animation library. It now lives in
-    src/styles/global.css rather than in a scoped block here, which is where
-    three other copies of the same keyframe used to sit.
-
-    A ten-card gallery is mostly below the fold at any width, so these use the
-    scroll-driven variant: a card arrives as you reach it instead of every card
-    animating at once before you can see most of them.
+    Motion lives in src/components/MotionScript.astro. These cards carry
+    `data-motion="focus"` and share the home page's scroll-linked treatment, so
+    the two surfaces move as one system rather than animating differently.
 
     The third column arrives at xl, not lg. These cards are text only — no
     evidence frame to fill the width — so they need more measure than the home

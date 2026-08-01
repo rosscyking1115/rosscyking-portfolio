@@ -4,6 +4,7 @@ import { Font } from "astro:assets";
 import SpeedInsights from "@vercel/speed-insights/astro";
 
 import LensScript from "../components/LensScript.astro";
+import MotionScript from "../components/MotionScript.astro";
 import Footer from "../components/layout/Footer.astro";
 import Nav from "../components/layout/Nav.astro";
 import ThemeScript from "../components/ThemeScript.astro";
@@ -169,6 +170,7 @@ const fullTitle =
         https://docs.astro.build/en/guides/integrations-guide/vercel/#webanalytics
     */
     }
+    <MotionScript />
     <Analytics />
     <SpeedInsights />
   </body>
