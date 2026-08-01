@@ -1,6 +1,6 @@
 ---
 title: Aerospace Prognostics
-summary: "Deployable end-to-end PHM MLOps, not another leaderboard notebook: NASA C-MAPSS turbofan RUL and ESA spacecraft-telemetry anomaly detection carried through their real evaluation protocols, wrapped in a FastAPI serving API, an operator console, signed release evidence (model card, SBOM, provenance), drift monitoring, and 451 tests. The evaluation layer proved general enough to extract as telemeval, a standalone library on PyPI with a Zenodo DOI."
+summary: "Deployable end-to-end PHM MLOps, not another leaderboard notebook: NASA C-MAPSS turbofan RUL and ESA spacecraft-telemetry anomaly detection carried through their real evaluation protocols, wrapped in a FastAPI serving API, an operator console, signed release evidence (model card, SBOM, provenance), drift monitoring, and 462 tests. The evaluation layer proved general enough to extract as telemeval, a standalone library on PyPI with a Zenodo DOI."
 stack: [Python, FastAPI, Streamlit, Docker, GitHub Actions, pytest, PyPI]
 screenshot: /projects/screenshots/aerospace-prognostics.jpg
 role: Solo project
@@ -8,7 +8,7 @@ period: "2026"
 publishedAt: "2026-07-09"
 featured: false
 metrics:
-  - { value: "451", label: "tests passing" }
+  - { value: "462", label: "tests passing" }
   - { value: "0.42", label: "event-wise recall (corrected)" }
   - { value: "2", label: "benchmark tracks" }
 links:
@@ -61,7 +61,12 @@ and provenance.
 ## Honest limits
 
 A reference implementation of end-to-end PHM MLOps under MIT — not a product
-launch track (productization docs are frozen as archived context). The hosted
-review console is token-gated rather than public, so the visual here is the
-console itself rather than a click-through demo. Raw telemetry and generated
-model artifacts stay out of Git.
+launch track (productization docs are frozen as archived context). There is no
+hosted instance of the review console — a private one ran until 29 July 2026,
+when its container build had been failing for eight days and it was deleted
+rather than repaired, so the root cause was never diagnosed. The repo keeps
+that as a finding in its own right: CI had covered the artifact but not the
+destination, and nothing reported deployment status back, so a green badge and
+a dead service coexisted for over a week. The visual here is the console
+itself rather than a click-through demo. Raw telemetry and generated model
+artifacts stay out of Git.

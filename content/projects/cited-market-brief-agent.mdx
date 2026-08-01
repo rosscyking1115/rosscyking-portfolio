@@ -1,17 +1,15 @@
 ---
 title: Cited Market Brief Agent
-summary: "A region-aware morning-market web app and an audit-ready, evidence-backed brief engine in one. The radar surfaces a market clock, a FRED overnight-risk rail, most-read finance news with AI summaries, and a Taiwan ETF-vs-benchmark attribution tool; the brief engine generates company briefs from SEC EDGAR + FRED where every claim is validated against a stored source span before it ships, with a click-through evidence ledger. Four localised editions (Taiwan, Korea, UK, EU)."
+summary: "A region-aware morning-market web app and an audit-ready, evidence-backed brief engine in one. The radar surfaces a market clock, a FRED overnight-risk rail, most-read finance news with AI summaries, and a Taiwan ETF-vs-benchmark attribution tool; the brief engine generates company briefs from SEC EDGAR + FRED, attaching a stored source span to every claim it accepts, with a click-through evidence ledger. Four localised editions (Taiwan, Korea, UK, EU). The CI gate that once certified this at 100% turned out to be scoring itself; measured against independently labelled ground truth, 40% of accepted claims are genuinely supported by the span they cite."
 stack: [TypeScript, React, FastAPI, Python, Vercel, Docker]
 screenshot: /projects/screenshots/cited-market-brief-agent.png
 role: Solo project
 period: "2026"
 publishedAt: "2026-07-06"
-featured: true
-featuredOrder: 3
+featured: false
 metrics:
   - { value: "4", label: "regional editions" }
   - { value: "5", label: "public data sources" }
-  - { value: "100%", label: "claims cited" }
 links:
   github: https://github.com/rosscyking1115/cited-market-brief-agent
   demo: https://cited-market-brief-agent.vercel.app
@@ -27,11 +25,19 @@ An Asia → US market clock; a FRED-backed overnight-risk rail (VIX, USD/TWD·JP
 
 ## Evidence-backed brief engine
 
-Cited generation from SEC EDGAR filings and FRED/ALFRED macro series, built so a claim without a source span is dropped: every line that ships is backed by primary evidence. A click-through evidence ledger exposes the quote, document, section, accession number, and checksum behind each claim.
+Cited generation from SEC EDGAR filings and FRED/ALFRED macro series: a claim without a source span is dropped, and a click-through evidence ledger exposes the quote, document, section, accession number, and checksum behind each claim that survives.
 
 ## Auditable by design
 
-Every claim traces back to a primary source, so a reviewer can verify it rather than take it on faith — the opposite of an LLM that asserts confidently and cites nothing.
+Every claim carries a primary source a reviewer can open, rather than being asserted confidently with nothing behind it. What the validator checks is provenance and numeric/temporal consistency — that a span exists, resolves, and does not contradict the figure. It does not check entailment, so "cited" is not the same as "correct", and the repo's claim ledger forbids presenting it as verification of the underlying facts.
+
+## The gate that couldn't fail
+
+The project's central claim used to be that 100% of shipped claims were cited, backed by a CI eval reporting precision 1.000 and recall 1.000. Those numbers were the system marking its own homework: the gate was built from the same rules that produced the output, so it could not fail, and a metric that cannot fail is not measuring anything.
+
+Replacing it with independently labelled ground truth gave a different picture — **precision 0.579 on the development set and 0.400 on the holdout**, with recall 1.000 and no false negatives on either. In plain terms: of the claims the system accepts, about 40% are genuinely supported by the span they cite, so 60% are not. Nothing is dropped that should have shipped; plenty is kept that shouldn't be.
+
+The repo now carries a claim ledger listing the wording this result forbids, including quoting the development figure on its own, calling the validator a fact-checker, and stating any precision figure without first defining the unit, the positive class, and the population. One defect stays open and named: removing every evidence quote leaves the score unchanged, because an empty span skips the provenance check.
 
 ## Honest limits
 

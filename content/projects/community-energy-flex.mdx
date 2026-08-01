@@ -1,6 +1,6 @@
 ---
 title: Community Energy Flex
-summary: "Works out when to run flexible electricity loads — a wash, an EV charge — to cut cost and carbon from live UK grid data, and shows the working: an LP/MILP optimiser behind a typed FastAPI contract, a Next.js planner, and a forecast-vs-actual retro that checks whether yesterday's plan would have saved. On synthetic data the case-study community centre shifts about £149 and ~179 kg CO₂ a year just by moving when things run — a conditional ex-post estimate, not measured customer outcomes."
+summary: "Works out when to run flexible electricity loads — a wash, an EV charge — to cut cost and carbon from live UK grid data, and shows the working: an LP/MILP optimiser behind a typed FastAPI contract, a Next.js planner, and a scenario retro that re-scores a plan under alternative carbon curves. Product development stopped in July 2026 after a scan found the scheduling function already served by a statutory smart-tariff duty and three shipping products — recorded with its primary sources rather than quietly abandoned."
 stack:
   [
     Python,
@@ -9,7 +9,8 @@ stack:
     Next.js,
     TypeScript,
     dbt,
-    Snowflake,
+    DuckDB,
+    Dagster,
     Power BI,
     "Fly.io",
     Vercel,
@@ -18,12 +19,11 @@ screenshot: /projects/screenshots/community-energy-flex.png
 role: Solo project
 period: "2026"
 publishedAt: "2026-07-10"
-featured: true
-featuredOrder: 4
+featured: false
 metrics:
-  - { value: "153", label: "tests passing" }
+  - { value: "206", label: "tests passing" }
   - { value: "15", label: "UK grid regions" }
-  - { value: "~£149/yr", label: "case-study saving (synthetic)" }
+  - { value: "4", label: "dbt exposures, maturity high" }
 links:
   github: https://github.com/rosscyking1115/community-energy-flex
   demo: https://after-midnight-beta.vercel.app/
@@ -34,7 +34,9 @@ links:
 The `community-energy-flex` web app doesn't just show "carbon is low at
 02:00" — it says _"run the washing
 machine 02:30–04:00, charge the EV 01:30–04:30, expected saving £0.12 and
-0.14 kg CO₂, high confidence"_, with the assumptions and caveats attached.
+0.14 kg CO₂, strong robustness"_, with the assumptions and caveats attached. The
+indicator is a heuristic robustness band, not a calibrated confidence — the
+v0.2.0 closeout renamed it for exactly that reason.
 
 ## Why it exists
 
@@ -54,20 +56,36 @@ optimiser → a typed API → a front end.
   so you can `curl /v1/optimise` directly.
 - Graceful degradation by design: every live feed is TTL-cached with a
   last-good / sample fallback, so an upstream outage never takes the app down.
-- A dbt/Snowflake warehouse layer with Power BI reporting behind the analytical
-  views.
+- A DuckDB warehouse layer under dbt, with a Power BI semantic model and its own
+  DAX measure layer behind the analytical views. Snowflake exists as a bootstrap
+  DDL script and a second dbt profile target only — nothing here has been built
+  against a live Snowflake account, and the repo forbids saying otherwise.
+- Every downstream consumer declared as a dbt exposure at `maturity: high` —
+  FastAPI, Next.js, Power BI and the action report — so a model change that would
+  break a consumer fails the build. `fct_daily_savings` carries an enforced
+  contract across all 33 columns.
 
-## It closes the loop
+## It closes the loop — on scenarios, not on outcomes
 
-Most planners stop at the forecast. This one keeps score: a forecast-vs-actual
-retro measures whether yesterday's plan _actually_ saved, using realised
-grid data. In the demo period the worst day still saved, the average realised
-95% of forecast — and when the grid came in ~8% dirtier than forecast, the
-plan still realised 108% of its forecast carbon saving.
+Most planners stop at the forecast. This one re-scores a plan under alternative
+carbon curves: take the schedule it chose, replay it against a curve that is
+dirtier, cleaner, noisier or time-shifted, and report how the saving holds up.
+Every scenario in the current set still saves.
+
+What it is not is a measurement of anything that happened. There is no stored
+forecast vintage and no realised grid data behind it — the curves are
+constructed transformations of a sample, and the repo's claim ledger lists
+"the synthetic retro workflow measures realised household savings" as **not
+supported**, with schedule adherence explicitly unobserved. The site used to
+quote ratios from those scenarios as though a plan had been checked against a
+real outcome; the repo runs a CI gate that fails the build if those figures
+appear in its own docs, and this page now honours it.
 
 ## Honest limits
 
 Planning advice only — it does not control appliances, guarantee savings, or
 replace supplier advice. Savings are small per-household by design; the
-worked example (a community centre with four flexible loads) is where shifting
-adds up to ~£149 and ~179 kg CO₂ a year.
+worked example is a community centre with four flexible loads, where a single
+day of shifting comes to £0.41 and 0.49 kg CO₂ on synthetic data. The v0.2.0
+closeout deliberately retired the annualised version of that figure as a lead
+claim, so it is not quoted here either.

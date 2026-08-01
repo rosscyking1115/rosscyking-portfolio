@@ -19,11 +19,11 @@ role: Solo project
 period: "2026"
 publishedAt: "2026-07-12"
 featured: true
-featuredOrder: 1
+featuredOrder: 3
 metrics:
   - { value: "41.4M", label: "journeys unified" }
-  - { value: "1.42×", label: "median strike-day demand" }
-  - { value: "63", label: "dbt data tests" }
+  - { value: "1.42×", label: "median station-day demand" }
+  - { value: "92", label: "dbt data tests" }
 links:
   github: https://github.com/rosscyking1115/tfl-data-engineering
   demo: https://tfl-data-engineering.streamlit.app/
@@ -43,7 +43,8 @@ analytical layer and answers exactly that.
   distinct file schemas (columns renamed, dropped, and re-ordered between
   eras), with per-file reconciliation proving no rows are silently lost.
 - A tested dimensional model: a dbt star schema (`fact_journey`,
-  `dim_station`, `dim_date`) with 63 data tests, including cross-era
+  `dim_station`, `dim_date`) with 92 data tests over 17 models, plus a 129-test
+  Python suite, including cross-era
   station-identity conforming.
 - Isolating the strike effect: a weather-adjusted baseline separates disruption
   from weather (disruption days run about 1.42× median demand, 95% CI 1.24–1.61,
@@ -58,6 +59,27 @@ analytical layer and answers exactly that.
   warehouse, no server, nothing to keep paying for.
 - Ask it in English: an in-app assistant with keyless exact "quick answers",
   plus an optional bring-your-own-key Claude chat over curated, read-only tools.
+- Queryable by an agent, not just a person: the warehouse is exposed through a
+  read-only MCP server, so an LLM agent can ask it questions without being
+  handed credentials or write access.
+
+## The headline is certified, not just published
+
+The disruption figure is the kind of number that quietly drifts once it is in a
+README. So it is pinned instead: a certificate SHA-256-hashes the decision
+record that defines the statistic, the five inputs, the analysis code and the
+result into a single certificate ID, and verification fails if any of them
+moves. The statistic string itself — the median station-day ratio of actual to
+weather-adjusted expected demand — is asserted in code, so relabelling it
+breaks the build rather than the reader's understanding.
+
+Getting there needed the inputs to be byte-reproducible, which meant imposing a
+total order over a dbt-proven unique key and proving three rebuilds identical.
+Around the headline sit a 95% confidence interval from a cluster bootstrap over
+event days (1.24–1.61 across 13 events), a day-of-week-matched placebo returning
+a null median of 1.00 at p < 0.001, and a sensitivity battery over nine weather
+thresholds. The claim is classed as an observed association, and never as
+causation.
 
 ## The Spark ↔ Python boundary
 
