@@ -9,11 +9,10 @@ publishedAt: "2026-07-04"
 featured: false
 metrics:
   - { value: "13-week", label: "runway forecast" }
-  - { value: "150+", label: "tests" }
+  - { value: "167", label: "tests" }
   - { value: "STRIDE", label: "threat model + DPIA" }
 links:
   github: https://github.com/rosscyking1115/cashflow-risk
-  demo: https://cashflow-web-sidu.onrender.com/
 ---
 
 ## The problem
@@ -53,8 +52,18 @@ export/delete. Raw uploads are never stored — only derived results.
 A pure-Python analytics engine behind a FastAPI service, PostgreSQL
 system-of-record with migrations, a Next.js dashboard, and CI running ruff,
 strict mypy, pytest, a migration-apply-and-drift check, and the Next build —
-with SHA-pinned actions. The live demo opens on a synthetic dataset with no
-sign-in (free-tier host; first load can take ~30s).
+with SHA-pinned actions.
+
+The hosted demo was retired on 29 July 2026 and is deliberately not replaced.
+The free Postgres tier expired thirty days after creation, so migrations
+short-circuited, nothing bound the port, and the edge hung for 75–120s rather
+than failing. ADR 0003 records the options and the amendment that followed:
+a paid tier was not authorised, a SQLite fallback was rejected on
+sole-source-of-truth grounds with a do-not-re-propose clause, and a free
+non-expiring Postgres that would have worked was found late and declined on
+portfolio grounds rather than technical ones. The services are suspended, not
+deleted, so the decision is reversible. The screenshot is the console as it
+ran.
 
 ## Honest limits
 

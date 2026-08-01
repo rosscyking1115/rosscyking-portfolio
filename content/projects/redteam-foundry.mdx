@@ -1,6 +1,6 @@
 ---
 title: redteam-foundry
-summary: "Adversarial benchmark foundry for LLM safety (pip install redteam-foundry): attack-corpus audits, defence-impact measurement, staleness scoring, and over-refusal tests against 2026-era LLMs — with cross-judge validation and bootstrap confidence intervals."
+summary: "Adversarial benchmark foundry for LLM safety (pip install redteam-foundry): 1,883 prompts from four pinned corpora across 12 evaluation cells, with bootstrap confidence intervals and per-run API cost. Attack success came out at 0–4% — a negative result, so a known-vulnerable control model was pushed through the identical pipeline and scored 80%, which is what makes the zero mean something."
 stack:
   [
     Python,
@@ -15,15 +15,17 @@ stack:
 role: Solo project
 period: "2026"
 publishedAt: "2026-07-07"
-featured: false
+featured: true
+featuredOrder: 2
 metrics:
-  - { value: "12", label: "evaluation cells" }
+  - { value: "1,883", label: "pinned adversarial prompts" }
   - { value: "0–4%", label: "attack success" }
-  - { value: "+1.00", label: "cross-judge κ" }
+  - { value: "80%", label: "positive-control ASR" }
 terminal:
   - "$ redteam-foundry run --matrix v1   # 12 cells: 2 models × 2 corpora"
   - "» attack success: 0–4% across all 12 cells"
-  - "» cross-judge κ = +1.00 — the metric is well-posed"
+  - "» positive control (llama2-uncensored): 80% [72, 87] — the pipeline can detect"
+  - "» cross-judge κ = +0.935 on the control; undefined in 11 of 12 cells"
   - "» exports to a UK AISI Inspect eval log"
 links:
   github: https://github.com/rosscyking1115/redteam-foundry
@@ -51,9 +53,25 @@ Published adversarial prompts succeed between 0% and 4% of the time across all 1
 - Scoring pipeline: rule-based pre-screen → LLM judge → independent cross-judge for validation.
 - Statistical rigour: ASR with 95% percentile-bootstrap confidence intervals, Cohen's κ and Krippendorff's α for inter-judge agreement, and real API cost per run.
 
-### Cross-judge validation
+### Cross-judge validation, and a κ I had to withdraw
 
-Every attack-success verdict is scored by one judge model and independently re-scored by a second. Cross-judge κ = +1.00 across all 12 cells on ASR — the metric is well-posed. The harness also discovered that `refusal_rate` is _not_ well-posed: the two judges agree on whether an attack succeeded, but disagree — sometimes worse than chance — on whether a response was a "refusal" in the indirect-injection setting, because there are two things that can be refused. This is documented in METHODOLOGY.md, not quietly omitted.
+Every attack-success verdict is scored by one judge model and independently re-scored by a second. This used to be reported as "κ = +1.00 across all 12 cells — the metric is well-posed", and that was wrong.
+
+A κ of +1.00 sounds like two judges agreeing perfectly. What actually happened in 11 of the 12 cells is that both judges labelled every single case identically — because there were no successes to disagree about. That makes κ a 0/0 that convention fills in as 1.0. It is undefined, not perfect, and quoting it as evidence of a well-posed metric was measuring nothing.
+
+The agreement claim now rests where there is something to agree about: the positive control, where the judges scored **κ = +0.935** over 98 cases with 79 positives each. A standalone finding in the repo — _what does this metric return when nothing happened?_ — catalogues six metrics satisfied by the absence of the thing they measure, three of which I introduced while fixing the previous one. A `--check` mode now fails the build if the degenerate cells are reported as agreement.
+
+The harness separately found that `refusal_rate` is _not_ well-posed: the two judges agree on whether an attack succeeded, but disagree — sometimes worse than chance — on whether a response was a "refusal" in the indirect-injection setting, because there are two things that can be refused. Documented in METHODOLOGY.md, not quietly omitted.
+
+### Making a null result mean something
+
+Attack success of 0–4% is only interesting if the pipeline can detect success at all. Three controls were pre-registered and run:
+
+- **Positive control — passed.** `llama2-uncensored:7b` on AdvBench through the identical pipeline: **80% ASR** with a [72, 87] confidence interval. The harness works.
+- **AgentDojo positive control — failed.** 2% against a pre-registered 20% bar. That arm is recorded as **uncontrolled**: the result there is incapacity, not demonstrated resistance, and it is labelled that way in four places.
+- **Detector control — inconclusive.** 38% against a 70% bar; the compliance instruction did not take.
+
+Both failures are kept in the frozen record rather than dropped, and the staleness scores moved as a consequence of the κ correction (AdvBench 0.38 → 0.43).
 
 ### Inspect AI compatibility
 

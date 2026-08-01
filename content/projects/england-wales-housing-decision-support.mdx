@@ -1,17 +1,16 @@
 ---
 title: England & Wales Housing Decision Support
-summary: "Explainable where-to-live decision support for England & Wales. A tested dbt + DuckDB engine turns nine open-data sources into five transparent 0–100 indicators across 7,264 neighbourhoods, every score shown beside the raw figure it came from, served through a public FastAPI and a Next.js site with ~7k programmatic area pages. 222 dbt data tests + 2 unit tests, a versioned cross-runtime scoring contract, Dagster-orchestrated refresh, published lineage docs."
+summary: "Explainable where-to-live decision support for England & Wales. A tested dbt + DuckDB engine turns nine open-data sources into five transparent 0–100 indicators across 7,264 neighbourhoods, every score shown beside the raw figure it came from, served through a public FastAPI and a Next.js site with ~7k programmatic area pages. 228 dbt data tests + 2 unit tests, a versioned cross-runtime scoring contract, Dagster-orchestrated refresh, published lineage docs."
 stack: [dbt, DuckDB, Dagster, FastAPI, "Fly.io", Next.js, Vercel, GitHub Actions, Python]
 screenshot: /projects/screenshots/england-wales-housing-decision-support.png
 role: Solo project
 period: "2026"
 publishedAt: "2026-07-11"
-featured: true
-featuredOrder: 2
+featured: false
 metrics:
   - { value: "9", label: "open-data sources" }
   - { value: "7,264", label: "MSOAs scored" }
-  - { value: "222", label: "dbt data tests" }
+  - { value: "228", label: "dbt data tests" }
 links:
   github: https://github.com/rosscyking1115/england-wales-housing-decision-support
   demo: https://uk-housing-decision-support.vercel.app
@@ -44,7 +43,7 @@ England & Wales neighbourhoods:
   areas are reported as _not covered_, never given a favourable default
 - Convenience: 437k OpenStreetMap amenities, nearest + walkable count
 
-Sources → staging → intermediate → marts, tested at every layer: 222 dbt
+Sources → staging → intermediate → marts, tested at every layer: 228 dbt
 data tests plus 2 dbt unit tests, with lineage and column-level docs published
 to GitHub Pages on every push. Each source is fixture-default for fast,
 reproducible CI with a real-data toggle for production builds.

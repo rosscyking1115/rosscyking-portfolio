@@ -1,6 +1,6 @@
 ---
 title: Agent Release Safety Gates
-summary: "An installable release-gate for AI agents (pip install agent-release-gates): replay known incidents, apply policy-as-code gates, and produce ship / warn / block evidence — as a CLI that fails CI, a UK AISI Inspect eval, or a runner pointed at your own agent's traces. Backed by a synthetic evaluation lab: 358 golden cases, 60 red-team cases, TechQA/WixQA public RAG validation, safety-classifier and tool-governance checks, and six baseline-vs-intervention safety studies."
+summary: "An installable release-gate for AI agents (pip install agent-release-gates): replay known incidents, apply policy-as-code gates, and produce ship / warn / block evidence — as a CLI that fails CI, a UK AISI Inspect eval, or a runner pointed at your own agent's traces. Its most useful result is a negative one: the project's own synthetic benchmark turned out to be circular by construction, and the same retriever scores about twenty points lower on 640 external public cases. The external number is the one reported."
 stack:
   [
     Python,
@@ -18,11 +18,12 @@ screenshot: /projects/screenshots/agent-release-gates.png
 role: Solo project
 period: "2026"
 publishedAt: "2026-07-08"
-featured: false
+featured: true
+featuredOrder: 1
 metrics:
-  - { value: "358", label: "golden cases" }
-  - { value: "90.91%", label: "safety recall" }
-  - { value: "100%", label: "side-effect block" }
+  - { value: "79.92%", label: "external retrieval hit@3" }
+  - { value: "640", label: "public RAG cases" }
+  - { value: "309", label: "tests" }
 links:
   github: https://github.com/rosscyking1115/agent-release-gates
   demo: https://agent-release-gates.streamlit.app/
@@ -46,7 +47,7 @@ The core install is lean (just `pydantic`); the FastAPI evidence service and Str
 
 ## Evaluate your own agent
 
-It isn't tied to my synthetic agent. Export a real agent's results — generic logs or LangChain/LangSmith-style traces — and score them against the gates, or drive a live LLM through the replay against any OpenAI-compatible endpoint. The project ships candidate-results exporters and schemas so an external agent can be gated the same way.
+It isn't tied to my synthetic agent. Export a real agent's results — generic logs, LangChain/LangSmith traces, OpenAI Agents SDK run results, or LangGraph final states — and score them against the gates, or drive a live LLM through the replay against any OpenAI-compatible endpoint. The project ships candidate-results exporters and schemas so an external agent can be gated the same way.
 
 ## How it works
 
@@ -59,11 +60,21 @@ incidents ──▶ replay matrix ──▶ policy gates ──▶ ship / warn /
 
 The first module turns redacted synthetic incidents into regression fixtures. 8 seeded incidents are replayed on every change, with a 100% closure rate and 0 replay must-not violations, each producing a release-gate decision and an incident memo.
 
-## Evaluation evidence (the layer underneath)
+## The finding: my own benchmark was marking its own homework
 
-The controlled benchmark covers 358 synthetic golden cases and 60 red-team cases across 24 runbook sections and 180 synthetic tickets, plus compact public RAG tracks (160 TechQA, 80 WixQA) evaluated separately. Headline results: 100% retrieval hit rate@3, a safety classifier at 90.91% recall with 0 high-severity false negatives, and 100% block + audit rate on unapproved side-effecting tool calls.
+The project's synthetic benchmark scored the retriever at 99.31%, and for a while that was the headline. It shouldn't have been. The generator templates each query from the same variables as the gold answer, so the query is a projection of the thing it is meant to find — the benchmark measures the generator, not the retriever. Two of the four retrievers score a flat 100% on it, which is the tell.
 
-On top of the benchmark sit six baseline-vs-intervention safety studies (instruction hierarchy, action-risk gates, safety-classifier review policy, RAG grounding, memory/context pollution, and goal conflict), plus reviewed OpenAI and Anthropic judge-calibration runs.
+Run the same retriever against public data it did not generate and it scores **79.92% hit@3** over **640 cases and 510 documents** (TechQA 480 cases at 80.73%, WixQA 160 at 77.50%), with 69.61% top-1 citation and a 40.47% case failure rate. The largest single failure mode: 85 impossible questions answered instead of abstained.
+
+That roughly twenty-point drop is the useful result, so the external number is the one reported and every synthetic figure is labelled in-corpus wherever it appears.
+
+`docs/evaluation_integrity.md` in the repo is the full self-audit — six findings against my own work, in dependency order, including that three reported metrics were mathematically one measurement, that the "improved" retriever was an alias dictionary fitted to the eval strings, and that the safety classifier whitelists eval cases by name. A seventh problem was found the same way: a committed verdict had declared an input file that did not exist, and the regenerated run moved one incident from block to review. A test now fails the build on any machine-local path under `reports/`.
+
+## What the benchmark still does
+
+It remains a regression fixture, which is a real job — it covers 358 golden cases, 60 red-team cases, 24 runbook sections and 180 synthetic tickets, and it catches behavioural drift between releases. On top of it sit six baseline-vs-intervention safety studies (instruction hierarchy, action-risk gates, safety-classifier review policy, RAG grounding, memory/context pollution, and goal conflict), plus judge-calibration runs across three providers — OpenAI, Anthropic, and a local `llama3.1:8b`, which scored 91.67% against the frontier models' 95.83–100%.
+
+The in-corpus safety-classifier recall of 90.91% is deliberately not quoted as a headline here. It was measured with thirteen benign signals live, four of which match single eval cases by name; the repo expects it to fall once those are removed, and re-measuring it is an open item.
 
 ## Key finding
 
@@ -73,10 +84,10 @@ Safety scores aren't meaningful on their own. The lab reports over-review cost, 
 
 - pip-installable package + an `agent-safety` CLI with CI-friendly exit codes
 - UK AISI **Inspect** eval for the incident-replay suite
-- Candidate-results exporters (generic logs + LangChain/LangSmith traces)
+- Candidate-results exporters (generic logs, LangChain/LangSmith traces, OpenAI Agents SDK run results, and LangGraph final states)
 - FastAPI evidence service and Streamlit dashboard (opt-in extras)
 - GitHub Pages report + PDF, Docker / Compose, and CI running lint, tests, deterministic report regeneration, and an OpenTelemetry smoke test
 
 ## Honest limits
 
-The benchmark is synthetic and still partly templated; the public TechQA/WixQA tracks use compact samples, not the full datasets. Human-review labels are currently simulated workflow labels — independent reviewer labels are prepared but not yet published — and the hosted-model evidence is judge-calibration, not a broad multi-model agent comparison. Each limit is documented in the repo rather than presented as a production claim.
+The synthetic benchmark is circular by construction and is not retrieval evidence — it is a regression fixture, and every figure drawn from it is labelled in-corpus. The public TechQA/WixQA tracks are samples, not the full datasets. The safety-classifier recall was measured with case-matching signals still live and should be expected to fall when they are removed. The incident-replay suite is 8 self-authored samples: a conformance smoke check, not a benchmark that can rank models. Human-review labels are simulated workflow labels — independent reviewer labels are prepared but not published — and the hosted-model evidence is judge-calibration, not a broad multi-model agent comparison. The `mypy --strict` gate covers the 12 modules where a type error would corrupt a published number, not the other ~61. Each limit is documented in the repo rather than presented as a production claim.
