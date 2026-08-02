@@ -113,7 +113,7 @@ const numbers = [
     <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
       Colophon
     </h1>
-    <p class="text-muted-foreground mt-4 text-lg leading-relaxed text-pretty">
+    <p class="text-body mt-4 text-lg leading-relaxed text-pretty">
       A project write-up pointed at the site itself. It leads with what went wrong, for
       the same reason every other write-up here does.
     </p>
@@ -167,7 +167,7 @@ const numbers = [
   <Container class="py-14" size="sm">
     <section data-run-log>
       <IndexMark mark="01" label="The run log that fails" />
-      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+      <p class="text-body mt-3 text-sm leading-relaxed">
         Findings against my own work on this site, in the order they were made. Each one
         was caught by diffing, measuring or testing — none by looking at the page.
       </p>
@@ -182,9 +182,7 @@ const numbers = [
                 <h2 class="font-display text-base font-semibold tracking-tight">
                   {entry.found}
                 </h2>
-                <p class="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-                  {entry.detail}
-                </p>
+                <p class="text-body mt-1.5 text-sm leading-relaxed">{entry.detail}</p>
                 <p class="text-muted-foreground mt-2 border-l-2 border-current/20 pl-3 font-mono text-xs leading-relaxed">
                   {entry.cost}
                 </p>
@@ -197,7 +195,7 @@ const numbers = [
 
     <section class="mt-14" data-stack-table>
       <IndexMark mark="02" label="Stack" />
-      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+      <p class="text-body mt-3 text-sm leading-relaxed">
         The pieces that decide how the site behaves. Versions are read from package.json
         at build time, so a bump cannot leave this page claiming the old one.
       </p>
@@ -208,7 +206,7 @@ const numbers = [
               <p class="font-mono text-sm">
                 {item.name} <span class="text-muted-foreground">{item.version}</span>
               </p>
-              <p class="text-muted-foreground text-sm leading-relaxed">{item.role}</p>
+              <p class="text-body text-sm leading-relaxed">{item.role}</p>
             </div>
           ))
         }
@@ -217,7 +215,7 @@ const numbers = [
 
     <section class="mt-14" data-limits>
       <IndexMark mark="03" label="Honest limits" />
-      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+      <p class="text-body mt-3 text-sm leading-relaxed">
         Every one of these is read off something the repository already records — a config
         note, a gate, a marked slot — rather than inferred. If one is wrong, the record is
         wrong.

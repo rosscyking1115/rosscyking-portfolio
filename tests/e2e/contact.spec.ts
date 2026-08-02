@@ -100,8 +100,14 @@ test.describe("contact page — UI", () => {
     // keeps what they were sent without a round trip.
     expect(new URL(page.url()).pathname).toBe("/contact");
 
-    // A receipt with no time on it is a thank-you note.
+    // A receipt with no time on it is a thank-you note, and one with no
+    // reference is not what the spec asks for — "a receipt with a reference,
+    // in place". The reference is derived from the send time rather than
+    // returned by the action, which the page says out loud.
     await expect(receipt.locator("[data-receipt-time]")).not.toBeEmpty();
+    await expect(receipt.locator("[data-receipt-reference]")).toHaveText(
+      /^RK-\d{6}-\d{4}$/,
+    );
 
     // AND IT DOES NOT CLAIM WHAT THE ACTION DOES NOT DO. src/actions/index.ts
     // sends one email, to Ross, with replyTo set to the sender — no copy goes

@@ -3,23 +3,24 @@ import type { ContentState } from "../../lib/projects";
 import { cn } from "../../lib/utils";
 
 /**
- * One of the three content states (design spec §03 R6), as a token.
+ * One of the three content states (§03 R6), as the spec's status pill.
  *
- *   LIVE      a dot, in --state-live
- *   RUN LOG   a solid border
- *   ARCHIVED  a dashed border
+ *   LIVE      1px #e2e3e7 border, 5px dot #3f9a5f (#66b587 dark)
+ *   RUN LOG   1px SOLID #e2e3e7 border, text #5c6068
+ *   ARCHIVED  1px DASHED #cdd0d6 border, text #5c6068
+ *
+ * Built the first time as 4px-radius rectangles from the mock alone; the spec
+ * README — which arrived later and is authoritative — gives pills at 99px and
+ * names a different border colour for ARCHIVED. The dashed border is the only
+ * dashed border on the site apart from an unfilled data slot, which is what
+ * makes it read as "this one stopped" rather than as decoration.
+ *
+ * SIZE: 12px, not the spec's 10px. See the conflict note in global.css.
  *
  * The state is never a prop anyone chooses by hand — it comes from
- * `projectState()`, which derives it from the registry fields the validator
- * already gates. Finding 06 of the design audit was that this vocabulary did
- * not exist at all: one archived project rendered identically to nine live
- * ones, and two projects with no demo swapped in a run log with nothing to say
- * so. Three real states, one visual treatment.
- *
- * WHY A BORDER AND NOT A COLOUR for the other two. Colour is already carrying
- * the metric modes and the addressing states, and a fourth colour axis on the
- * same row stops being readable. Border style is free, works in both themes
- * without a new token, and survives a monochrome print.
+ * `projectState()`, derived from registry fields the validator already gates.
+ * Finding 06 of the audit was that this vocabulary did not exist at all: one
+ * archived project rendered identically to nine live ones.
  */
 interface Props {
   state: ContentState;
@@ -31,23 +32,24 @@ const { state, class: className } = Astro.props;
 const STYLES: Record<ContentState, string> = {
   LIVE: "border-border",
   "RUN LOG": "border-border",
-  ARCHIVED: "border-border border-dashed",
+  // #cdd0d6 — the reading border, not the hairline. A dashed hairline is
+  // almost invisible; the spec picks the darker of the two on purpose.
+  ARCHIVED: "border-instrument-reading-border border-dashed",
 };
 ---
 
 <span
   class={cn(
-    // 12px floor: §05 puts a hard minimum on any mono label carrying meaning,
-    // and this one is the difference between "you can try this" and "you can
-    // read what it did". Below that it would be decoration.
-    "text-muted-foreground inline-flex items-center gap-1.5 rounded border px-1.5 py-0.5 font-mono text-xs tracking-wider whitespace-nowrap uppercase",
+    "text-muted-foreground rounded-pill inline-flex items-center gap-1.5 border px-3 py-0.5 font-mono text-label tracking-wider whitespace-nowrap uppercase",
     STYLES[state],
     className,
   )}
 >
   {
     state === "LIVE" && (
-      <span class="bg-state-live size-1.5 shrink-0 rounded-full" aria-hidden="true" />
+      /* 5px, per the spec. Larger than the 6px dot used elsewhere on the site
+         would be, because inside a pill it competes with the cap height. */
+      <span class="bg-state-live size-[5px] shrink-0 rounded-full" aria-hidden="true" />
     )
   }
   {state}

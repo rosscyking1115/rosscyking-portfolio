@@ -83,9 +83,7 @@ const TOKEN: Record<RecordEntry["status"], string> = {
                 {entry.organisation}
               </p>
               {entry.detail && (
-                <p class="text-muted-foreground mt-2 text-sm leading-relaxed">
-                  {entry.detail}
-                </p>
+                <p class="text-body mt-2 text-sm leading-relaxed">{entry.detail}</p>
               )}
               {entry.url && (
                 /*

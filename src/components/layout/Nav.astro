@@ -87,6 +87,16 @@ const social = [
     </div>
   </Container>
 
+  {
+    /*
+      The progress hairline (spec: "Motion"). It sits under the header because
+      that is where a position readout belongs — pinned to the thing that is
+      also pinned. See .progress-hairline in global.css for why it has no
+      transition and why it stays on under reduced motion.
+    */
+  }
+  <div class="progress-hairline" data-progress aria-hidden="true"></div>
+
   {/* Mobile menu */}
   <div id="mobile-menu" hidden class="border-border/60 bg-background border-t md:hidden">
     <Container>

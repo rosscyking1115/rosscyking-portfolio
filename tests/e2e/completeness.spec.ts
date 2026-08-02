@@ -185,10 +185,29 @@ test.describe("completeness — now building (finding #6)", () => {
   });
 });
 
-test.describe("completeness — lens switcher (finding #2)", () => {
-  test("matches the ported control rather than a look-alike", async ({ page }) => {
-    // Would have caught: the switcher was rewritten from scratch instead of
-    // ported, losing the caption, the mono face, and the tinted active state.
+test.describe("completeness — the narrowing control (finding #2)", () => {
+  /**
+   * REWRITTEN, AND ITS PREMISE WAS INVERTED.
+   *
+   * The original assertion read: "a 10% tint keeps the label in primary. The
+   * look-alike filled the pill solid and inverted the text, which reads as a
+   * different control." It failed the moment the chip was built to the design
+   * spec — because the spec draws exactly what that sentence calls a
+   * look-alike:
+   *
+   *     selected — bg #3d5a73, text #fafafb, no border
+   *
+   * The tint was carried over from the Next lens switcher during the port and
+   * then defended in a test, so the port's incidental styling became the thing
+   * the suite protected the design FROM. That is worth stating plainly: a test
+   * can pin the wrong thing so firmly that the right thing looks like a
+   * regression.
+   *
+   * The finding underneath survives — the control was once rewritten from
+   * scratch rather than ported, losing its caption and its mono face — and both
+   * of those are still asserted. What changed is which active state is correct.
+   */
+  test("is the spec's chip: mono, pill, solid when selected", async ({ page }) => {
     await page.goto("/");
 
     const group = page.getByRole("group", { name: "View this portfolio by role" });
@@ -201,15 +220,19 @@ test.describe("completeness — lens switcher (finding #2)", () => {
     const font = await active.evaluate((el) => getComputedStyle(el).fontFamily);
     expect(font).toMatch(/Mono/i);
 
-    // A 10% tint keeps the label in primary. The look-alike filled the pill
-    // solid and inverted the text, which reads as a different control.
-    await expect(active).toHaveCSS("color", "rgb(61, 90, 115)");
-    const activeBg = await active.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(activeBg, "active pill should be tinted, not solid primary").not.toBe(
-      "rgb(61, 90, 115)",
-    );
+    // Selected: solid accent, inverted label, no border.
+    await expect(active).toHaveCSS("background-color", "rgb(61, 90, 115)");
+    await expect(active).toHaveCSS("color", "rgb(250, 250, 251)");
+    await expect(active).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
 
-    await expect(inactive).toHaveCSS("font-weight", "400");
-    await expect(active).toHaveCSS("font-weight", "500");
+    // Rest: transparent, bordered, muted.
+    await expect(inactive).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(inactive).toHaveCSS("border-top-color", "rgb(205, 208, 214)");
+
+    // A pill, not a rounded rectangle.
+    const radius = await active.evaluate((el) =>
+      Number.parseFloat(getComputedStyle(el).borderTopLeftRadius),
+    );
+    expect(radius, "the chip is not a pill").toBeGreaterThanOrEqual(99);
   });
 });

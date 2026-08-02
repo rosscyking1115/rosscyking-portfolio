@@ -26,6 +26,24 @@
   --background: #fafafb;
   --foreground: #1c1e22;
 
+  /**
+   * THE THIRD TEXT LEVEL, and the one this site was missing entirely.
+   *
+   * docs/DESIGN-SPEC-README.md specifies three: foreground #1c1e22 for the
+   * thing being read, BODY #3f434a for prose, and muted #5c6068 for labels and
+   * receded titles. Built with only two, every paragraph on the site sat at the
+   * label level — so a standfirst and a mono caption carried the same weight,
+   * and the "receded title, foreground metric" rule had nothing between them to
+   * work with.
+   *
+   * The dark value is DERIVED, not specified: the README's dark table lists a
+   * foreground and a muted and stops. It sits at the same proportion of the way
+   * between them as #3f434a does in light (~40%), because "layout, measure,
+   * type scale, spacing … are identical in both themes" and a theme with two
+   * text levels where the other has three is not a token swap.
+   */
+  --body: #3f434a;
+
   --muted: #f0f1f3;
   --muted-foreground: #5c6068;
 
@@ -38,6 +56,9 @@
 
   --primary: #3d5a73;
   --primary-foreground: #fafafb;
+  /* The accent's hover, which the site did not have — a filled button changed
+     its shadow and nothing else. Specified in the spec README's colour table. */
+  --primary-hover: #324b60;
 
   --secondary: #f0f1f3;
   --secondary-foreground: #1c1e22;
@@ -48,7 +69,25 @@
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(0.985 0 0);
 
+  /* Caution / CLS-risk marker. Declared because the spec's palette has it;
+     nothing consumes it yet, and a token with no consumer is honest as long as
+     it is not pretending to be in use. */
+  --caution: #8a5a2b;
+
+  /* ---------- Radius, by ROLE rather than by size ----------
+   * The spec gives four values and ties each to a kind of thing: controls 5px,
+   * tables and panels 6px, cards 7–8px, pills 99px. This site had one --radius
+   * of 8px with sm/md/lg derived arithmetically from it, so a chip, a button, a
+   * card and a table all rounded off the same number and the hierarchy the four
+   * values encode did not exist.
+   *
+   * `--radius` is kept because shadcn's ported primitives read it; everything
+   * that follows the spec uses the named tokens. */
   --radius: 0.5rem;
+  --radius-control: 5px;
+  --radius-panel: 6px;
+  --radius-card: 8px;
+  --radius-pill: 99px;
 
   /* ---------- Motion (design spec §01) ----------
    * Three durations, one easing, and nothing else. The names say what the
@@ -96,6 +135,10 @@
   --background: #151619;
   --foreground: #e7e8ea;
 
+  /* Derived, not specified — see the note on the light value. Same proportion
+     of the way from foreground to muted as #3f434a is in light. */
+  --body: #c9cbd0;
+
   --muted: #212327;
   --muted-foreground: #9ca0a8;
 
@@ -108,6 +151,9 @@
 
   --primary: #8fa9c2;
   --primary-foreground: #151619;
+  /* Derived: the spec names #324b60 for light and gives no dark counterpart.
+     Light darkens on hover, so dark lightens by the same step. */
+  --primary-hover: #a3b8cb;
 
   --secondary: #212327;
   --secondary-foreground: #e7e8ea;
@@ -117,6 +163,8 @@
 
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.985 0 0);
+
+  --caution: #c08a52;
 
   /* Instrument states, dark. Note the direction of --instrument-chrome: once a
    * reading instrument has LIFTED to #212327, its own chrome bar has to step
@@ -135,6 +183,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
+  --color-body: var(--body);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
 
@@ -147,6 +196,8 @@
 
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-caution: var(--caution);
 
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -162,6 +213,39 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
+  /* The role-named radii, as `rounded-control` / `rounded-panel` /
+     `rounded-card` / `rounded-pill`. */
+  --radius-control: var(--radius-control);
+  --radius-panel: var(--radius-panel);
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+
+  /* ---------- Type scale, from the spec's own list ----------
+   * "Scale in use (px): 92, 22, 20, 16 / 15 / 14.5, 13.5 / 13 / 12.5,
+   *  12 / 11.5 / 11 / 10.5."
+   *
+   * Tailwind's defaults are 18 / 16 / 14 / 12, which is a coarser ladder with
+   * different rungs — so body copy landed at 18px where the spec says 16, and
+   * secondary at 14 where it says 13.5. Named for the ROLE, because "text-sm"
+   * says nothing about whether a thing is prose or a label.
+   *
+   * The mono sizes stop at 11px on purpose. The spec's component note asks for
+   * 10px status pills, and its own accessibility contract says "12px minimum
+   * for any mono label carrying meaning" — a status token carries meaning, so
+   * the contract wins and the conflict is recorded in the status component. */
+  --text-band: 92px;
+  --text-step: 22px;
+  --text-bio: 20px;
+  --text-body: 16px;
+  --text-body-sm: 15px;
+  --text-body-xs: 14.5px;
+  --text-secondary: 13.5px;
+  --text-secondary-sm: 13px;
+  --text-secondary-xs: 12.5px;
+  --text-label: 12px;
+  --text-label-sm: 11.5px;
+  --text-mono-min: 11px;
+
   --font-sans:
     var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     sans-serif;
@@ -173,6 +257,12 @@
   /* Near-flat elevation ramp. Resting cards use shadow-xs; hover uses shadow-lift. */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-lift: 0 6px 20px -8px rgb(0 0 0 / 0.12);
+
+  /* THE READING SHADOW, named. It is the same value as --shadow-lift, and that
+     is the point: the instrument was carrying --shadow-xs, a 1px hairline
+     shadow, where the spec asks for `0 6px 20px -8px rgb(0 0 0 / .12)`. The
+     right value was already in the file under a name nothing pointed at. */
+  --shadow-reading: 0 6px 20px -8px rgb(0 0 0 / 0.12);
 
   /* Motion and instrument tokens, exposed as utilities. `ease-instrument` is
    * the ONLY easing any transition on this site may use. */
@@ -354,7 +444,12 @@
   --instrument-title: var(--foreground);
   border-color: var(--instrument-reading-border);
   background-color: var(--instrument-reading-surface);
-  box-shadow: var(--shadow-xs);
+  /* --shadow-reading, not --shadow-xs. The spec gives
+     `0 6px 20px -8px rgb(0 0 0 / .12)` for the reading state; this carried a
+     1px hairline shadow instead, so a reading instrument in light was marked
+     by its border alone and the elevation half of the state did nothing. The
+     correct value was already in the file, under a name nothing used. */
+  box-shadow: var(--shadow-reading);
 }
 
 .dark .instrument[data-reading],
@@ -430,6 +525,74 @@
     background-color: transparent;
   }
 }
+
+/* ---------- The header progress hairline ----------
+ * The ONE continuous element the motion contract allows, and it is allowed
+ * because it is not an animation:
+ *
+ *   "The one continuous element is the 1px progress hairline under the header.
+ *    It is a position readout, not an animation — it has no transition and it
+ *    stays on under reduced motion."
+ *
+ * Both of those are load-bearing and both are unusual. No transition, because a
+ * readout that lags is lying about where you are. On under reduced motion,
+ * because it is reporting a position rather than moving to attract attention —
+ * the same reason a scrollbar stays.
+ *
+ * Driven by `scroll()` on the document rather than `view()` on an element, so
+ * it measures the page and not itself. `transform: scaleX()` is the cheap way
+ * to do this — and it is banned by "nothing translates", so it animates
+ * `width` instead. A width animation on a 1px bar composited alone costs
+ * nothing measurable and keeps the contract intact.
+ *
+ * Where scroll-driven animation is unsupported the bar simply never grows,
+ * which is the reduced-motion state and a complete design rather than a
+ * degraded one. */
+.progress-hairline {
+  height: 1px;
+  width: 0;
+  background: var(--primary);
+}
+
+@supports (animation-timeline: scroll()) {
+  .progress-hairline {
+    animation: progress-hairline linear both;
+    animation-timeline: scroll(root block);
+    animation-duration: auto;
+  }
+}
+
+@keyframes progress-hairline {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* ---------- TWO CONFLICTS IN THE SPEC, AND HOW THEY ARE RESOLVED ----------
+ * docs/DESIGN-SPEC-README.md contradicts itself twice on mono type size, and
+ * both are resolved the same way, here, once:
+ *
+ *   Status tokens   "(pills, 99px radius, 10px mono)"
+ *   Chips           "Geist Mono 400 11px"
+ *   Contract        "TYPE — 12px minimum for any mono label carrying meaning.
+ *                    Below that it is decoration and should not exist."
+ *
+ * A status token IS the R6 vocabulary and a filter chip IS the narrowing
+ * control's only label; both carry meaning by the contract's own definition.
+ * So both are set at 12px and the two component values are not honoured.
+ *
+ * The contract wins because it is framed as one — a rule about what the site
+ * may never do, as against a value describing what a component looks like. A
+ * document that says "recreate pixel-accurately" and also says "below 12px it
+ * should not exist" cannot have both, and shipping 10px labels to satisfy the
+ * smaller claim would break the larger one.
+ *
+ * FLAGGED FOR ROSS rather than settled: if he wants the literal 10px and 11px,
+ * this is the one place to change and the contract line is the thing he would
+ * be overruling. */
 
 /* ---------- Inline prose links ----------
  * A link inside a paragraph must be distinguishable WITHOUT colour (WCAG 1.4.1),

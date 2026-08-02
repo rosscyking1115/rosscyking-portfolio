@@ -247,6 +247,26 @@ if (new Set(orders).size !== orders.length) {
     } else if (withdrawn) {
       fail(slug, `has a \`withdrawn\` value but mode is ${mode}, not CORRECTED`);
     }
+
+    // A CONTROLLED headline renders "result vs control, side by side", so it
+    // needs the control. redteam-foundry's own write-up states the principle:
+    // "a negative result only means something if the pipeline can detect a
+    // positive" — a 0–4% attack success with no 80% beside it is exactly the
+    // unsupported null the project exists to argue against.
+    const control = spec.headline.control;
+    if (mode === "CONTROLLED") {
+      if (!control) {
+        fail(slug, `headline.mode is CONTROLLED but no \`control\` metric is named`);
+      } else if (!(entry.data.metrics ?? []).some((m) => m.label === control)) {
+        const available = (entry.data.metrics ?? []).map((m) => m.label).join('", "');
+        fail(
+          slug,
+          `headline.control "${control}" is not a published metric — the MDX has "${available}"`,
+        );
+      }
+    } else if (control) {
+      fail(slug, `has a \`control\` metric but mode is ${mode}, not CONTROLLED`);
+    }
   }
 
   // Every project resolves to exactly one content state (spec §03 R6), and the

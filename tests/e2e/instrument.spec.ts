@@ -437,15 +437,20 @@ test.describe("the reading line — addressing without a pointer (spec §02)", (
     const page = await context.newPage();
     await page.goto("/projects");
 
+    // SCOPED TO INSTRUMENTS. This counted every scroll-driven animation on the
+    // page, which was true of the site until the header progress hairline
+    // landed — that is also scroll-driven, is also allowed, and runs on every
+    // device by design. An assertion about the reading line has to name the
+    // reading line rather than the mechanism it happens to share.
     const running = await page.evaluate(
       () =>
-        document
-          .getAnimations()
-          .filter(
-            (animation) =>
-              animation.timeline &&
-              animation.timeline.constructor.name !== "DocumentTimeline",
-          ).length,
+        document.getAnimations().filter((animation) => {
+          if (!animation.timeline) return false;
+          if (animation.timeline.constructor.name === "DocumentTimeline") return false;
+          const effect = animation.effect;
+          const target = effect instanceof KeyframeEffect ? effect.target : null;
+          return Boolean(target?.closest("[data-instrument]"));
+        }).length,
     );
     expect(running, "the reading line is running on a pointer device").toBe(0);
 
