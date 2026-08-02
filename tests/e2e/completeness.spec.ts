@@ -122,37 +122,56 @@ test.describe("completeness — featured showcase (finding #5)", () => {
    * mode worth gating, so it is now asserted as a property of every surface at
    * once rather than as a property of this component's animation.
    */
-  test("no surface was skipped: cards are complete on arrival, everywhere", async ({
+  test("no surface was skipped: the arrival is on the rack and nowhere else", async ({
     page,
   }) => {
-    // Would have caught the original finding — the showcase differing from
-    // Hero and /projects after a site-wide motion change — and now also
-    // catches the inverse, a reveal surviving on one surface after removal.
-    for (const [route, selector] of [
-      ["/", '[data-lens-panel="all"] article'],
-      ["/projects", "[data-project] article"],
-    ] as const) {
-      await page.goto(route);
-      const cards = page.locator(selector);
-      await expect(cards, `${route} renders no cards at all`).not.toHaveCount(0);
-
-      const held = await cards.evaluateAll((els) =>
-        els
-          .map((el, i) => {
-            const style = getComputedStyle(el);
-            return {
-              i,
-              opacity: Number(style.opacity),
-              transform: style.transform,
-              animation: style.animationName,
-            };
-          })
-          .filter(
-            (card) =>
-              card.opacity < 1 || card.transform !== "none" || card.animation !== "none",
-          ),
+    // REWRITTEN A SECOND TIME, AND THE ASSERTION HAS NOW BEEN INVERTED TWICE.
+    //
+    //   v1  every card HAS an entrance   (the original finding: three <FadeIn>
+    //       wrappers dropped, one component skipped)
+    //   v2  no card has one              (§01 banned arrivals outright)
+    //   v3  the rack has one, and only the rack   (Ross, 2 Aug 2026)
+    //
+    // Recorded rather than tidied, because the churn is the lesson. The FINDING
+    // has been the same all three times — a change was made across the site and
+    // ONE surface was skipped — and each rewrite pinned the mechanism of the
+    // day instead of the property. So this version asserts the property: the
+    // arrival is present exactly where it is meant to be, and absent everywhere
+    // else, whatever it is implemented with.
+    //
+    // The v2 note is worth keeping too: left alone, v1 would not even have gone
+    // red. It queried `.reveal, .reveal-on-scroll`, which matched nothing, so
+    // the loop iterated zero times and passed vacuously. A dead green test is
+    // worse than a deleted one; it reports coverage that does not exist.
+    await page.goto("/");
+    const rack = page.locator('[data-lens-panel="all"] [data-rack] article');
+    await expect(rack, "the rack renders no cards at all").not.toHaveCount(0);
+    for (const card of await rack.all()) {
+      await expect(card, "a rack card was skipped by the arrival").toHaveAttribute(
+        "data-enter",
+        "scroll",
       );
-      expect(held, `${route}: cards not fully present on arrival`).toEqual([]);
+    }
+
+    // And nowhere else. /projects is the comparison surface and must be
+    // complete the instant it loads — a filtered list whose rows fade in is the
+    // defect the previous entrance was removed for.
+    for (const route of ["/projects", "/about"]) {
+      await page.goto(route);
+      await expect(
+        page.locator("[data-enter]"),
+        `${route} has picked up an arrival it should not have`,
+      ).toHaveCount(0);
+
+      const held = await page.locator("main *").evaluateAll((els) =>
+        els
+          .map((el) => ({
+            el: el.tagName.toLowerCase() + "." + (el.getAttribute("class") ?? ""),
+            opacity: Number(getComputedStyle(el).opacity),
+          }))
+          .filter((entry) => entry.opacity < 1),
+      );
+      expect(held, `${route}: something is not fully present on arrival`).toEqual([]);
     }
   });
 });

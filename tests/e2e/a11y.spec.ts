@@ -20,23 +20,35 @@ import { ROUTES as ALL_ROUTES, routeName } from "./routes";
  * Both themes, because the palette is the most likely thing to regress and the
  * dark tokens are a separate set of values.
  *
- * THE SCAN NOW RUNS ON THE PAGE AS LOADED, and that is a real tightening.
+ * THE SCAN RUNS ON THE PAGE AS LOADED, AND IT STILL DOES — WITH ONE WAIT.
  *
- * It used to set `reducedMotion: "reduce"`, for a defensible reason: cards
+ * The history is worth keeping because the amendment nearly repeated it. This
+ * file used to set `reducedMotion: "reduce"`, for a defensible reason: cards
  * below the fold sat at opacity 0 until their scroll-driven reveal ran, axe
  * blends opacity into the foreground colour before measuring, and an
  * un-scrolled card reported its body text at 1.13:1 against the page — a
- * measurement of a transient animation frame rather than of the design. Under
- * reduced motion the reveal did not apply at all, so every element was scanned
- * at the state it settles in.
+ * measurement of a transient animation frame rather than of the design.
  *
- * It was still a workaround, and it left a gap the design spec names directly:
+ * It was a workaround, and it left a gap the design spec names directly:
  * contrast is "graded on the page AS LOADED — a state that only becomes
- * legible under reduced motion still fails". The reveal is gone (see the MOTION
- * CONTRACT in src/styles/global.css), nothing on this site is transparent at
- * any point, and so the flag is no longer needed. Removing it means the default
- * visitor's experience is the one being graded. Do not put it back to make a
- * violation go away: a violation that only appears without it is a real one.
+ * legible under reduced motion still fails". When §01 removed all motion, the
+ * flag went with it.
+ *
+ * The 2 Aug 2026 amendment brought an arrival back, and this failed again in
+ * exactly the old shape: the third headline chunk measured 1.25:1 — #dde2e6 on
+ * #fafafb — because axe reached it 300ms in, halfway through its fade. The
+ * MOTION CONTRACT block predicted this and said the reduced-motion flag would
+ * have to come back for the home page.
+ *
+ * IT DID NOT, and that prediction is corrected there rather than quietly
+ * dropped. The flag grades a page the visitor never sees; waiting grades the
+ * page they do. `settled()` below waits for every document-timeline animation
+ * to finish and then scans normally — so the arrival is not disabled, it is
+ * simply over, and "as loaded" stays true for every route including this one.
+ * Measured: 1 violation without the wait, 0 with it, 0 under the old flag.
+ *
+ * Do not reach for `reducedMotion` to make a violation go away: a violation
+ * that only appears without it is a real one.
  */
 
 /**
@@ -95,6 +107,20 @@ for (const theme of ["light", "dark"] as const) {
       ]);
       const page = await context.newPage();
       await page.goto(route.path);
+
+      // Nothing is still moving. A scroll- or view-driven animation never
+      // finishes by design — its progress is the reader's scroll position — so
+      // only document-timeline animations are waited on. Every route but home
+      // has none and this resolves immediately.
+      await page.waitForFunction(() =>
+        document
+          .getAnimations()
+          .every(
+            (animation) =>
+              animation.timeline?.constructor.name !== "DocumentTimeline" ||
+              animation.playState === "finished",
+          ),
+      );
 
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
