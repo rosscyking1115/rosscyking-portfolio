@@ -164,4 +164,15 @@ evidence link and Ross has not said whether they stay.
 - full-page, 2× device pixel ratio, captured after every arrival has settled and
   every scroll-triggered element has fired
 
+**If only some arrived**, these twelve are the core set and cover every route
+type at the widths that matter — ask for the rest by name:
+
+```
+home-desktop-light      home-tablet-light       home-mobile-light
+home-desktop-dark       projects-desktop-light  projects-mobile-light
+projects-agent-release-gates-desktop-light      about-desktop-light
+projects-agent-release-gates-mobile-light       about-mobile-light
+contact-desktop-light   colophon-desktop-light
+```
+
 Regenerate any time with `npm run shots:site` against a running dev server.
