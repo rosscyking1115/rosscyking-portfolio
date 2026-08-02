@@ -199,3 +199,88 @@ test.describe("write-ups", () => {
     expect(colours.light).not.toBe(colours.dark);
   });
 });
+
+test.describe("the canonical mark (2026-08-01 design audit, finding 01)", () => {
+  /**
+   * The mark rendered as `[ 05 ]` must be the SAME NUMBER for a given project on
+   * every surface that shows it.
+   *
+   * It was not. Home numbered by position within the lens's featured array,
+   * while /projects and the write-up numbered by a global publishedAt-descending
+   * sort — so Agent Release Safety Gates was `01` on the home page and `05`
+   * everywhere else, and London Cycle-Hire was `03` on home and `01` elsewhere.
+   * IndexMark's own contract is that the mark is always TRUE, so this was a
+   * defect rather than a cosmetic wrinkle, and it survived a full design pass,
+   * a content reconciliation and two audits without anything going red.
+   *
+   * Nothing existing could have caught it: every assertion checked that A mark
+   * rendered, never that the SAME mark rendered in two places. That is the gap
+   * this closes.
+   */
+  test("a project shows one number on home, the index and its write-up", async ({
+    page,
+  }) => {
+    const featured = registry.lenses.all.featured as string[];
+
+    await page.goto("/");
+    const onHome = new Map<string, string>();
+    for (const slug of featured) {
+      const card = page
+        .locator(`[data-lens-panel="all"] article`)
+        .filter({ has: page.locator(`a[href="/projects/${slug}"]`) });
+      const mark = await card.locator("span.text-primary").first().textContent();
+      onHome.set(slug, (mark ?? "").trim());
+    }
+
+    await page.goto("/projects");
+    const onIndex = new Map<string, string>();
+    for (const slug of featured) {
+      const row = page
+        .locator("[data-project]")
+        .filter({ has: page.locator(`a[href="/projects/${slug}"]`) });
+      const mark = await row.locator("[data-catalogue]").first().textContent();
+      onIndex.set(slug, (mark ?? "").trim());
+    }
+
+    for (const slug of featured) {
+      await page.goto(`/projects/${slug}`);
+      const raw = await page.locator("header span.text-primary").first().textContent();
+      const onWriteUp = (raw ?? "").replace(/[[\]\s]/g, "");
+
+      expect(
+        onHome.get(slug),
+        `${slug}: home says ${onHome.get(slug)}, the index says ${onIndex.get(slug)}`,
+      ).toBe(onIndex.get(slug));
+      expect(
+        onWriteUp,
+        `${slug}: its own page says ${onWriteUp}, the index says ${onIndex.get(slug)}`,
+      ).toBe(onIndex.get(slug));
+    }
+  });
+
+  test("every rendered mark matches the registry, and none is positional", async ({
+    page,
+  }) => {
+    // The registry is the single source. A mark computed from list position
+    // would still agree with itself across surfaces while disagreeing with the
+    // frozen value — this is what separates "consistent" from "correct".
+    await page.goto("/projects");
+    const rendered = await page.locator("[data-project]").evaluateAll((rows) =>
+      rows.map((row) => ({
+        slug: row.querySelector("a[href^='/projects/']")?.getAttribute("href") ?? "",
+        mark: row.querySelector("[data-catalogue]")?.textContent?.trim() ?? "",
+      })),
+    );
+
+    expect(rendered.length).toBeGreaterThan(0);
+    for (const { slug, mark } of rendered) {
+      const id = slug.replace("/projects/", "");
+      const expected = String(
+        (registry.projects as Record<string, { mark: number }>)[id]!.mark,
+      ).padStart(2, "0");
+      expect(mark, `${id} renders ${mark} but the registry says ${expected}`).toBe(
+        expected,
+      );
+    }
+  });
+});

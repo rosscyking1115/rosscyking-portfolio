@@ -4,6 +4,7 @@ import { ArrowRight } from "@lucide/astro";
 import { allLenses, DEFAULT_LENS } from "../../lib/lenses";
 import {
   getLensFeaturedCards,
+  projectMarkLabel,
   projectReadingTime,
   type Project,
 } from "../../lib/projects";
@@ -121,7 +122,7 @@ const allLabel = `All ${allCount} projects`;
             <article class="reveal-on-scroll linked-card group border-border bg-card hover:border-foreground/20 hover:shadow-lift relative mt-8 grid gap-6 rounded-lg border p-6 shadow-xs transition-[transform,box-shadow,border-color] duration-150 hover:-translate-y-0.5 lg:grid-cols-5 lg:gap-8 lg:p-8">
               <div class="flex min-w-0 flex-col lg:col-span-2">
                 <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
-                  <span class="text-primary">01</span>
+                  <span class="text-primary">{projectMarkLabel(flagship.id)}</span>
                   <span>
                     {flagship.data.period} · {projectReadingTime(flagship)}
                   </span>
@@ -203,7 +204,7 @@ const allLabel = `All ${allCount} projects`;
                   sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
                 />
                 <div class="text-muted-foreground mt-4 flex items-center justify-between font-mono text-xs">
-                  <span class="text-primary">{String(i + 2).padStart(2, "0")}</span>
+                  <span class="text-primary">{projectMarkLabel(project.id)}</span>
                   <span>
                     {project.data.period} · {projectReadingTime(project)}
                   </span>

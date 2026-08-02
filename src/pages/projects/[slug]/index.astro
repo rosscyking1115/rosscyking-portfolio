@@ -12,6 +12,7 @@ import {
   getAdjacentProjects,
   getAllProjects,
   projectReadingTime,
+  projectMarkLabel,
   toMetaDescription,
 } from "../../../lib/projects";
 
@@ -28,9 +29,10 @@ import {
  */
 export async function getStaticPaths() {
   const projects = await getAllProjects();
-  return projects.map((project, index) => ({
+  return projects.map((project) => ({
     params: { slug: project.id },
-    props: { project, number: String(index + 1).padStart(2, "0") },
+    // The mark is the registry's, not this list's position — see projectMark().
+    props: { project, number: projectMarkLabel(project.id) },
   }));
 }
 

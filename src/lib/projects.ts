@@ -1,6 +1,8 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 import readingTime from "reading-time";
 
+import registry from "../../content/projects/registry.json";
+
 /**
  * Project queries, ported from the Next app's src/lib/projects.ts.
  *
@@ -35,14 +37,54 @@ export async function getAllProjects(): Promise<Project[]> {
 }
 
 /**
- * Catalogue numbers, assigned over the FULL list so a project keeps its number
- * when the gallery is filtered — the Next page did the same, deliberately.
+ * The canonical mark for a project — the number in `[ 05 ]`, wherever it shows.
+ *
+ * READ, NEVER COMPUTED, and that is the whole point. This used to be a
+ * positional index, and it produced a mark that contradicted itself:
+ *
+ *   - home numbered by position within the LENS's featured array, so
+ *     Agent Release Gates was `01` there;
+ *   - /projects and the write-up numbered by a global publishedAt-descending
+ *     sort, so the same project was `05` on both;
+ *   - and because the sort is over the whole set, publishing an eleventh
+ *     project silently renumbered all ten.
+ *
+ * IndexMark's own contract is that the mark is always TRUE — a priority, a
+ * reading order, a location — so a number that disagrees with itself across
+ * three surfaces, and moves whenever content is added, is a defect rather than
+ * a cosmetic wrinkle. Found in the 2026-08-01 design audit.
+ *
+ * The values are frozen in registry.json and gated by validate-projects.mjs for
+ * presence, uniqueness and contiguity. A lens or a sort may change ORDER; it
+ * must never change the mark.
+ */
+export function projectMark(slug: string): number {
+  const mark = (registry.projects as Record<string, { mark?: number }>)[slug]?.mark;
+  if (typeof mark !== "number") {
+    throw new Error(
+      `No canonical mark for "${slug}" in registry.json. Every project needs one — ` +
+        `see the _mark note there, and validate-projects.mjs which gates it.`,
+    );
+  }
+  return mark;
+}
+
+/** The mark as it is displayed: zero-padded to two digits. */
+export function projectMarkLabel(slug: string): string {
+  return String(projectMark(slug)).padStart(2, "0");
+}
+
+/**
+ * Every publishable project with its canonical mark, in display order.
+ *
+ * `index` is the MARK, not the position — two projects adjacent in this list
+ * can carry non-adjacent marks once a project is retired, and that is correct.
  */
 export async function getNumberedProjects(): Promise<
   Array<{ project: Project; index: number }>
 > {
   const all = await getAllProjects();
-  return all.map((project, i) => ({ project, index: i + 1 }));
+  return all.map((project) => ({ project, index: projectMark(project.id) }));
 }
 
 /**
