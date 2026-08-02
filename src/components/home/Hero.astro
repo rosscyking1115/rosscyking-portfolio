@@ -6,37 +6,42 @@ import BrandIcon from "../icons/BrandIcon.astro";
 import Container from "../layout/Container.astro";
 import IndexMark from "../layout/IndexMark.astro";
 import Button from "../ui/Button.astro";
-import ProofStrip from "./ProofStrip.astro";
 
 /**
- * Ported from src/components/home/hero.tsx.
+ * The masthead (design spec §04, home route).
  *
- * The seven stacked <FadeIn> wrappers became one shared CSS keyframe, and that
- * keyframe is now gone too — see the MOTION CONTRACT in src/styles/global.css:
- * nothing on this site animates on arrival.
+ *   "Masthead loses two blocks. Role chips demote to one mono line and the
+ *    proof panel leaves the hero entirely. Six stacked blocks become four, so
+ *    the H1 gets the room to be the only large thing here."
  *
- * The hero was expected to be the strongest argument for that, on the reasoning
- * that an element at opacity 0 is not painted and so a staggered entrance must
- * gate LCP. Measured, it did not — the gap between FCP and LCP was 0ms with the
- * reveal and 0ms without it. What the fade actually did was disqualify this <h1>
- * as an LCP candidate and hand the title to a lens button instead. The full
- * measurement is in the motion contract; it is recorded because the prediction
- * was wrong, not because it was right.
+ * Both blocks are gone:
  *
- * TWO COLUMNS AT lg, and the reason is a measurement rather than a preference.
- * The container is 1152px and the hero column was capped at 768px, left
- * aligned — 384px of empty right-hand column on every desktop, and the same
- * 768px made the standfirst an 85-character line. One number causing two
- * problems in opposite directions. The measure column is now 40rem, which puts
- * the paragraph at roughly 68 characters, and the proof readout occupies the
- * space that was previously blank. Below lg the two stack in DOM order, which
- * is exactly what the single-column version already did.
+ *   1. THE PROOF PANEL. It sat in a right-hand rail at lg, which is where audit
+ *      finding 05 found it — "your three best numbers sit in the hero's right
+ *      column at roughly a third the size of the headline". It is now the
+ *      full-bleed band immediately below (ProofBand.astro), where the change of
+ *      measure does what a bigger font size could not.
+ *   2. THE ROLE CHIPS. Three bordered pills behind a "Roles →" caption became
+ *      one mono line. Nothing was cut — the same three strings, in the same
+ *      order, at a weight that no longer competes with the headline.
+ *
+ * WHICH MEANS THE TWO-COLUMN GRID GOES TOO, and with it the measurement that
+ * justified it. The container is 1152px; the hero column was capped at 768px,
+ * left aligned, leaving 384px of empty right-hand column on every desktop — and
+ * the readout was moved in to fill it. With the readout gone the honest fix is
+ * a single column at a reading measure rather than a rail with nothing in it.
+ *
+ * THE STANDFIRST IS ROSS'S, UNCUT. The spec's mock shortens it to two
+ * sentences, and "copy is selected, never rewritten" would permit that — but
+ * this string is also `siteConfig.description`, which Ross authored
+ * deliberately in an earlier pass. Trimming published copy is his call, not a
+ * layout decision, so it is left whole and flagged instead.
  */
 /**
  * Order is the message, not an alphabetisation.
  *
  * These read left to right and a scanner stops at the first one, so the lead
- * chip is doing the same job as the <title>. It used to read "Data Engineering
+ * role is doing the same job as the <title>. It used to read "Data Engineering
  * · ML Engineering · AI Safety & Evaluation", which put the thing Ross moved
  * away from first and the thing he moved to last — the metadata said one thing
  * and the two largest signals on the page said another.
@@ -48,102 +53,68 @@ const ROLES = [
 ] as const;
 ---
 
-<Container class="pt-16 pb-16 sm:pt-24 sm:pb-20">
-  <div
-    class="grid gap-10 lg:grid-cols-[minmax(0,40rem)_minmax(0,1fr)] lg:items-end lg:gap-14"
-  >
-    <div>
-      {
-        /*
-        The dot no longer pings. A continuous animation is banned outright by
-        the motion contract, and this one was also the site's only piece of
-        motion with no reduced-motion escape — NowBuilding's copy of the same
-        markup carried `motion-reduce:animate-none` and this one never did.
-        The LIVE state is now the token, held still.
+<Container class="pt-16 pb-14 sm:pt-24 sm:pb-16">
+  <div class="max-w-3xl">
+    {
+      /*
+        The availability signal folds into the mark line rather than sitting in
+        its own pill above it — one block instead of two, and the dot is the
+        LIVE token the instrument uses, held still (the motion contract bans
+        continuous animation).
       */
-      }
+    }
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <IndexMark mark={siteConfig.shortName} label="Sheffield, UK" />
       <span
-        class="border-border bg-background inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-xs font-medium"
+        class="text-muted-foreground inline-flex items-center gap-2 font-mono text-xs"
       >
-        <span class="bg-state-live inline-flex size-2 rounded-full" aria-hidden="true"
+        <span class="bg-state-live inline-flex size-1.5 rounded-full" aria-hidden="true"
         ></span>
         {siteConfig.availability}
       </span>
-
-      <IndexMark mark={siteConfig.shortName} label="Sheffield, UK" class="mt-7" />
-
-      <h1
-        class="font-display mt-4 text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
-      >
-        I work on <span class="text-primary">AI evaluation and reliability.</span>
-      </h1>
-
-      <p
-        class="text-muted-foreground mt-6 max-w-prose text-lg leading-relaxed text-pretty"
-      >
-        {siteConfig.description}
-      </p>
-
-      {
-        /*
-        The caption takes its own line below sm — the same structure as the lens
-        switcher's "Viewing as →". Flat, it shared line one with the first chip
-        and the other two dropped beneath it, so the label read as an orphan
-        rather than as the row's heading.
-      */
-      }
-      <div
-        class="mt-6 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-1.5"
-      >
-        <span class="text-muted-foreground font-mono text-xs tracking-wider uppercase">
-          Roles&nbsp;→
-        </span>
-        <div class="flex flex-wrap gap-1.5 sm:contents">
-          {
-            ROLES.map((role) => (
-              <span class="bg-muted rounded px-2 py-0.5 font-mono text-[11px]">
-                {role}
-              </span>
-            ))
-          }
-        </div>
-      </div>
-
-      <div class="mt-8 flex flex-wrap items-center gap-3">
-        <Button href="/projects">
-          View projects
-          <ArrowRight aria-hidden="true" />
-        </Button>
-        <Button href="/cv.pdf" variant="outline" download="Cheng-Yuan-King-CV.pdf">
-          <Download aria-hidden="true" />
-          Download CV
-        </Button>
-        <Button
-          href={siteConfig.links.github}
-          variant="ghost"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <BrandIcon name="github" class="size-4" />
-          GitHub
-        </Button>
-        <Button
-          href={siteConfig.links.linkedin}
-          variant="ghost"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <BrandIcon name="linkedin" class="size-4" />
-          LinkedIn
-        </Button>
-      </div>
     </div>
 
-    {/* The readout fills what was the dead right-hand column at lg. */}
-    <div>
-      <ProofStrip />
+    <h1
+      class="font-display mt-6 text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+    >
+      I work on <span class="text-primary">AI evaluation and reliability.</span>
+    </h1>
+
+    <p class="text-muted-foreground mt-6 max-w-prose text-lg leading-relaxed text-pretty">
+      {siteConfig.description}
+    </p>
+
+    <p class="text-muted-foreground mt-6 font-mono text-xs tracking-wide">
+      {ROLES.join(" · ")}
+    </p>
+
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <Button href="/projects">
+        View projects
+        <ArrowRight aria-hidden="true" />
+      </Button>
+      <Button href="/cv.pdf" variant="outline" download="Cheng-Yuan-King-CV.pdf">
+        <Download aria-hidden="true" />
+        Download CV
+      </Button>
+      <Button
+        href={siteConfig.links.github}
+        variant="ghost"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <BrandIcon name="github" class="size-4" />
+        GitHub
+      </Button>
+      <Button
+        href={siteConfig.links.linkedin}
+        variant="ghost"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <BrandIcon name="linkedin" class="size-4" />
+        LinkedIn
+      </Button>
     </div>
   </div>
-
-  <div class="ruler mt-16" aria-hidden="true"></div>
 </Container>

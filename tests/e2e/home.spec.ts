@@ -91,32 +91,62 @@ test.describe("featured showcase", () => {
       await expect(panel.locator("[data-lens-headline]")).toContainText(
         "projects, shown working",
       );
-      await expect(panel.locator("article")).toHaveCount(lens.featured.length);
+      // SCOPED TO THE RACK. Every InstrumentRow is an <article> too, so an
+      // unscoped count now takes in the bench below and returns the whole
+      // portfolio. The assertion was right about the wrong scope.
+      await expect(panel.locator("[data-rack] article")).toHaveCount(
+        lens.featured.length,
+      );
+
+      // And the bench holds exactly what the rack does not, so no project is
+      // dropped between the two and none appears twice. This is the half that
+      // makes "home shows work running, the index compares" checkable — a
+      // project missing from BOTH used to be invisible.
+      const benchCount = await panel.locator("[data-bench] [data-instrument]").count();
+      expect(
+        benchCount + lens.featured.length,
+        `${key}: rack + bench does not add up to the portfolio`,
+      ).toBe(Object.keys(registry.projects).length);
     }
   });
 
-  test("every featured card has a visual — no empty evidence frames", async ({
-    page,
-  }) => {
-    // The frame is the section's signature. A project with neither a screenshot
-    // nor terminal lines renders an empty box, which is easy to miss in review
-    // and was a real defect on the Next site (HANDOFF P3, item 4).
+  test("exactly one instrument reads, and only it loads an image", async ({ page }) => {
+    // TWO findings in one assertion, and the second is new.
+    //
+    // The original: the frame is the section's signature, and a project with
+    // neither a screenshot nor terminal lines renders an EMPTY box — easy to
+    // miss in review, and a real defect on the Next site (HANDOFF P3, item 4).
+    // That still has to hold for whichever instrument is reading.
+    //
+    // The new one: §03 R7, "only the reading instrument loads an image". Every
+    // featured project used to carry its own frame — four screenshots per lens,
+    // twelve across the three prerendered panels. Nothing failed, because the
+    // page looked fine; the cost was bytes and the flatness finding 08 named.
     for (const key of Object.keys(lenses)) {
       await page.goto(key === "all" ? "/" : `/?lens=${key}`);
       const panel = page.locator(`[data-lens-panel="${key}"]`);
+      await expect(panel.locator("[data-rack] article")).not.toHaveCount(0);
 
-      // Wait for the panel to actually render before counting anything —
-      // .count() does not retry, so a mid-render read looks like "no visual".
-      await expect(panel.locator("article")).not.toHaveCount(0);
+      const framed = panel.locator("[data-rack] figure");
+      await expect(
+        framed,
+        `${key}: ${await framed.count()} instruments are framed — R7 allows one`,
+      ).toHaveCount(1);
 
-      for (const card of await panel.locator("article").all()) {
-        const title = await card.locator("h3").textContent();
-        const hasImage = (await card.locator("figure img").count()) > 0;
-        const hasTerminal = (await card.locator("figure p").count()) > 0;
-        expect(
-          hasImage || hasTerminal,
-          `${title?.trim()} has an empty evidence frame in the ${key} lens`,
-        ).toBe(true);
+      // …and that one is not an empty box.
+      const hasImage = (await framed.locator("img").count()) > 0;
+      const hasTerminal = (await framed.locator("p").count()) > 0;
+      const title = await panel.locator("[data-rack] h3").first().textContent();
+      expect(
+        hasImage || hasTerminal,
+        `${title?.trim()} has an empty evidence frame in the ${key} lens`,
+      ).toBe(true);
+
+      // Every other row keeps its title and its headline number at full
+      // legibility — "receding removes the frame, the screenshot and the
+      // elevation, never the readability."
+      for (const row of await panel.locator("[data-instrument]").all()) {
+        await expect(row.locator("h3")).not.toBeEmpty();
       }
     }
   });
@@ -138,7 +168,7 @@ test.describe("featured showcase", () => {
 
   test("screenshots are served responsively", async ({ page }) => {
     await page.goto("/");
-    const image = page.locator('[data-lens-panel="all"] figure img').first();
+    const image = page.locator('[data-lens-panel="all"] [data-rack] figure img').first();
     await expect(image).toBeVisible();
     // Astro optimises these because they are imported, not served from public/.
     // Losing the import would silently drop srcset and ship full-size PNGs.
