@@ -15,6 +15,38 @@
  */
 @import "tailwindcss";
 
+/* ---------- shadcn/ui, and what was NOT taken from it ----------
+ * `components.json` was written by `shadcn init` on 2 Aug 2026 and this import
+ * is the only line of that run's CSS that survived. What init actually did is
+ * worth recording, because the failure was silent and total:
+ *
+ *   IT REPLACED THE PALETTE. Every token in both themes was overwritten with
+ *   the Nova preset's neutral OKLCH ramp — --primary went from the spec's
+ *   #3d5a73 steel blue to oklch(0.205 0 0), a near-black grey. The design
+ *   spec's colour table, rebuilt to the hex in PR #95, was gone in one command
+ *   and the site still built, still passed typecheck, and still looked like a
+ *   competent website.
+ *
+ *   IT REVERTED src/lib/utils.ts to the stock `twMerge`, reintroducing the
+ *   silent class-dropping bug documented in that file — the one that left the
+ *   button with no font-size at all and took a grep of the BUILT markup to
+ *   find.
+ *
+ *   IT ADDED `tw-animate-css`, a library of entrance and exit animations, to a
+ *   project whose motion contract enumerates every arrival it permits by name.
+ *
+ * All three are reverted. What is kept is what shadcn is actually for: this
+ * stylesheet's `@custom-variant` helpers (data-open, data-closed, data-checked
+ * and the rest), which the primitives need and which touch no colour, and the
+ * config that lets `npx shadcn@latest add` place components correctly.
+ *
+ * The two accordion keyframes in here animate `height` and nothing else, so
+ * they sit inside the motion contract rather than against it. Any component
+ * added from the registry still has to be re-timed to the three duration
+ * tokens — tests/e2e/motion.spec.ts sweeps the rendered page and will say so.
+ */
+@import "shadcn/tailwind.css";
+
 @custom-variant dark (&:is(.dark *));
 
 /* ---------- Design tokens (light) ----------
@@ -53,6 +85,13 @@
 
   --card: #fafafb;
   --card-foreground: #1c1e22;
+
+  /* Popover surfaces, added for the shadcn primitives rather than by them.
+     `init` wrote fourteen more — chart-1..5 and eight sidebar-* — for a site
+     with no chart and no sidebar. An unused token is the easiest thing in the
+     file to typo, delete or half-define; these arrive with their consumers. */
+  --popover: #fafafb;
+  --popover-foreground: #1c1e22;
 
   --primary: #3d5a73;
   --primary-foreground: #fafafb;
@@ -172,6 +211,9 @@
   --card: #151619;
   --card-foreground: #e7e8ea;
 
+  --popover: #212327;
+  --popover-foreground: #e7e8ea;
+
   --primary: #8fa9c2;
   --primary-foreground: #151619;
   /* Derived: the spec names #324b60 for light and gives no dark counterpart.
@@ -216,6 +258,8 @@
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
