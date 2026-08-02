@@ -2,30 +2,73 @@
 import { ArrowLeft, ExternalLink, FileText, Package, ScrollText } from "@lucide/astro";
 import { render } from "astro:content";
 
+import EvidenceFrame from "../../../components/home/EvidenceFrame.astro";
 import BrandIcon from "../../../components/icons/BrandIcon.astro";
+import FindingBand from "../../../components/instrument/FindingBand.astro";
+import InstrumentRow from "../../../components/instrument/InstrumentRow.astro";
 import Container from "../../../components/layout/Container.astro";
-import Badge from "../../../components/ui/Badge.astro";
 import Button from "../../../components/ui/Button.astro";
 import Base from "../../../layouts/Base.astro";
 import { PROJECT_OG_ALT } from "../../../lib/og-config";
 import {
   getAdjacentProjects,
   getAllProjects,
-  projectReadingTime,
+  projectHeadline,
   projectMarkLabel,
+  projectReadingTime,
   toMetaDescription,
 } from "../../../lib/projects";
 
 /**
- * Ported from src/app/projects/[slug]/page.tsx.
+ * The project write-up (design spec §04): "Finding band → evidence → reading
+ * track → rail + prose. Limits move up beside the number; self-audit becomes a
+ * table."
  *
- * The MDX pipeline collapses hard here, exactly as the brief predicted:
- * next-mdx-remote's compileMDX, remark-gfm and rehype-pretty-code all become
- * `render(entry)`. GFM is on by default in Astro, and Shiki is built in — the
- * dual themes moved to astro.config.mjs.
+ * ── WHAT LANDED HERE ─────────────────────────────────────────────────────────
+ *   THE FINDING BAND replaces the three-cell metrics strip. See
+ *   FindingBand.astro: three equal cells said "here are some numbers"; this
+ *   says what the number was, what it is, what it was measured against, and
+ *   where the limits are.
  *
- * `getStaticPaths` replaces `generateStaticParams` and additionally carries the
- * entry itself through props, so the page body needs no second lookup.
+ *   EVIDENCE BEFORE PROSE. "The demo frame sits above the body, so the engineer
+ *   can open the thing and the recruiter can see it exists without scrolling
+ *   into the method." This page had no frame at all — the one surface entirely
+ *   about a single project was the only one that never showed it running.
+ *
+ *   THE MASTHEAD COMPRESSES. Stack chips become a mono line sharing the row
+ *   with the actions, so the blocks between the title and the evidence go from
+ *   five to three.
+ *
+ *   PREV / NEXT ARE INSTRUMENTS. "Receded rows carrying their headline number,
+ *   identical to the rack. You always leave a write-up knowing the next one's
+ *   result." They were two bordered boxes carrying a title and nothing else.
+ *
+ * ── WHAT IS NOT HERE, AND WHY ────────────────────────────────────────────────
+ *   THE READING TRACK and the rail-as-meter are the fourth use of the narrowing
+ *   control, and both need something this repo does not have yet: a per-project
+ *   list of which sections belong to the summary. The spec's own example —
+ *   "Summary keeps four sections, full report keeps nine" — is a selection over
+ *   nine authored headings, and deriving it (first N? by heading text?) would
+ *   be guessing at editorial intent across ten different write-ups.
+ *
+ *   That is authored data of the same shape as `headline.metric`: name sections
+ *   the content already has, gate them so a renamed heading fails the build,
+ *   never duplicate the prose. It is a change to registry.json and the
+ *   validator, and it belongs with the section that consumes it rather than
+ *   bolted onto a layout pass.
+ *
+ *   THE SELF-AUDIT TABLE is a third thing again — six findings in dependency
+ *   order currently living as prose in ONE write-up. Turning it into structured
+ *   data is a content change to agent-release-gates, and Ross's call.
+ *
+ *   THE STANDFIRST IS UNCUT, for the reason it is uncut on the home page: the
+ *   spec's mock trims it to its first sentence, "copy is selected, never
+ *   rewritten" would permit that, and it is still Ross's published copy. The
+ *   same string is the meta description, so trimming it on the page is an
+ *   editorial decision rather than a layout one.
+ *
+ * `getStaticPaths` replaces Next's `generateStaticParams` and carries the entry
+ * through props, so the page body needs no second lookup.
  */
 export async function getStaticPaths() {
   const projects = await getAllProjects();
@@ -37,11 +80,32 @@ export async function getStaticPaths() {
 }
 
 const { project, number } = Astro.props;
-const { Content } = await render(project);
+const { Content, headings } = await render(project);
 const { prev, next } = await getAdjacentProjects(project.id);
 
-const { title, summary, stack, period, role, links, metrics } = project.data;
+const { title, summary, stack, period, role, links, screenshot, terminal } = project.data;
 const description = toMetaDescription(summary);
+const headline = projectHeadline(project);
+
+/**
+ * The limits section, found in the RENDERED headings rather than assumed.
+ *
+ * Every write-up but one carries an "Honest limits" h2; redteam-foundry calls
+ * its equivalent "Limits and future work", and marketing-effectiveness-lab has
+ * none at all. Matching on the word rather than the exact string means the
+ * finding band's jump link appears for nine projects and is silently absent for
+ * the tenth — which is correct, and better than a link to an anchor that does
+ * not exist.
+ */
+const limits = headings.find(
+  (heading) => heading.depth === 2 && /limits/i.test(heading.text),
+);
+
+/** Mono caption for the frame's title bar: the demo's host, or a run label. */
+const frameCaption = (() => {
+  const source = links?.demo ?? links?.report;
+  return source ? new URL(source).hostname : "run log";
+})();
 
 /** Ported one-for-one from the Next page's link buttons, in the same order. */
 const externalLinks = [
@@ -61,6 +125,18 @@ const externalLinks = [
   { href: links?.paper, label: "Paper", Icon: ScrollText, variant: "outline" as const },
   { href: links?.pypi, label: "PyPI", Icon: Package, variant: "outline" as const },
 ].filter((link) => Boolean(link.href));
+
+/**
+ * Four stacks, then a count of the rest — the same shape the instrument row
+ * uses for its meta line. The full list was fourteen bordered chips on some
+ * projects, which is a wall between the title and the evidence rather than
+ * information: nobody reads the fourteenth chip, and the index is where stacks
+ * are actually used as a filter.
+ */
+const stackLine =
+  stack.length > 4
+    ? `${stack.slice(0, 4).join(" · ")} · +${stack.length - 4}`
+    : stack.join(" · ");
 ---
 
 <Base
@@ -74,7 +150,7 @@ const externalLinks = [
     <Container class="py-12 sm:py-16" size="sm">
       <a
         href="/projects"
-        class="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm"
+        class="text-muted-foreground hover:text-foreground ease-instrument inline-flex items-center gap-1.5 text-sm transition-colors duration-[var(--motion-state)]"
       >
         <ArrowLeft class="size-4" aria-hidden="true" />
         All projects
@@ -107,68 +183,66 @@ const externalLinks = [
           {summary}
         </p>
 
-        <ul class="mt-5 flex flex-wrap gap-1.5">
-          {
-            stack.map((tech) => (
-              <li>
-                <Badge variant="tag">{tech}</Badge>
-              </li>
-            ))
-          }
-        </ul>
-
         {
-          externalLinks.length > 0 && (
-            <div class="mt-6 flex flex-wrap gap-2.5">
-              {externalLinks.map((link) => (
-                <Button
-                  href={link.href}
-                  variant={link.variant}
-                  size="sm"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.icon ? (
-                    <BrandIcon name={link.icon} class="size-4" />
-                  ) : (
-                    link.Icon && <link.Icon aria-hidden="true" />
-                  )}
-                  {link.label}
-                </Button>
-              ))}
-            </div>
-          )
+          /*
+            One row, not two blocks. The stack line sits with the actions
+            because it is the same kind of thing — metadata about the artefact,
+            not a claim about it — and because every block between the title and
+            the evidence is a block the reader crosses before seeing the number.
+          */
         }
+        <div class="mt-6 flex flex-col gap-4">
+          {
+            externalLinks.length > 0 && (
+              <div class="flex flex-wrap gap-2.5">
+                {externalLinks.map((link) => (
+                  <Button
+                    href={link.href}
+                    variant={link.variant}
+                    size="sm"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.icon ? (
+                      <BrandIcon name={link.icon} class="size-4" />
+                    ) : (
+                      link.Icon && <link.Icon aria-hidden="true" />
+                    )}
+                    {link.label}
+                  </Button>
+                ))}
+              </div>
+            )
+          }
+          <p class="text-muted-foreground font-mono text-xs" data-stack-line>
+            {stackLine}
+          </p>
+        </div>
       </header>
 
-      <div class="ruler my-10" aria-hidden="true"></div>
+      <FindingBand
+        headline={headline}
+        limitsHref={limits ? `#${limits.slug}` : undefined}
+        limitsLabel={limits?.text}
+        class="mt-10"
+      />
 
       {
-        metrics && metrics.length > 0 && (
-          /*
-            The type scales with the cell, because it did not and the numbers
-            were being CUT OFF. At 320px each of the three cells is about 90px
-            wide, and `90.91%` set in 24px mono needs 65px plus 32px of padding
-            — so it overflowed into its neighbour and the parent's
-            `overflow-hidden` silently clipped the `%`. Clipped overflow is
-            invisible to a scrollWidth check, which is why the responsive gate
-            passed on this page: nothing scrolls, the content just disappears.
-          */
-          <div
-            class="bg-border border-border grid grid-cols-3 gap-px overflow-hidden rounded-lg border"
-            data-metrics
-          >
-            {metrics.map((metric) => (
-              <div class="bg-background px-2 py-4 text-center sm:p-4">
-                <div class="font-mono text-lg font-medium sm:text-2xl" data-metric-value>
-                  {metric.value}
-                </div>
-                <div class="text-muted-foreground mt-1 font-mono text-[11px] tracking-wider uppercase">
-                  {metric.label}
-                </div>
-              </div>
-            ))}
-          </div>
+        /*
+          EVIDENCE BEFORE PROSE. Lazy, unlike the home page's flagship: on this
+          route the largest-contentful element is the h1, and the frame is a
+          screen and a half down.
+        */
+        (screenshot || (terminal && terminal.length > 0)) && (
+          <EvidenceFrame
+            caption={frameCaption}
+            live={Boolean(links?.demo)}
+            screenshot={screenshot}
+            alt={`Screenshot of the ${title} live demo`}
+            lines={terminal}
+            sizes="(min-width: 768px) 42rem, 100vw"
+            class="mt-4"
+          />
         )
       }
 
@@ -176,38 +250,43 @@ const externalLinks = [
         <Content />
       </div>
 
-      <nav
-        aria-label="Project navigation"
-        class="border-border mt-14 grid gap-3 border-t pt-8 sm:grid-cols-2"
-      >
-        {
-          prev ? (
-            <a
-              href={`/projects/${prev.id}`}
-              class="border-border hover:border-instrument-reading-border ease-instrument flex flex-col rounded-lg border p-4 transition-[border-color] duration-[var(--motion-address)]"
-            >
-              <span class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
-                ← Previous
-              </span>
-              <span class="font-display mt-1 font-semibold">{prev.data.title}</span>
-            </a>
-          ) : (
-            <span aria-hidden="true" />
-          )
-        }
-        {
-          next && (
-            <a
-              href={`/projects/${next.id}`}
-              class="border-border hover:border-instrument-reading-border ease-instrument flex flex-col rounded-lg border p-4 text-right transition-[border-color] duration-[var(--motion-address)] sm:items-end"
-            >
-              <span class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
-                Next →
-              </span>
-              <span class="font-display mt-1 font-semibold">{next.data.title}</span>
-            </a>
-          )
-        }
+      {
+        /*
+          "Prev / next are instruments too — receded rows carrying their
+          headline number, identical to the rack. You always leave a write-up
+          knowing the next one's result."
+
+          They were two bordered boxes carrying a title and a direction, which
+          told the reader nothing about whether the next thing was worth
+          opening. Full width and stacked rather than side by side: an
+          InstrumentRow is a row, and squeezing two into a half-width column
+          reflows the metric under the title and breaks the one row anatomy the
+          rest of the site keeps.
+        */
+      }
+      <nav aria-label="Project navigation" class="border-border mt-14 border-t pt-8">
+        <div class="flex flex-col gap-2">
+          {
+            prev && (
+              <div>
+                <span class="text-muted-foreground mb-1.5 block font-mono text-[11px] tracking-wider uppercase">
+                  &larr; Previous
+                </span>
+                <InstrumentRow project={prev} />
+              </div>
+            )
+          }
+          {
+            next && (
+              <div>
+                <span class="text-muted-foreground mt-3 mb-1.5 block font-mono text-[11px] tracking-wider uppercase">
+                  Next &rarr;
+                </span>
+                <InstrumentRow project={next} />
+              </div>
+            )
+          }
+        </div>
       </nav>
     </Container>
   </article>
