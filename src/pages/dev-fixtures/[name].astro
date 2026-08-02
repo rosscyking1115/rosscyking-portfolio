@@ -1,8 +1,10 @@
 ---
 import NowBuilding from "../../components/home/NowBuilding.astro";
+import InstrumentRow from "../../components/instrument/InstrumentRow.astro";
 import Container from "../../components/layout/Container.astro";
 import Base from "../../layouts/Base.astro";
 import type { NowBuildingEntry } from "../../lib/now-building";
+import { getAllProjects } from "../../lib/projects";
 
 /**
  * Dev-only fixture routes, for components whose real data makes them render
@@ -35,7 +37,11 @@ import type { NowBuildingEntry } from "../../lib/now-building";
  */
 export function getStaticPaths() {
   if (!import.meta.env.DEV) return [];
-  return [{ params: { name: "now-building" } }, { params: { name: "headlines" } }];
+  return [
+    { params: { name: "now-building" } },
+    { params: { name: "headlines" } },
+    { params: { name: "instrument" } },
+  ];
 }
 
 const FIXTURES: Record<string, readonly NowBuildingEntry[]> = {
@@ -109,6 +115,20 @@ const HEADLINES: { id: string; lead: string; mark: string; note: string }[] = [
 
 const { name } = Astro.params;
 const entries = FIXTURES[name!] ?? [];
+
+/**
+ * Every project as an instrument row, with the third one reading.
+ *
+ * REAL DATA, not a fixture array, and that is the point. The row's whole job is
+ * to render three metric modes, three content states and a designed empty cell
+ * from what the registry actually holds — so a fixture built from invented
+ * projects would prove nothing about the ten that exist. This page is where the
+ * empty state (marketing-effectiveness-lab, archived and publishing no metrics)
+ * and the struck pairs are visible side by side, in both themes.
+ *
+ * The instrument is not on any route yet; wiring it into /projects is step 04.
+ */
+const instrumentProjects = name === "instrument" ? await getAllProjects() : [];
 ---
 
 <Base
@@ -117,6 +137,24 @@ const entries = FIXTURES[name!] ?? [];
   canonical="/404"
 >
   {name === "now-building" && <NowBuilding entries={entries} />}
+
+  {
+    name === "instrument" && (
+      <Container class="py-12">
+        <p class="text-muted-foreground mb-8 font-mono text-xs tracking-wider uppercase">
+          The instrument &middot; spec &sect;03 &middot; row 03 is reading, the rest
+          recede &middot; toggle the theme
+        </p>
+        <ul class="flex flex-col gap-2" data-instrument-list>
+          {instrumentProjects.map((project, i) => (
+            <li>
+              <InstrumentRow project={project} reading={i === 2} />
+            </li>
+          ))}
+        </ul>
+      </Container>
+    )
+  }
 
   {
     name === "headlines" && (

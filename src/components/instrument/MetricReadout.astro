@@ -1,0 +1,94 @@
+---
+import type { Headline } from "../../lib/projects";
+import { cn } from "../../lib/utils";
+
+/**
+ * A project's headline number in one of the three metric modes (spec §03 R5),
+ * plus the evidence note that says which mode it is.
+ *
+ *   CORRECTED   the struck pair — the withdrawn number, then the reported one
+ *   CONTROLLED  a null or negative result, carried by a positive control
+ *   LIMITS      a result published with its documented limits
+ *
+ * THE VALUE IS ALWAYS FOREGROUND, in every state, and that is a rule rather
+ * than a preference. §02: a receded instrument is two levels, not one — muted
+ * title, foreground metric — "where a plain metric is foreground exactly like a
+ * corrected one. Corrections are distinguished by the struck pair and the
+ * accent pill, never by being the only legible number." Dim the LIMITS rows and
+ * the page starts arguing that only the corrections are worth reading, which is
+ * both untrue and the opposite of the point.
+ *
+ * `headline` may be null. marketing-effectiveness-lab is archived and publishes
+ * no metrics, so it has no number to lead with; the empty cell below is
+ * DESIGNED, not a gap. See the _headline note in registry.json.
+ */
+interface Props {
+  headline: Headline | null;
+  /** Larger treatment for a reading instrument or a detail page. */
+  size?: "row" | "lead";
+  class?: string;
+}
+
+const { headline, size = "row", class: className } = Astro.props;
+
+const VALUE_SIZE = size === "lead" ? "text-3xl sm:text-4xl" : "text-lg";
+const WITHDRAWN_SIZE = size === "lead" ? "text-lg" : "text-sm";
+---
+
+{
+  headline ? (
+    <div class={cn("flex min-w-0 flex-col gap-1", className)}>
+      <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        {headline.withdrawn && (
+          /*
+            The struck number is decoration to a screen reader without this: a
+            line-through has no accessible meaning, so the relationship is
+            spelled out and the visual pair is hidden from the tree. <s> rather
+            than a class, because the element itself carries "no longer
+            accurate".
+          */
+          <>
+            <span class="sr-only">
+              Withdrawn: {headline.withdrawn}. Corrected to {headline.value}{" "}
+              {headline.label}.
+            </span>
+            <s
+              class={cn("text-muted-foreground font-mono", WITHDRAWN_SIZE)}
+              aria-hidden="true"
+            >
+              {headline.withdrawn}
+            </s>
+          </>
+        )}
+        <span
+          class={cn("text-foreground font-mono font-semibold", VALUE_SIZE)}
+          aria-hidden={headline.withdrawn ? "true" : undefined}
+        >
+          {headline.value}
+        </span>
+      </div>
+      <span
+        class="text-muted-foreground font-mono text-xs leading-tight"
+        aria-hidden={headline.withdrawn ? "true" : undefined}
+      >
+        {headline.label}
+      </span>
+    </div>
+  ) : (
+    /*
+      The designed empty state. It says WHY there is no number, because a blank
+      cell and an unfilled one look identical — the defect AGENTS.md records
+      three times over. The mock filled this slot with a phrase lifted from the
+      project summary; the spec's instruction where a fact is missing is to mark
+      the slot.
+    */
+    <div class={cn("flex min-w-0 flex-col gap-1", className)}>
+      <span class={cn("text-muted-foreground font-mono", VALUE_SIZE)} aria-hidden="true">
+        &mdash;
+      </span>
+      <span class="text-muted-foreground font-mono text-xs leading-tight">
+        no metric published
+      </span>
+    </div>
+  )
+}
