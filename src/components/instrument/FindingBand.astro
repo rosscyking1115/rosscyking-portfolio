@@ -1,0 +1,82 @@
+---
+import { ArrowDown } from "@lucide/astro";
+
+import type { Headline } from "../../lib/projects";
+import { cn } from "../../lib/utils";
+import MetricMode from "./MetricMode.astro";
+import MetricReadout from "./MetricReadout.astro";
+
+/**
+ * The finding band (design spec §04, /projects/[slug]).
+ *
+ *   "The metrics band becomes the finding band. Three equal cells said 'here
+ *    are some numbers'. This says what the number was, what it is, and what it
+ *    was measured against — and the limits sit next to it, not 2,000 words
+ *    below."
+ *
+ * WHAT IT REPLACED, and why three equal cells was the problem rather than the
+ * cells being ugly. The old band printed every metric a project publishes at
+ * the same size, in the same box, with no indication which one the project
+ * turns on or how it was arrived at. On agent-release-gates that meant 79.92%,
+ * 640 and 309 side by side — a retrieval score, a corpus size and a test count,
+ * presented as three facts of equal weight. Only one of them is the finding.
+ *
+ * So this band carries exactly four things and no more:
+ *
+ *   the pair     what the number WAS, struck, and what it IS
+ *   the label    what it was measured against
+ *   the mode     which kind of evidence that makes it (§03 R5)
+ *   the limits   a jump to the section, beside the number rather than below it
+ *
+ * NOTHING HERE IS AUTHORED COPY. The pair and the label come from
+ * `projectHeadline()`, which names a metric the write-up already publishes; the
+ * mode is the registry's, gated so a correction cannot be fabricated; and the
+ * limits link is derived from the rendered headings, so it appears only for a
+ * project that actually has a limits section to jump to. A band that invented a
+ * caption for a number would be the opposite of what this page is for.
+ */
+interface Props {
+  headline: Headline | null;
+  /** Anchor for the write-up's limits section, when it has one. */
+  limitsHref?: string;
+  limitsLabel?: string;
+  class?: string;
+}
+
+const { headline, limitsHref, limitsLabel, class: className } = Astro.props;
+---
+
+<section
+  aria-label="Headline finding"
+  data-finding-band
+  class={cn(
+    "border-border bg-muted/40 flex flex-col gap-6 rounded-lg border p-6 sm:flex-row sm:items-start sm:justify-between sm:gap-10 sm:p-8",
+    className,
+  )}
+>
+  <div class="min-w-0">
+    <MetricReadout headline={headline} size="lead" />
+  </div>
+
+  <div class="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+    {headline && <MetricMode mode={headline.mode} />}
+    {
+      limitsHref && (
+        /*
+          "The limits sit next to it, not 2,000 words below." A jump link rather
+          than the limits themselves: the section is prose of a different length
+          in every write-up, and lifting a summary of it here would be writing
+          new copy about published work — which is the one thing this page is
+          not allowed to do.
+        */
+        <a
+          href={limitsHref}
+          class="text-muted-foreground hover:text-foreground ease-instrument inline-flex items-center gap-1.5 font-mono text-xs whitespace-nowrap transition-colors duration-[var(--motion-state)]"
+        >
+          {limitsLabel ?? "Honest limits"}
+          <ArrowDown class="size-3.5" aria-hidden="true" />
+        </a>
+      )
+    }
+  </div>
+</section>

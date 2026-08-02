@@ -295,29 +295,90 @@ test.describe("write-ups", () => {
     }
   });
 
-  test("renders the header, metrics and neighbour navigation", async ({ page }) => {
-    await page.goto("/projects/tfl-data-engineering");
+  test("leads with the finding, then the evidence, then the prose", async ({ page }) => {
+    // The spec's spine for this route, asserted as ORDER rather than as
+    // presence — "evidence before prose" is the whole point, and three
+    // components all rendering somewhere on the page would satisfy a
+    // presence-only check while the reader still met the method first.
+    await page.goto("/projects/agent-release-gates");
 
-    await expect(page.locator("main h1")).toHaveText(
-      "London Cycle-Hire Analytics Platform",
-    );
+    await expect(page.locator("main h1")).toHaveText("Agent Release Safety Gates");
     // Catalogue number matches the log's, not a per-page counter.
-    await expect(page.locator("header span.text-primary").first()).toHaveText("[ 01 ]");
+    await expect(page.locator("header span.text-primary").first()).toHaveText("[ 05 ]");
 
-    // Pinned metrics come from the MDX front matter, which validate-projects
-    // gates against registry.json — a stale number fails CI before it ships.
-    //
-    // Located by `data-metric-value`, not by `.font-mono.text-2xl`. The class
-    // string was a styling detail standing in for a contract: the values are
-    // now `text-lg sm:text-2xl`, because at 320px each cell is ~90px and
-    // `90.91%` in 24px mono was being clipped by the wrapper's overflow. The
-    // metric was still rendered and still correct; only the class had moved.
-    const metrics = page.locator("[data-metric-value]");
-    await expect(metrics).not.toHaveCount(0);
-    await expect(metrics.first()).not.toBeEmpty();
+    const order = await page.evaluate(() => {
+      const at = (selector: string) => {
+        const node = document.querySelector(selector);
+        return node ? node.getBoundingClientRect().top + window.scrollY : Infinity;
+      };
+      return {
+        band: at("[data-finding-band]"),
+        frame: at("main figure"),
+        prose: at(".doc"),
+      };
+    });
+    expect(order.band, "the finding band is not on the page").toBeLessThan(Infinity);
+    expect(order.band, "the evidence comes before the finding").toBeLessThan(order.frame);
+    expect(order.frame, "the prose comes before the evidence").toBeLessThan(order.prose);
+  });
 
+  test("the finding band carries the headline number and its correction", async ({
+    page,
+  }) => {
+    // Replaces the three-cell metrics strip and the assertion that went with
+    // it. That test checked a metric was rendered and non-empty, which the old
+    // band satisfied by printing everything the project publishes at equal
+    // weight — including a corpus size and a test count beside the finding.
+    // What matters now is that the ONE number is here WITH the number it
+    // replaced, because half a correction is just a confident number.
+    await page.goto("/projects/agent-release-gates");
+    const band = page.locator("[data-finding-band]");
+
+    await expect(band.getByText("79.92%", { exact: true })).toBeVisible();
+    await expect(band.locator("s")).toHaveText("99.31%");
+    await expect(band).toContainText("external retrieval hit@3");
+    await expect(band).toContainText("Withdrawn: 99.31%");
+    await expect(band.locator("[title^='Corrected']")).toBeVisible();
+
+    // "The limits sit next to it, not 2,000 words below" — a jump link, and it
+    // must land on a heading that exists.
+    const limits = band.getByRole("link");
+    const href = await limits.getAttribute("href");
+    expect(href, "the finding band has no limits link").toMatch(/^#.+/);
+    await expect(page.locator(`.doc ${href}`)).toBeVisible();
+  });
+
+  test("a project with no metric marks the slot rather than hiding it", async ({
+    page,
+  }) => {
+    // marketing-effectiveness-lab is archived, publishes no metrics, and has no
+    // limits section. Every one of those is a real absence, and the band has to
+    // say so — a band that vanished would be indistinguishable from a band that
+    // failed to render, which is the defect AGENTS.md records three times.
+    await page.goto("/projects/marketing-effectiveness-lab");
+    const band = page.locator("[data-finding-band]");
+    await expect(band).toBeVisible();
+    await expect(band).toContainText("no metric published");
+    await expect(band.getByRole("link")).toHaveCount(0);
+  });
+
+  test("prev and next are instruments, carrying the next result", async ({ page }) => {
+    // "You always leave a write-up knowing the next one's result." They were
+    // two bordered boxes carrying a title and a direction, which told the
+    // reader nothing about whether the next thing was worth opening.
+    await page.goto("/projects/agent-release-gates");
     const neighbours = page.getByRole("navigation", { name: "Project navigation" });
-    await expect(neighbours.getByRole("link")).not.toHaveCount(0);
+
+    const rows = neighbours.locator("[data-instrument]");
+    await expect(rows).not.toHaveCount(0);
+    for (const row of await rows.all()) {
+      await expect(row.locator("[data-catalogue]")).not.toBeEmpty();
+      // The headline number, or the marked empty slot — never nothing.
+      await expect(row).toContainText(/\S/);
+      await expect(
+        row.locator(".font-mono.font-semibold, [aria-hidden='true']").first(),
+      ).toBeVisible();
+    }
   });
 
   test("MDX renders through the .doc styles with numbered headings", async ({ page }) => {
