@@ -117,9 +117,11 @@ describe("motion contract — nothing translates", () => {
 
 describe("motion contract — never on arrival, on scroll, or continuously", () => {
   it("the entrance reveal is gone, and stays gone", () => {
-    // Would have caught the reveal returning under any of its names. It was
-    // removed for LCP: an element at opacity 0 is not painted, so a faded hero
-    // gated Largest Contentful Paint on the animation rather than on the byte.
+    // Would have caught the reveal returning under any of its names. Note that
+    // it was NOT removed for LCP — that prediction was measured and did not
+    // hold. It was removed because §01 bans motion on arrival and on scroll,
+    // and because the a11y gate could then drop its reduced-motion workaround.
+    // The measurement is in the MOTION CONTRACT in src/styles/global.css.
     expect(
       scan(/\breveal(?:-on-scroll)?\b|--reveal-(?:delay|shift|distance|duration)/),
     ).toEqual([]);

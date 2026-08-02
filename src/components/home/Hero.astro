@@ -12,11 +12,16 @@ import ProofStrip from "./ProofStrip.astro";
  * Ported from src/components/home/hero.tsx.
  *
  * The seven stacked <FadeIn> wrappers became one shared CSS keyframe, and that
- * keyframe is now gone too. The hero is the largest-contentful-paint element on
- * the site, and an element at opacity 0 is not painted — so a staggered
- * entrance was gating LCP on the animation instead of on the byte. See the
- * MOTION CONTRACT in src/styles/global.css: nothing on this site animates on
- * arrival, and the hero is the clearest reason why.
+ * keyframe is now gone too — see the MOTION CONTRACT in src/styles/global.css:
+ * nothing on this site animates on arrival.
+ *
+ * The hero was expected to be the strongest argument for that, on the reasoning
+ * that an element at opacity 0 is not painted and so a staggered entrance must
+ * gate LCP. Measured, it did not — the gap between FCP and LCP was 0ms with the
+ * reveal and 0ms without it. What the fade actually did was disqualify this <h1>
+ * as an LCP candidate and hand the title to a lens button instead. The full
+ * measurement is in the motion contract; it is recorded because the prediction
+ * was wrong, not because it was right.
  *
  * TWO COLUMNS AT lg, and the reason is a measurement rather than a preference.
  * The container is 1152px and the hero column was capped at 768px, left

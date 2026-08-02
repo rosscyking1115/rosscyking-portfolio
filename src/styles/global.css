@@ -271,8 +271,24 @@
  *
  * Removing it is worth more than the animation was:
  *
- *   1. LCP. An element at opacity 0 is not "painted", so a faded hero gates
- *      Largest Contentful Paint on the animation rather than on the byte.
+ *   1. LCP — AND THE PREDICTION HERE WAS WRONG, recorded rather than quietly
+ *      deleted. The reasoning was that an element at opacity 0 is not
+ *      "painted", so a faded hero must gate Largest Contentful Paint on the
+ *      animation rather than on the byte. Measured on the PR-85 preview
+ *      against production, five cold loads each:
+ *
+ *          production (reveal)  FCP 248ms · LCP 248ms · gap 0ms
+ *          preview (no reveal)  FCP 212ms · LCP 212ms · gap 0ms
+ *
+ *      A 0ms gap on every run of both. What the reveal actually did was change
+ *      WHICH element counted — Chrome skips opacity-0 candidates, so the faded
+ *      <h1> was disqualified and a lens button won instead — but LCP still
+ *      landed on the same frame as FCP, because an unfaded element was always
+ *      available to be it. The absolute difference is two deployments with
+ *      different cache warmth and is not attributable to this change.
+ *
+ *      So there is no LCP win. Reasons 2 and 3 stand on their own, and §01
+ *      bans the motion regardless.
  *   2. The a11y gate gets STRICTER, not weaker. tests/e2e/a11y.spec.ts had to
  *      scan under `reducedMotion: "reduce"`, because axe blends opacity into
  *      the foreground colour and an un-scrolled card reported its body text at
