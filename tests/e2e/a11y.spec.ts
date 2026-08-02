@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
+import { ROUTES as ALL_ROUTES, routeName } from "./routes";
+
 /**
  * Automated accessibility gate.
  *
@@ -59,18 +61,23 @@ const KNOWN: Record<string, string[]> = {
   ],
 };
 
-const ROUTES = [
-  { path: "/", name: "home" },
-  { path: "/projects", name: "projects index" },
-  { path: "/projects/agent-release-gates", name: "project write-up" },
-  { path: "/about", name: "about" },
-  { path: "/contact", name: "contact" },
-  { path: "/no-such-page-exists", name: "404" },
-];
+/**
+ * DERIVED, not listed. See tests/e2e/routes.ts — three gates each carried their
+ * own hardcoded route list, and none of them noticed when /privacy and
+ * /colophon shipped. A list written by hand cannot fail for a page that is not
+ * on it.
+ */
+const ROUTES = ALL_ROUTES.map((path) => ({ path, name: routeName(path) }));
 
-/** Only the two densest pages are re-scanned in dark, to keep the run short. */
-const DARK_ROUTES = ROUTES.filter(
-  (route) => route.path === "/" || route.path === "/about",
+/**
+ * Only the densest pages are re-scanned in dark, to keep the run short.
+ *
+ * Home and About are the two with the most distinct token usage. The two new
+ * pages join them because they are the ones whose contrast has never been
+ * checked in either theme, which is the whole reason this file changed.
+ */
+const DARK_ROUTES = ROUTES.filter((route) =>
+  ["/", "/about", "/privacy", "/colophon"].includes(route.path),
 );
 
 for (const theme of ["light", "dark"] as const) {
