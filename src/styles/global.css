@@ -49,6 +49,46 @@
   --destructive-foreground: oklch(0.985 0 0);
 
   --radius: 0.5rem;
+
+  /* ---------- Motion (design spec §01) ----------
+   * Three durations, one easing, and nothing else. The names say what the
+   * motion MEANS, so a component cannot pick a duration by feel:
+   *
+   *   state     pointer on a control
+   *   address   an instrument becomes, or stops being, the one being read;
+   *             colour and border only
+   *   disclose  the reader opened something
+   *
+   * These are theme-independent — a duration is not a colour — so they live
+   * once here and are not repeated under .dark.
+   *
+   * See the MOTION CONTRACT block further down for what is BANNED, which is
+   * the more load-bearing half of §01. */
+  --motion-state: 120ms;
+  --motion-address: 160ms;
+  --motion-disclose: 220ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---------- Instrument states (design spec §02) ----------
+   * Addressing has two states and the difference between them is colour,
+   * border and surface — NEVER height. See the hard requirement in the motion
+   * contract below.
+   *
+   * A receded instrument is two levels, not one: its title recedes to
+   * --muted-foreground but its metric stays at --foreground. Those two are the
+   * existing tokens by value, so they are not duplicated here; only the
+   * reading state and the chrome bar need values of their own.
+   *
+   * In light the reading state keeps the page surface and is marked by a
+   * darker border plus a shadow. In dark it cannot be a shadow — #151619 has
+   * no depth to cast into — so the surface itself lifts to #212327 and the
+   * shadow is dropped. Consumed by the instrument (spec §03). */
+  --instrument-reading-surface: #fafafb;
+  --instrument-reading-border: #cdd0d6;
+  --instrument-chrome: #f0f1f3;
+
+  /* LIVE, one of the three content states in §03 R6. */
+  --state-live: #3f9a5f;
 }
 
 /* ---------- Design tokens (dark) ---------- */
@@ -77,6 +117,17 @@
 
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.985 0 0);
+
+  /* Instrument states, dark. Note the direction of --instrument-chrome: once a
+   * reading instrument has LIFTED to #212327, its own chrome bar has to step
+   * DOWN to #1a1c20 rather than up. In light it steps up, because the reading
+   * surface there is the page. Getting this backwards is the single easiest
+   * mistake in the dark pass. */
+  --instrument-reading-surface: #212327;
+  --instrument-reading-border: #3a3d43;
+  --instrument-chrome: #1a1c20;
+
+  --state-live: #66b587;
 }
 
 /* ---------- Map tokens to Tailwind theme ---------- */
@@ -122,6 +173,15 @@
   /* Near-flat elevation ramp. Resting cards use shadow-xs; hover uses shadow-lift. */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-lift: 0 6px 20px -8px rgb(0 0 0 / 0.12);
+
+  /* Motion and instrument tokens, exposed as utilities. `ease-instrument` is
+   * the ONLY easing any transition on this site may use. */
+  --ease-instrument: var(--motion-ease);
+
+  --color-instrument-reading: var(--instrument-reading-surface);
+  --color-instrument-reading-border: var(--instrument-reading-border);
+  --color-instrument-chrome: var(--instrument-chrome);
+  --color-state-live: var(--state-live);
 }
 
 /* ---------- Base layer ---------- */
@@ -179,70 +239,51 @@
   );
 }
 
-/* ---------- Entrance reveal ----------
- * ONE declaration for the whole site.
+/* ---------- MOTION CONTRACT (design spec §01) ----------
+ * The bans, which are the load-bearing half of the motion system. The three
+ * durations at the top of this file say when motion is allowed; this says when
+ * it is not. `tests/e2e/motion.spec.ts` enforces all of it against the rendered
+ * page, and `tests/unit/motion-contract.test.ts` against the source.
  *
- * Four components each carried their own copy of this keyframe in a scoped
- * <style> block, at three different value pairs — Hero 500ms/10px,
- * FeaturedProjects and /projects 400ms/8px, NowBuilding 400ms/8px with no
- * stagger at all. Scoped styles cannot cross a component boundary, which is why
- * the copies existed; a class in the global sheet has no such limit and cannot
- * drift.
+ *   NOTHING TRANSLATES   No element slides, rises or drifts, in any state,
+ *                        ever. That includes hover lift, arrow nudge and
+ *                        padding growth — all three shipped here before.
+ *   NO OPACITY ON TEXT   At any state, in either theme.
+ *   NEVER                On arrival. On scroll, as a reveal. Between pages.
+ *                        Continuously.
+ *   EASING               cubic-bezier(.2, 0, 0, 1) for all three durations.
+ *                        Nothing bounces or overshoots.
  *
- * Two variants:
- *   .reveal            plays on load. For content above the fold, where there
- *                      is no scroll to drive anything.
- *   .reveal-on-scroll  is driven by the element's own view() progress where the
- *                      browser supports scroll-driven animations, so a card
- *                      arrives when you reach it instead of firing off screen.
- *                      Where it does not, the @supports block simply does not
- *                      apply and the element keeps the load-time behaviour —
- *                      which is what every browser did before this.
- *     https://developer.mozilla.org/en-US/docs/Web/CSS/animation-timeline
+ * HARD REQUIREMENT, and the reason CLS is the one live risk in the performance
+ * budget: receded and reading differ in colour, border and surface only —
+ * NEVER in height. Both states must reserve identical layout. Implement
+ * receding as a height change and the page shifts under the reader's thumb.
  *
- * The range ends early on purpose. `cover 14%` is reached by anything with a
- * meaningful amount of itself on screen, so an element that is already well in
- * view at load renders at its end state rather than half-faded; only something
- * just peeking over the fold has any distance left to travel. Ending on `cover`
- * rather than `entry` also covers the case that breaks the naive recipe: an
- * element TALLER than the viewport never completes `entry`, and would sit
- * permanently transparent.
+ * WHAT THIS REPLACED, and why it is not a regression.
  *
- * REDUCED MOTION. The whole block sits inside `prefers-reduced-motion:
- * no-preference`, so the animation is never applied at all. The global reduce
- * block in the base layer collapses `animation-duration`, but it does NOT reset
- * `animation-delay`, and `fill-mode: both` holds an element at opacity 0 for
- * the whole of that delay — so before this, a reduced-motion visitor still got
- * the full staggered pop-in, just with instant tweens. Measured on the old
- * markup: the <h1> stayed transparent for 167ms and the proof strip for 360ms.
- */
-@media (prefers-reduced-motion: no-preference) {
-  .reveal,
-  .reveal-on-scroll {
-    animation: reveal var(--reveal-duration, 480ms) cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: var(--reveal-delay, 0ms);
-  }
-
-  @supports (animation-timeline: view()) {
-    .reveal-on-scroll {
-      animation-timeline: view();
-      animation-range: cover 0% cover calc(14% + var(--reveal-shift, 0%));
-      animation-duration: auto;
-      animation-delay: 0s;
-    }
-  }
-}
-
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(var(--reveal-distance, 10px));
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
+ * A `.reveal` / `.reveal-on-scroll` pair used to live here: a shared keyframe
+ * fading and translating elements in, driven by `animation-timeline: view()`
+ * where supported. It was a genuine improvement on what preceded it — four
+ * components each carrying their own copy of the same keyframe at three
+ * different value pairs — and it was measured, staggered and reduced-motion
+ * correct. It still violates three of the four rules above: it translated, it
+ * put opacity on text, and it fired on arrival and on scroll.
+ *
+ * Removing it is worth more than the animation was:
+ *
+ *   1. LCP. An element at opacity 0 is not "painted", so a faded hero gates
+ *      Largest Contentful Paint on the animation rather than on the byte.
+ *   2. The a11y gate gets STRICTER, not weaker. tests/e2e/a11y.spec.ts had to
+ *      scan under `reducedMotion: "reduce"`, because axe blends opacity into
+ *      the foreground colour and an un-scrolled card reported its body text at
+ *      1.13:1 — a measurement of a transient frame, not of the design. The
+ *      spec's contrast rule is "graded on the page AS LOADED", and only now
+ *      can that be what runs.
+ *   3. There is no second code path. "No scroll-driven animation support" used
+ *      to mean a different, lesser experience; now every browser gets the one
+ *      design, which is also exactly what a reduced-motion visitor sees.
+ *
+ * The site is finished when it arrives. The reader opens what they want. */
 
 /* ---------- Stretched-link cards ----------
  * A card whose title link carries `after:inset-0` is entirely clickable, but

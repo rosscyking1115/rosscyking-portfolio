@@ -71,7 +71,7 @@ const links = [
             <a
               href={link.href}
               {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              class="text-muted-foreground hover:text-foreground inline-block min-w-6 py-1 transition-colors"
+              class="text-muted-foreground hover:text-foreground ease-instrument inline-block min-w-6 py-1 transition-colors duration-[var(--motion-state)]"
             >
               {link.label}
             </a>

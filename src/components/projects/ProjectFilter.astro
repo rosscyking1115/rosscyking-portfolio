@@ -31,7 +31,7 @@ const { stacks } = Astro.props;
 
 const chipClass = (extra?: string) =>
   cn(
-    "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors",
+    "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap ease-instrument transition-colors duration-[var(--motion-state)]",
     "border-border bg-background text-muted-foreground hover:text-foreground",
     "aria-[current]:border-primary aria-[current]:bg-primary aria-[current]:text-primary-foreground",
     extra,

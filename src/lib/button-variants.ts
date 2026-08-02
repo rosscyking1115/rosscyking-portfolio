@@ -15,12 +15,23 @@ import { cn } from "./utils";
  * documents the elevation ramp as "resting cards use shadow-xs; hover uses
  * shadow-lift", and cards follow it — the primary button was the one surface
  * whose shadow appeared out of nothing on hover instead of deepening.
+ *
+ * TIMING. A button is a control, so its hover is the `state` token — 120ms on
+ * the shared easing. See the MOTION CONTRACT in src/styles/global.css.
+ *
+ * `disabled:opacity-50` is one of only three places on the whole site where
+ * text carries an opacity — the other two are on the input and its label in
+ * src/components/ui/form-controls.tsx. All three are the SAME state, and all
+ * three are allowlisted by name in tests/unit/motion-contract.test.ts rather
+ * than quietly skipped. The ban exists so that every state can be
+ * contrast-graded; WCAG 1.4.3 exempts text that is part of an inactive control,
+ * so this one state has nothing to grade. A fourth site fails the gate.
  */
 export type ButtonVariant = "default" | "outline" | "ghost" | "link";
 export type ButtonSize = "default" | "sm" | "lg" | "icon";
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-[color,background-color,border-color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0";
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-[color,background-color,border-color,box-shadow] duration-[var(--motion-state)] ease-instrument focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0";
 
 const VARIANTS: Record<ButtonVariant, string> = {
   default: "bg-primary text-primary-foreground shadow-xs hover:shadow-lift",

@@ -184,7 +184,7 @@ const externalLinks = [
           prev ? (
             <a
               href={`/projects/${prev.id}`}
-              class="border-border hover:border-foreground/20 flex flex-col rounded-lg border p-4 transition-[border-color,box-shadow] duration-150 hover:shadow-xs"
+              class="border-border hover:border-instrument-reading-border ease-instrument flex flex-col rounded-lg border p-4 transition-[border-color] duration-[var(--motion-address)]"
             >
               <span class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
                 ← Previous
@@ -199,7 +199,7 @@ const externalLinks = [
           next && (
             <a
               href={`/projects/${next.id}`}
-              class="border-border hover:border-foreground/20 flex flex-col rounded-lg border p-4 text-right transition-[border-color,box-shadow] duration-150 hover:shadow-xs sm:items-end"
+              class="border-border hover:border-instrument-reading-border ease-instrument flex flex-col rounded-lg border p-4 text-right transition-[border-color] duration-[var(--motion-address)] sm:items-end"
             >
               <span class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
                 Next →
