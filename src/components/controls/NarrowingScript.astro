@@ -1,0 +1,81 @@
+---
+import { DEFAULT_LENS, LENS_ALIASES, LENS_KEYS } from "../../lib/lenses";
+import { SORTS } from "../../lib/projects";
+
+/**
+ * Resolves every narrowing parameter BEFORE first paint.
+ *
+ * Replaces LensScript.astro, which did this for `?lens=` alone. The reason it
+ * has to be inline in <head> is unchanged and is worth restating: a bundled
+ * script is deferred and runs after first paint, so a visitor opening a shared
+ * `/projects?stack=dbt&sort=tests` link would see the full, unsorted list flash
+ * first. Everything is prerendered and CSS picks what is visible off these
+ * attributes, so they have to exist before the first frame.
+ *
+ * THREE PARAMETERS, THREE DIFFERENT RESOLUTIONS, one script:
+ *
+ *   lens   a fixed key set WITH ALIASES. Retired lens names map onto the lens
+ *          that answers the same role rather than being dumped on the default,
+ *          so an old shared link still lands somewhere sensible.
+ *   sort   a fixed key set, no aliases. Anything unknown falls back.
+ *   stack  FREE TEXT — a stack name is authored content, so there is no key set
+ *          to validate against. It is written to the attribute as given and the
+ *          CSS below narrows on it. `CSS.escape` is what keeps a crafted value
+ *          from ending the selector early.
+ *
+ * The key sets and the alias map are injected from the registry at build time,
+ * so adding a lens or a sort cannot leave this file behind.
+ *
+ * The `/for/:lens` → `/?lens=:lens` redirect that feeds the lens parameter
+ * lives in vercel.json, because Astro cannot express a query-string
+ * destination — it fails the build with InvalidRedirectDestination. vercel.json
+ * permits no comments, so the reasoning is here and in
+ * tests/e2e/redirects.spec.ts.
+ */
+const config = JSON.stringify({
+  lens: { valid: LENS_KEYS, aliases: LENS_ALIASES, fallback: DEFAULT_LENS },
+  sort: { valid: SORTS, aliases: {}, fallback: "order" },
+});
+---
+
+<script is:inline define:vars={{ config }}>
+  (function () {
+    const params = new URLSearchParams(window.location.search);
+
+    try {
+      const spec = JSON.parse(config);
+      for (const name in spec) {
+        const rule = spec[name];
+        const requested = params.get(name);
+        let value = rule.fallback;
+        if (requested) {
+          if (rule.valid.indexOf(requested) > -1) value = requested;
+          else if (Object.prototype.hasOwnProperty.call(rule.aliases, requested))
+            value = rule.aliases[requested];
+        }
+        document.documentElement.dataset[name] = value;
+      }
+    } catch {
+      document.documentElement.dataset.lens = "all";
+      document.documentElement.dataset.sort = "order";
+    }
+
+    try {
+      const stack = params.get("stack");
+      document.documentElement.dataset.stack = stack || "";
+      if (stack) {
+        // Free text, so the rule is injected rather than pre-generated. The
+        // `|`-delimited form is what allows a stack name containing spaces —
+        // the whitespace-separated `~=` operator cannot match "GitHub Actions".
+        const style = document.createElement("style");
+        style.textContent =
+          '[data-project]:not([data-stack*="|' +
+          CSS.escape(stack).replace(/\\/g, "") +
+          '|"]) { display: none }';
+        document.head.appendChild(style);
+      }
+    } catch {
+      /* Narrowing is an enhancement — never let it hide the whole list. */
+    }
+  })();
+</script>

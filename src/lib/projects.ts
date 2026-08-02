@@ -2,6 +2,7 @@ import { getCollection, type CollectionEntry } from "astro:content";
 import readingTime from "reading-time";
 
 import registry from "../../content/projects/registry.json";
+import { testCount } from "./registry-stats";
 
 /**
  * Project queries, ported from the Next app's src/lib/projects.ts.
@@ -168,6 +169,75 @@ export function projectState(slug: string): ContentState {
   const spec = REGISTRY[slug];
   if (spec?.status === "archived") return "ARCHIVED";
   return spec?.demo ? "LIVE" : "RUN LOG";
+}
+
+/**
+ * The four sorts the projects log offers (design spec §04, /projects row).
+ *
+ * "Evidence note is a sortable column" is the thesis of that page: the metric
+ * mode stops being a sentence in the prose and becomes an AXIS, so "corrected
+ * first" is a thing a hiring manager can actually do. The other three are the
+ * reading order, the size of the test suite, and whether there is something to
+ * click.
+ */
+export const SORTS = ["order", "tests", "corrected", "live"] as const;
+export type Sort = (typeof SORTS)[number];
+
+export const SORT_LABELS: Record<Sort, string> = {
+  order: "Reading order",
+  tests: "Most tests",
+  corrected: "Corrected first",
+  live: "Live demo first",
+};
+
+/** Mode and state precedence, most-interesting first. Ties fall back to the mark. */
+const MODE_RANK: Record<MetricMode, number> = { CORRECTED: 0, CONTROLLED: 1, LIMITS: 2 };
+const STATE_RANK: Record<ContentState, number> = { LIVE: 0, "RUN LOG": 1, ARCHIVED: 2 };
+
+/**
+ * Every sort's position for every project, as CSS `order` values.
+ *
+ * SORTING IS CSS, NOT JAVASCRIPT. Each row carries all four ranks as custom
+ * properties and a rule on `<html data-sort>` picks which one `order` reads, so
+ * changing the sort moves nothing in the DOM: no re-render, no reflow of ten
+ * subtrees, no hydration, and a shared `?sort=` link is correct before first
+ * paint rather than after a script runs. It also means the sort cannot
+ * disagree with the filter — they are independent attributes on the same
+ * element rather than two passes over one list.
+ */
+export function sortRanks(projects: Project[]): Map<string, Record<Sort, number>> {
+  const rank = (compare: (a: Project, b: Project) => number) => {
+    const ordered = [...projects].sort(
+      (a, b) => compare(a, b) || projectMark(a.id) - projectMark(b.id),
+    );
+    return new Map(ordered.map((project, index) => [project.id, index + 1]));
+  };
+
+  const byOrder = rank(() => 0);
+  const byTests = rank((a, b) => testCount(b.id) - testCount(a.id));
+  const byCorrected = rank((a, b) => {
+    const modeRank = (project: Project) => {
+      const headline = projectHeadline(project);
+      // No headline sorts last: it is neither corrected nor uncorrected.
+      return headline ? MODE_RANK[headline.mode] : 3;
+    };
+    return modeRank(a) - modeRank(b);
+  });
+  const byLive = rank(
+    (a, b) => STATE_RANK[projectState(a.id)] - STATE_RANK[projectState(b.id)],
+  );
+
+  return new Map(
+    projects.map((project) => [
+      project.id,
+      {
+        order: byOrder.get(project.id)!,
+        tests: byTests.get(project.id)!,
+        corrected: byCorrected.get(project.id)!,
+        live: byLive.get(project.id)!,
+      },
+    ]),
+  );
 }
 
 /**

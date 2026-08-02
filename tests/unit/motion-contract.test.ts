@@ -110,8 +110,20 @@ describe("motion contract — nothing translates", () => {
     );
   });
 
-  it("no keyframe displaces anything", () => {
-    expect(scan(/@keyframes|transform:\s*translate|transform:\s*scale/)).toEqual([]);
+  it("no CSS declaration displaces anything", () => {
+    // NARROWED alongside the scroll ban below. This used to reject the string
+    // `@keyframes` outright, which was a fair proxy while the site's only
+    // keyframe was the entrance reveal — and became wrong the moment §02's
+    // reading line needed a keyframe that changes two colours and nothing else.
+    // What a keyframe CONTAINS is now checked properly, one case down; this is
+    // left holding the plain-declaration half.
+    //
+    // The lookbehind is doing real work: without it, `text-transform:
+    // uppercase` matches, and the first run of this reported the email
+    // template's eyebrow and the write-up's table headers as motion.
+    expect(
+      scan(/(?<![\w-])(?:transform:\s*(?!none)|translate:\s|scale:\s|rotate:\s)/),
+    ).toEqual([]);
   });
 });
 
@@ -127,10 +139,51 @@ describe("motion contract — never on arrival, on scroll, or continuously", () 
     ).toEqual([]);
   });
 
-  it("no scroll-driven animation is declared", () => {
-    expect(scan(/animation-timeline|animation-range|\bview\(\)|\bscroll\(\)/)).toEqual(
-      [],
+  it("no keyframe animates opacity or transform, on any timeline", () => {
+    // NARROWED, and the narrowing is the point.
+    //
+    // This used to ban `animation-timeline`, `view()` and `scroll()` outright.
+    // That was right for what existed at the time — the only scroll-driven
+    // thing on the site was the entrance reveal — and WRONG as a rule, because
+    // §02's third addressing input is proximity to a reading line, which is a
+    // scroll-driven state and the only addressing a phone can have. Banning the
+    // mechanism banned the design.
+    //
+    // What §01 actually forbids is a REVEAL: something arriving, fading or
+    // sliding as you scroll. So the ban moves onto the two properties that make
+    // an animation a reveal rather than onto the timeline that drives it. The
+    // reading line animates border-color and background-color and would fail
+    // this the moment it touched anything else.
+    //
+    // tests/e2e/motion.spec.ts enforces the same rule against LIVE keyframes
+    // read off getAnimations(), which is the half a text scan cannot do.
+    const keyframeBlocks = FILES.flatMap((file) =>
+      [...file.text.matchAll(/@keyframes\s+([\w-]+)\s*\{/g)].map((match) => {
+        // Walk braces from the opening one, so nested percentage blocks are
+        // included and the next rule is not.
+        let depth = 0;
+        let end = match.index! + match[0].length - 1;
+        for (let i = end; i < file.text.length; i++) {
+          if (file.text[i] === "{") depth++;
+          else if (file.text[i] === "}" && --depth === 0) {
+            end = i;
+            break;
+          }
+        }
+        return {
+          file: file.path,
+          name: match[1]!,
+          body: file.text.slice(match.index!, end + 1),
+        };
+      }),
     );
+
+    const offenders = keyframeBlocks
+      .filter((block) =>
+        /(?:^|[\s;{])(?:opacity|transform|translate|scale|rotate)\s*:/m.test(block.body),
+      )
+      .map((block) => `${block.file} — @keyframes ${block.name}`);
+    expect(offenders).toEqual([]);
   });
 
   it("nothing animates continuously", () => {

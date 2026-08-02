@@ -345,3 +345,110 @@ test.describe("the instrument — both themes", () => {
     });
   }
 });
+
+test.describe("the reading line — addressing without a pointer (spec §02)", () => {
+  /**
+   * §02's third addressing input, and the only one a phone has.
+   *
+   * The spec's own risk note on this direction is the reason it exists:
+   * "hover-driven emphasis has no touch equivalent, and most of your traffic is
+   * a phone. Mobile needs a different rule, not a fallback." So it is scoped to
+   * `(hover: none)` — a different rule for devices with no pointer, rather than
+   * a degraded version of the pointer rule — and on a desktop it never applies
+   * at all, which is what stops a running animation and a `:hover` declaration
+   * fighting over the same two properties.
+   *
+   * It is a scroll-driven ANIMATION, which the motion contract used to ban
+   * outright. The ban was narrowed rather than waived: what §01 forbids is a
+   * reveal, so the rule now sits on the two properties that make an animation a
+   * reveal (opacity, transform) instead of on the timeline that drives it.
+   * tests/e2e/motion.spec.ts reads the live keyframes off getAnimations() and
+   * fails if this ever touches either.
+   */
+  const phone = { width: 390, height: 844 };
+
+  test("on touch, exactly one row reads, and scrolling moves which", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: phone,
+      isMobile: true,
+      hasTouch: true,
+    });
+    const page = await context.newPage();
+    await page.goto("/projects");
+
+    const litAt = (top: number) =>
+      page.evaluate(async (y) => {
+        // `behavior: "instant"` is REQUIRED, and finding out why cost an hour.
+        // global.css sets `scroll-behavior: smooth` on <html>, so a plain
+        // scrollTo animates — and reading two frames later samples the scroll
+        // 43px in rather than at its destination. Every row looked receded and
+        // the reading line looked broken when it was working correctly. Third
+        // time this pass that a synchronous read caught a tween mid-flight.
+        window.scrollTo({ top: y, behavior: "instant" });
+        await new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        );
+        const receded = getComputedStyle(document.documentElement)
+          .getPropertyValue("--border")
+          .trim();
+        const hex = (value: string) => {
+          const [r, g, b] = value.match(/\d+/g)!.map(Number);
+          return `#${[r, g, b].map((n) => n!.toString(16).padStart(2, "0")).join("")}`;
+        };
+        return [...document.querySelectorAll("[data-instrument]")]
+          .map((row, index) => ({
+            index,
+            border: hex(getComputedStyle(row).borderTopColor),
+          }))
+          .filter((row) => row.border !== receded)
+          .map((row) => row.index);
+      }, top);
+
+    const sweep: number[][] = [];
+    for (const top of [450, 600, 900, 1050, 1200, 1500, 1650, 2100, 2250]) {
+      sweep.push(await litAt(top));
+    }
+
+    // AT MOST ONE. The lit band is ~55px of scroll against a row pitch of 89px,
+    // so two rows can never be inside it together — that is the geometry the
+    // band width was chosen for, asserted rather than assumed.
+    for (const [i, lit] of sweep.entries()) {
+      expect(lit.length, `${lit.length} rows addressed at sample ${i}`).toBeLessThan(2);
+    }
+
+    // AND IT MOVES. A reading line that never changes which row it addresses is
+    // indistinguishable from a static highlight.
+    const distinct = new Set(sweep.flat());
+    expect(
+      distinct.size,
+      `only ${distinct.size} row(s) ever addressed across the whole scroll`,
+    ).toBeGreaterThan(3);
+
+    await context.close();
+  });
+
+  test("a pointer device gets the hover rule instead, not both", async ({ browser }) => {
+    // The failure this guards is silent and only visible on a desktop: an
+    // animation beats a plain declaration in the cascade, so a reading line
+    // running here would quietly disable `:hover` on every row.
+    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await context.newPage();
+    await page.goto("/projects");
+
+    const running = await page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter(
+            (animation) =>
+              animation.timeline &&
+              animation.timeline.constructor.name !== "DocumentTimeline",
+          ).length,
+    );
+    expect(running, "the reading line is running on a pointer device").toBe(0);
+
+    await context.close();
+  });
+});

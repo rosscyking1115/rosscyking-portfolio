@@ -1,0 +1,145 @@
+---
+import { cn } from "../../lib/utils";
+
+/**
+ * THE narrowing control (design spec §03 R3), and the "the" is the point:
+ *
+ *   "One narrowing control, used four times. Home lens, index stack filter,
+ *    index sort, post reading track are the same component: chips, client-side,
+ *    URL-synced, back-button honest. No full navigation for a filter."
+ *
+ * Before this the site had two mechanics that disagreed. The home lens was
+ * buttons with `aria-pressed`, switching a `data-lens` attribute client-side.
+ * The index stack filter was a strip of `<a>` links — a full page navigation
+ * per filter, which R3 rules out by name, and which meant the two controls
+ * looked alike and behaved differently.
+ *
+ * ── HOW IT WORKS ─────────────────────────────────────────────────────────────
+ * Every chip sets one attribute on <html>: `data-<name>="<value>"`. The page
+ * decides what that means in CSS — hiding rows for `data-stack`, re-ordering
+ * them for `data-sort`, swapping panels for `data-lens`. Nothing is re-rendered
+ * and no DOM is moved, so narrowing costs a class change and a repaint.
+ *
+ * The attribute is set by an inline head script (NarrowingScript.astro) BEFORE
+ * first paint, so a shared `/projects?stack=dbt&sort=tests` link arrives
+ * already narrowed rather than flashing the full list. This component's own
+ * script only handles clicks and marks the active chip.
+ *
+ * ── replaceState, NOT pushState ──────────────────────────────────────────────
+ * Carried over deliberately from the lens switcher this replaces, which
+ * documented the reasoning: narrowing is a filter, not a navigation, so Back
+ * should leave the page as it did in the Next app rather than walk backwards
+ * through every chip the reader tried. R3 asks for "back-button honest", and
+ * both readings are defensible — the important half is that ONE rule now
+ * applies to all four controls instead of each surface choosing.
+ */
+export interface NarrowingOption {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  /** URL parameter and `data-*` key on <html>: "lens", "stack", "sort". */
+  name: string;
+  /** Mono caption before the chips — "Filter", "Sort", "Viewing as". */
+  label: string;
+  /** Accessible name for the group, since the caption is a visual label. */
+  groupLabel: string;
+  options: readonly NarrowingOption[];
+  /** The value meaning "not narrowed"; omitted from the URL when active. */
+  defaultValue: string;
+  class?: string;
+}
+
+const { name, label, groupLabel, options, defaultValue, class: className } = Astro.props;
+---
+
+<div
+  role="group"
+  aria-label={groupLabel}
+  class={cn("flex flex-wrap items-center gap-x-3 gap-y-2", className)}
+>
+  <span class="text-muted-foreground shrink-0 font-mono text-xs tracking-wider uppercase">
+    {label}&nbsp;&rarr;
+  </span>
+  <div class="flex flex-wrap gap-1.5">
+    {
+      options.map((option) => (
+        <button
+          type="button"
+          data-narrow={name}
+          data-narrow-chip
+          data-narrow-value={option.value}
+          aria-pressed={option.value === defaultValue ? "true" : "false"}
+          class={cn(
+            "focus-visible:ring-ring border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground cursor-pointer rounded-full border px-3 py-1 font-mono text-xs whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none",
+            "aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-primary aria-pressed:font-medium",
+            "ease-instrument transition-colors duration-[var(--motion-state)]",
+          )}
+        >
+          {option.label}
+        </button>
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  /**
+   * One click handler for every narrowing control on the page.
+   *
+   * Astro hoists and bundles a component's script once no matter how many times
+   * the component renders, so this is a single listener set regardless of
+   * whether a page carries one control or three.
+   */
+  const DEFAULTS: Record<string, string> = { lens: "all", stack: "", sort: "order" };
+
+  function apply(name: string, value: string, syncUrl: boolean) {
+    document.documentElement.dataset[name] = value;
+
+    // `[data-narrow-chip]`, not `[data-narrow]`. Anything may TRIGGER a
+    // narrowing — the projects log's empty state has a "clear the filter"
+    // button that does — but only a chip inside a control is a toggle with a
+    // pressed state. Without the distinction that button inherited
+    // `aria-pressed="true"`, which tells a screen reader the clear action is
+    // currently switched on.
+    for (const chip of document.querySelectorAll<HTMLButtonElement>(
+      `[data-narrow="${name}"][data-narrow-chip]`,
+    )) {
+      chip.setAttribute("aria-pressed", String(chip.dataset.narrowValue === value));
+    }
+
+    if (syncUrl) {
+      const params = new URLSearchParams(window.location.search);
+      if (value && value !== DEFAULTS[name]) params.set(name, value);
+      else params.delete(name);
+      const query = params.toString();
+      // replaceState: a filter is not a navigation. See the component note.
+      window.history.replaceState(
+        {},
+        "",
+        `${window.location.pathname}${query ? `?${query}` : ""}`,
+      );
+    }
+
+    // The page owns what narrowing MEANS — counts, empty states, anything CSS
+    // cannot express. It listens rather than being called, so this control has
+    // no knowledge of any particular route.
+    document.dispatchEvent(new CustomEvent("narrow", { detail: { name, value } }));
+  }
+
+  // Adopt whatever the inline head script already resolved, rather than
+  // re-parsing the URL and risking a mismatch with what is on screen.
+  for (const name of Object.keys(DEFAULTS)) {
+    const current = document.documentElement.dataset[name];
+    if (current !== undefined) apply(name, current, false);
+  }
+
+  for (const chip of document.querySelectorAll<HTMLButtonElement>("[data-narrow]")) {
+    chip.addEventListener("click", () => {
+      const name = chip.dataset.narrow;
+      const value = chip.dataset.narrowValue;
+      if (name && value !== undefined) apply(name, value, true);
+    });
+  }
+</script>
