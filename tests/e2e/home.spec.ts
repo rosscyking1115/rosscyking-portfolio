@@ -110,44 +110,45 @@ test.describe("featured showcase", () => {
     }
   });
 
-  test("every featured card is framed, and no frame is empty", async ({ page }) => {
-    // REWRITTEN, AND THE RULE IT ENFORCED WAS OVERRULED RATHER THAN BROKEN.
+  test("exactly one instrument reads, and only it loads an image", async ({ page }) => {
+    // §03 R7, RESTORED AFTER A ROUND TRIP, and the round trip is why this note
+    // is longer than the test.
     //
-    // It read "exactly one instrument reads, and only it loads an image" — §03
-    // R7. Ross's call on 2 Aug 2026 is that every featured project is open, so
-    // the count goes from one to however many the lens features. R7 still holds
-    // everywhere else, which is why /projects and the bench below are untouched
-    // and why this assertion is scoped to `[data-rack]`.
+    // On 2 Aug 2026 the rack was rebuilt as three open cards, and this
+    // assertion was rewritten to count one frame per featured project. Ross
+    // reverted the layout the same day, so R7 is back in force and so is the
+    // count. What that sequence proves is worth keeping: the assertion tracked
+    // the layout both times, which means it was never testing R7 — it was
+    // testing whatever the component happened to do.
     //
-    // What survives is the finding underneath, which had nothing to do with the
-    // count: a project with neither a screenshot nor terminal lines renders an
-    // EMPTY box — easy to miss in review, and a real defect on the Next site
-    // (HANDOFF P3, item 4). Three cards means three chances at it now, so the
-    // check runs per frame rather than on the one that used to exist.
+    // So the failure it names is the one that does not move: the frame is the
+    // section's signature, and a project with neither a screenshot nor terminal
+    // lines renders an EMPTY box — easy to miss in review, and a real defect on
+    // the Next site (HANDOFF P3, item 4).
     for (const key of Object.keys(lenses)) {
       await page.goto(key === "all" ? "/" : `/?lens=${key}`);
       const panel = page.locator(`[data-lens-panel="${key}"]`);
+      await expect(panel.locator("[data-rack] article")).not.toHaveCount(0);
 
       const framed = panel.locator("[data-rack] figure");
-      await expect(framed, `${key}: every featured card carries a frame`).toHaveCount(
-        lenses[key]!.featured.length,
-      );
+      await expect(
+        framed,
+        `${key}: ${await framed.count()} instruments are framed — R7 allows one`,
+      ).toHaveCount(1);
 
-      for (let i = 0; i < (await framed.count()); i++) {
-        const frame = framed.nth(i);
-        const hasImage = (await frame.locator("img").count()) > 0;
-        const hasTerminal = (await frame.locator("p").count()) > 0;
-        const title = await panel.locator("[data-rack] h3").nth(i).textContent();
-        expect(
-          hasImage || hasTerminal,
-          `${title?.trim()} has an empty evidence frame in the ${key} lens`,
-        ).toBe(true);
-      }
+      // …and that one is not an empty box.
+      const hasImage = (await framed.locator("img").count()) > 0;
+      const hasTerminal = (await framed.locator("p").count()) > 0;
+      const title = await panel.locator("[data-rack] h3").first().textContent();
+      expect(
+        hasImage || hasTerminal,
+        `${title?.trim()} has an empty evidence frame in the ${key} lens`,
+      ).toBe(true);
 
-      // Every bench row keeps its title and its headline number at full
+      // Every other row keeps its title and its headline number at full
       // legibility — "receding removes the frame, the screenshot and the
       // elevation, never the readability."
-      for (const row of await panel.locator("[data-bench] [data-instrument]").all()) {
+      for (const row of await panel.locator("[data-instrument]").all()) {
         await expect(row.locator("h3")).not.toBeEmpty();
       }
     }
@@ -158,13 +159,12 @@ test.describe("featured showcase", () => {
   }) => {
     // THE COST OF OVERRULING R7, ASSERTED SO IT CANNOT DRIFT.
     //
-    // R7 was not decoration: it kept the rack to one screenshot per lens. Three
-    // open cards across three prerendered panels is ten frames in the document,
-    // and the only reason that is defensible is that nine of them are lazy and
-    // sit either below the fold or inside a display:none lens panel. Delete the
-    // `eager` condition — or extend it to "the lead card of every lens", which
-    // reads perfectly reasonable in a diff — and the home page starts fetching
-    // three full-size screenshots before it paints.
+    // Three prerendered lens panels means three rack frames in the document
+    // even under R7, and the only reason that is defensible is that two of them
+    // are lazy and sit inside a display:none panel. Extend the `eager`
+    // condition to "the reading instrument of every lens", which reads
+    // perfectly reasonable in a diff, and the home page starts fetching three
+    // full-size screenshots before it paints.
     await page.goto("/");
     const eager = await page.locator("main img:not([loading='lazy'])").count();
     expect(eager, "more than one image is eager on first paint").toBe(1);

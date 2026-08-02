@@ -144,10 +144,16 @@ test.describe("completeness — featured showcase (finding #5)", () => {
     // the loop iterated zero times and passed vacuously. A dead green test is
     // worse than a deleted one; it reports coverage that does not exist.
     await page.goto("/");
-    const rack = page.locator('[data-lens-panel="all"] [data-rack] article');
-    await expect(rack, "the rack renders no cards at all").not.toHaveCount(0);
-    for (const card of await rack.all()) {
-      await expect(card, "a rack card was skipped by the arrival").toHaveAttribute(
+
+    // EVERY DIRECT CHILD OF THE RACK, not every <article> in it. The rack is a
+    // reading instrument and a list of rows, and the list arrives as one block
+    // — so an article-level check would demand the attribute on each row and
+    // fail against the correct implementation. Direct children is the shape
+    // that survives the layout changing again, which it has twice now.
+    const rack = page.locator('[data-lens-panel="all"] [data-rack] > *');
+    await expect(rack, "the rack renders nothing at all").not.toHaveCount(0);
+    for (const block of await rack.all()) {
+      await expect(block, "a rack block was skipped by the arrival").toHaveAttribute(
         "data-enter",
         "scroll",
       );

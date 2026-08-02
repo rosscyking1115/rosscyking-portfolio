@@ -76,7 +76,7 @@ const counted = new Date().toLocaleDateString("en-GB", {
   >
     {
       items.map((item) => (
-        <div class="px-6 py-8 sm:px-8 sm:py-10">
+        <div class="px-6 py-6 sm:px-8 sm:py-10">
           <dt class="sr-only">{item.label}</dt>
           <dd>
             {/*
@@ -104,7 +104,7 @@ const counted = new Date().toLocaleDateString("en-GB", {
             >
               {item.value}
             </span>{" "}
-            <span class="text-muted-foreground mt-4 block font-mono text-xs tracking-wider uppercase">
+            <span class="text-muted-foreground mt-2 block font-mono text-xs tracking-wider uppercase sm:mt-4">
               {item.label}
             </span>
           </dd>
