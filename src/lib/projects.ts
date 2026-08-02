@@ -273,6 +273,30 @@ export async function getFilterStacks(): Promise<string[]> {
     .slice(0, 10);
 }
 
+/**
+ * How many published projects use each tool, keyed by the stack string.
+ *
+ * The provenance toolbox on /about is built from this. The design spec is blunt
+ * about why it has to exist: "the toolbox was the least honest thing on the
+ * site … a bare skills list is a claim with nothing behind it — on a site whose
+ * argument is that every number traces to the test that produced it, that stood
+ * out."
+ *
+ * So a tool either has projects behind it, in which case the count is derived
+ * here and links to the filtered log, or it has none and cannot pretend
+ * otherwise. Nothing about the count is authored.
+ */
+export async function stackCounts(): Promise<Map<string, number>> {
+  const all = await getAllProjects();
+  const counts = new Map<string, number>();
+  for (const project of all) {
+    for (const tool of project.data.stack) {
+      counts.set(tool, (counts.get(tool) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
 /** The neighbours either side of a project, for the prev/next footer nav. */
 export async function getAdjacentProjects(slug: string): Promise<{
   prev: Project | null;

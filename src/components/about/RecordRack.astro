@@ -1,0 +1,121 @@
+---
+import { ExternalLink } from "@lucide/astro";
+
+import { cn } from "../../lib/utils";
+
+/**
+ * The record rack (design spec §04, 6a).
+ *
+ *   "A timeline is a rack. Dated entries, one reading, siblings as hairline
+ *    rows — the addressing rule you already chose, reused rather than
+ *    reinvented. Status tokens do the work the ruler dividers were doing:
+ *    IN PROGRESS, VERIFIED, SELF-PACED, AWARDED."
+ *
+ * Three separate lists — education, certifications, virtual training — became
+ * one dated rack, because they are one thing: a record of what was studied and
+ * when. Splitting them into three sections separated by ruler dividers meant a
+ * reader had to reassemble the chronology themselves, and it put a one-item
+ * "Certifications" heading beside a two-item "Virtual training" heading as
+ * though they were peers of a degree.
+ *
+ * IT IS THE SAME `.instrument` AS THE PROJECT ROW. Same addressing, same
+ * hover, same focus, same never-changes-height rule — so nothing new has to be
+ * learned here, and a change to the addressing system reaches this page for
+ * free. That is the point of R4's "one row anatomy".
+ *
+ * EVERY STATUS IS DERIVED, never authored. See recordStatus() in
+ * src/lib/record.ts: a course in progress, a degree completed, a credential
+ * with a verification URL and one without are four different facts already in
+ * the data, and each maps to exactly one token.
+ */
+export interface RecordEntry {
+  title: string;
+  organisation: string;
+  /** Display period — "Sep 2025 – Sep 2026" or "Jun 2026". */
+  period: string;
+  /** Sort key, newest first. */
+  sortKey: string;
+  status: "IN PROGRESS" | "AWARDED" | "VERIFIED" | "SELF-PACED" | "RECORDED";
+  /** One line on what it covered. */
+  detail?: string;
+  /** Public verification URL, where one exists. */
+  url?: string;
+}
+
+interface Props {
+  entries: readonly RecordEntry[];
+}
+
+const { entries } = Astro.props;
+
+/**
+ * IN PROGRESS takes the accent; the rest are quiet.
+ *
+ * §02's rule about corrections applies here by analogy — the tokens must not
+ * make the unaccented entries look less true. Only the one that is still
+ * happening is coloured, because that is the one whose meaning is different in
+ * kind rather than in degree.
+ */
+const TOKEN: Record<RecordEntry["status"], string> = {
+  "IN PROGRESS": "border-primary/40 bg-primary/10 text-primary",
+  AWARDED: "border-border text-muted-foreground",
+  VERIFIED: "border-border text-muted-foreground",
+  "SELF-PACED": "border-border text-muted-foreground",
+  RECORDED: "border-border text-muted-foreground",
+};
+---
+
+<ul class="mt-5 flex flex-col gap-2" data-record-rack>
+  {
+    entries.map((entry) => (
+      <li>
+        <article class="instrument group relative rounded-lg" data-record>
+          <div class="flex min-h-11 flex-col gap-2 p-4 sm:flex-row sm:items-start sm:gap-5">
+            <span class="text-muted-foreground shrink-0 font-mono text-xs tabular-nums sm:w-40 sm:pt-0.5">
+              {entry.period}
+            </span>
+
+            <div class="min-w-0 flex-1">
+              <h3 class="font-display ease-instrument text-base font-semibold tracking-tight text-[color:var(--instrument-title)] transition-[color] duration-[var(--motion-address)]">
+                {entry.title}
+              </h3>
+              <p class="text-muted-foreground mt-0.5 font-mono text-xs">
+                {entry.organisation}
+              </p>
+              {entry.detail && (
+                <p class="text-muted-foreground mt-2 text-sm leading-relaxed">
+                  {entry.detail}
+                </p>
+              )}
+              {entry.url && (
+                /*
+                  The credential link is a real anchor rather than a stretched
+                  one: a record entry is not a destination, so making the whole
+                  row clickable would promise a page that does not exist.
+                */
+                <a
+                  href={entry.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-primary ease-instrument mt-2 inline-flex items-center gap-1.5 font-mono text-xs underline underline-offset-2 transition-colors duration-[var(--motion-state)]"
+                >
+                  Verify credential
+                  <ExternalLink class="size-3" aria-hidden="true" />
+                </a>
+              )}
+            </div>
+
+            <span
+              class={cn(
+                "shrink-0 self-start rounded border px-1.5 py-0.5 font-mono text-xs tracking-wider whitespace-nowrap uppercase",
+                TOKEN[entry.status],
+              )}
+            >
+              {entry.status}
+            </span>
+          </div>
+        </article>
+      </li>
+    ))
+  }
+</ul>
