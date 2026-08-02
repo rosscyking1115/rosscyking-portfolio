@@ -52,19 +52,19 @@ const caption = source ? new URL(source).hostname : "run log";
   */
 }
 <div
-  class="border-border/70 grid gap-5 border-t border-dashed px-4 pt-5 pb-5 sm:grid-cols-5 sm:gap-6"
+  class="border-border/70 grid gap-5 border-t border-dashed px-4 pt-5 pb-5 md:grid-cols-5 md:gap-6"
 >
   <EvidenceFrame
-    class="sm:col-span-2"
+    class="md:col-span-2"
     caption={caption}
     live={Boolean(project.data.links?.demo)}
     screenshot={project.data.screenshot}
     alt={`Screenshot of the ${project.data.title} live demo`}
     lines={project.data.terminal}
-    sizes="(min-width: 640px) 26vw, 100vw"
+    sizes="(min-width: 768px) 26vw, 100vw"
   />
 
-  <div class="flex min-w-0 flex-col sm:col-span-3">
+  <div class="flex min-w-0 flex-col md:col-span-3">
     <p class="text-body line-clamp-4 text-sm leading-relaxed">
       {project.data.summary}
     </p>

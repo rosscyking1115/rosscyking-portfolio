@@ -151,11 +151,13 @@ test.describe("arrival — the featured rack, once and only once", () => {
   test("cards are held until they are reached, then released", async ({ page }) => {
     await page.goto("/");
 
-    const cards = page.locator('[data-lens-panel="all"] [data-rack] article');
-    await expect(cards).toHaveCount(registry.lenses.all.featured.length);
+    // The rack's two arrival blocks: the reading instrument, then the sibling
+    // list. Counting featured projects here would be counting the layout.
+    const cards = page.locator('[data-lens-panel="all"] [data-rack] > [data-enter]');
+    await expect(cards).toHaveCount(2);
 
-    // Nothing below the fold has arrived yet. The LAST card is used rather than
-    // the first, because the first is close enough to the fold that a tall
+    // Nothing below the fold has arrived yet. The LAST block is used rather
+    // than the first, because the first is close enough to the fold that a tall
     // viewport can legitimately have released it already.
     await expect(cards.last()).not.toHaveAttribute("data-shown", "");
     await expect(cards.last()).toHaveCSS("opacity", "0");
@@ -177,7 +179,7 @@ test.describe("arrival — the featured rack, once and only once", () => {
     await page.goto("/");
     await scrollThrough(page);
 
-    const cards = page.locator('[data-lens-panel="all"] [data-rack] article');
+    const cards = page.locator('[data-lens-panel="all"] [data-rack] > [data-enter]');
     await expect(cards.last()).toHaveCSS("opacity", "1");
 
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
@@ -202,14 +204,14 @@ test.describe("arrival — the featured rack, once and only once", () => {
 
     await page.getByRole("button", { name: aiLens }).click();
     await scrollThrough(page);
-    const aiCards = page.locator('[data-lens-panel="ai"] [data-rack] article');
+    const aiCards = page.locator('[data-lens-panel="ai"] [data-rack] > [data-enter]');
     await expect(aiCards.first()).toHaveAttribute("data-shown", "");
 
     await page.getByRole("button", { name: allLens }).click();
     // No wait and no scroll: if the cards were going to replay, they would be
     // at zero opacity the instant the panel is shown.
     for (const card of await page
-      .locator('[data-lens-panel="all"] [data-rack] article')
+      .locator('[data-lens-panel="all"] [data-rack] > [data-enter]')
       .all()) {
       await expect(card).toHaveCSS("opacity", "1");
     }
@@ -250,10 +252,14 @@ test.describe("arrival — it is always skippable", () => {
     // here — nothing is hidden until the script says it may be — and this is
     // what proves the inversion actually holds end to end.
     //
-    // The featured rack is deliberately NOT asserted: the lens panels are shown
-    // by NarrowingScript, so without JavaScript that section has been absent
-    // since long before this change. It is a real limitation, it predates the
-    // arrival, and pretending otherwise here would hide it.
+    // THE FEATURED SECTION IS ASSERTED TOO, AND IT DID NOT USED TO SURVIVE.
+    // Writing this test is what found it: every lens panel was `display: none`
+    // until NarrowingScript wrote `data-lens` on <html>, so with no JavaScript
+    // the rack AND the bench were simply absent — the page went from the proof
+    // band to the footer. That had shipped with the narrowing control and was
+    // invisible, because a missing section throws nothing and 404s nothing.
+    // The default panel is now visible by default; see the note in
+    // FeaturedProjects.astro.
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
     await page.goto("/");
@@ -271,6 +277,18 @@ test.describe("arrival — it is always skippable", () => {
     await expect(page.locator("[data-proof-strip] [data-count-to]")).toHaveText(
       FINAL_FIGURES,
     );
+
+    // The default lens renders, and the other two do not — so a reader with no
+    // JavaScript gets one featured set rather than three stacked on top of each
+    // other, or none at all.
+    await expect(page.locator('[data-lens-panel="all"]')).toBeVisible();
+    await expect(page.locator('[data-lens-panel="ai"]')).toBeHidden();
+    await expect(page.locator('[data-lens-panel="all"] [data-rack] article')).toHaveCount(
+      registry.lenses.all.featured.length,
+    );
+    await expect(
+      page.locator('[data-lens-panel="all"] [data-bench] details').first(),
+    ).toBeVisible();
     await context.close();
   });
 });

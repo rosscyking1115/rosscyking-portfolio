@@ -20,40 +20,39 @@ import EvidenceFrame from "./EvidenceFrame.astro";
 import NowBuilding from "./NowBuilding.astro";
 
 /**
- * The rack and the ledger (design spec §04, home route), as amended by Ross on
- * 2 August 2026.
+ * The rack and the ledger (design spec §04, home route).
  *
- * ── WHAT CHANGED, AND WHAT IT OVERRULES ──────────────────────────────────────
- * §03 R7 read: "One instrument reads, siblings are hairline rows… Only the
- * reading instrument loads an image." Ross's call is that every featured
- * project is open, the first one takes the most space, and each arrives as you
- * reach it. R7 is therefore no longer in force ON THIS SECTION — it still is
- * everywhere else, which is why the bench below is rows and why /projects is
- * untouched.
+ * ── THE RACK, AND A ROUND TRIP WORTH RECORDING ───────────────────────────────
+ *   "One instrument reads, siblings are hairline rows that keep their title and
+ *    headline number at full legibility. Receding removes the frame, the
+ *    screenshot and the elevation — never the readability. Only the reading
+ *    instrument loads an image."
  *
- * It is worth being precise about what that costs, because R7 was not
- * arbitrary. It bought two things:
+ * That is §03 R7 and it is what this file does. It briefly did something else:
+ * on 2 August 2026 the rack was rebuilt as three open cards, one larger, each
+ * arriving on scroll — and then reverted the same day, by Ross, to this. The
+ * detour is recorded rather than deleted because both halves are useful:
  *
- *   1. IMAGES. The rack was one screenshot per lens; it is now one per featured
- *      project — three for `all` and `data`, four for `ai`. Only the lead card
- *      of the DEFAULT lens is eager; every other frame is lazy and sits either
- *      below the fold or inside a display:none lens panel, so the request count
- *      on first paint is unchanged at one. The bytes that ship regardless are
- *      the markup.
- *   2. FLATNESS. Audit finding 08 was "eleven blocks arrive at the same width
- *      off the same margin with roughly the same tonal weight". Three identical
- *      cards would walk straight back into it — which is exactly why the lead
- *      card is a different SHAPE and not merely a bigger one: five columns
- *      against two, a taller frame, and the only summary paragraph in the rack.
- *      The rhythm now comes from the difference between the cards rather than
- *      from the difference between a card and a row.
+ *   WHAT THE THREE CARDS COST. Ten evidence frames in the document instead of
+ *   three, and a 5,077px page at tablet width. The request count on first paint
+ *   never moved — nine of the ten were lazy and below the fold or inside a
+ *   display:none panel — so the cost was never bytes. It was that the page
+ *   stopped having a lead. Audit finding 08 was "eleven blocks arrive at the
+ *   same width off the same margin with roughly the same tonal weight", and
+ *   three cards of the same species walk back into it however differently they
+ *   are shaped. The rhythm here comes from the difference between a CARD and a
+ *   ROW, which is a bigger difference than any two cards can have.
+ *
+ *   WHAT SURVIVED THE REVERT. Everything that was not layout: the arrival, the
+ *   pointer response, the reticle, and the bench disclosure. Those were the
+ *   actual request; the three cards were one way of answering it, and not the
+ *   one that held up against the design.
  *
  * ── THE ARRIVAL ──────────────────────────────────────────────────────────────
- * Each card carries `data-enter="scroll"`, which holds it at 14px and zero
- * opacity until an IntersectionObserver marks it once — see ArrivalScript.astro
- * and the ARRIVAL block in global.css. There is no stagger between them and
- * there should not be: they are far enough apart that the reader triggers each
- * one by scrolling, so the page itself is the stagger.
+ * Two `data-enter="scroll"` carriers, not five: the reading instrument, then
+ * the sibling list as one block. See the note above the <ul> for why the rows
+ * do not arrive individually, ArrivalScript.astro for the observer, and the
+ * ARRIVAL block in global.css for the rules.
  *
  * SWITCHING LENS IS NOT AN ARRIVAL, and this is the trap the old entrance fell
  * into three times. A hidden lens panel is `display: none`, so its cards have
@@ -67,14 +66,14 @@ import NowBuilding from "./NowBuilding.astro";
  *    the index doing the same job twice: home shows work running, this shows
  *    the ledger, the index compares."
  *
- * Still true, and the disclosure is what keeps it true now that the rack is
- * three cards rather than one. A bench row is a line in a ledger until you ask
- * it a question; the answer is a short preview, not a fourth card. See
- * InstrumentPreview.astro for why it is not the rack card at a smaller size.
+ * A bench row is a line in a ledger until you ask it a question; the answer is
+ * a short preview, not a fourth card. See InstrumentPreview.astro for why it is
+ * not the rack card at a smaller size.
  *
  * Each lens still gets its own prerendered panel with CSS choosing the visible
  * one off `data-lens`, so the whole section ships as static HTML with no
- * hydration.
+ * hydration — and, since the no-JS fix in the <style> block below, renders the
+ * default lens even when that CSS is the only thing that runs.
  */
 interface Props {
   allCount: number;
@@ -111,6 +110,7 @@ const allLabel = `All ${allCount} projects`;
   {
     allLenses.map((lens) => {
       const featured = lensCards[lens.key] ?? [];
+      const [flagship, ...siblings] = featured;
       const featuredIds = new Set(featured.map((project) => project.id));
       const bench = all.filter((project) => !featuredIds.has(project.id));
 
@@ -144,140 +144,104 @@ const allLabel = `All ${allCount} projects`;
             wrong scope.
           */}
           <div data-rack>
-            {featured.map((project, index) => {
-              const lead = index === 0;
-              const headline = projectHeadline(project);
-
-              return (
-                <article
-                  class:list={[
-                    // `lg:items-center` is not a nicety. The text column is
-                    // always shorter than a 16:10 frame, and the lead card's
-                    // 68vh minimum makes the difference larger still — first
-                    // cut, the action sat 250px below the stack chips with
-                    // nothing in between, which reads as a card that failed to
-                    // load rather than one with room to breathe. Centred, the
-                    // spare height becomes symmetric padding.
-                    "instrument linked-card reticle-cursor group relative grid rounded-lg lg:items-center",
-                    // THE LEAD CARD IS A DIFFERENT SHAPE, not a bigger one —
-                    // see finding 08 in the note at the top. Five columns to
-                    // two, and the only summary paragraph in the rack.
-                    //
-                    // `lg:min-h-[68vh]` is what makes "scrolling to the first
-                    // project shows only the first project" true on a desktop.
-                    // It is a MINIMUM and it is scoped to lg: pinning a card to
-                    // the viewport on a phone is how you get content that
-                    // cannot be scrolled past, and the frame already makes the
-                    // card tall there.
-                    lead
-                      ? "mt-6 gap-6 p-6 lg:min-h-[68vh] lg:grid-cols-5 lg:gap-10 lg:p-8"
-                      : "mt-8 gap-5 p-5 sm:mt-12 sm:p-6 lg:grid-cols-2 lg:gap-8",
-                  ]}
-                  data-reading
-                  data-enter="scroll"
-                  data-rack-card={index}
-                >
-                  <div class:list={["flex min-w-0 flex-col", lead && "lg:col-span-2"]}>
-                    <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
-                      <span class="text-primary" data-catalogue>
-                        {projectMarkLabel(project.id)}
-                      </span>
-                      <span>
-                        {project.data.period} · {projectReadingTime(project)}
-                      </span>
-                    </div>
-                    <h3
-                      class:list={[
-                        "font-display mt-4 font-semibold tracking-tight text-balance",
-                        lead ? "text-2xl" : "text-xl",
-                      ]}
-                    >
-                      <a
-                        href={`/projects/${project.id}`}
-                        class="after:absolute after:inset-0 after:rounded-lg"
-                      >
-                        {project.data.title}
-                      </a>
-                    </h3>
-
-                    {/*
-                      §03 R2 — no summary paragraph on two index surfaces. The
-                      lead card is the one place on this page that carries
-                      prose; the other cards state their number and their stack
-                      and stop, which is also what keeps them a different shape
-                      rather than a smaller copy.
-                    */}
-                    {lead && (
-                      <p class="text-body mt-3 line-clamp-4 text-sm leading-relaxed">
-                        {project.data.summary}
-                      </p>
-                    )}
-
-                    {/*
-                      The headline number in the card's own voice, at `lead`
-                      size on the lead card — the same MetricReadout the log
-                      renders, including the struck pair when the number is a
-                      correction. The old three-metric strip listed everything
-                      the project publishes; this shows the ONE number the
-                      project turns on.
-                    */}
-                    <MetricReadout
-                      headline={headline}
-                      size={lead ? "lead" : undefined}
-                      class="mt-5"
-                    />
-
-                    <div class="mt-5 flex flex-wrap items-center gap-1.5">
-                      {project.data.stack.slice(0, 4).map((tech) => (
-                        <Badge variant="tag">{tech}</Badge>
-                      ))}
-                    </div>
-                    <span
-                      class="text-primary inline-flex items-center gap-1.5 pt-5 text-sm font-medium"
-                      data-card-action
-                    >
-                      Read the write-up
-                      <ArrowRight class="size-3.5" aria-hidden="true" />
+            {flagship && (
+              <article
+                class="instrument linked-card reticle-cursor group relative mt-6 grid gap-6 rounded-lg p-6 lg:grid-cols-5 lg:gap-8 lg:p-8"
+                data-reading
+                data-enter="scroll"
+              >
+                <div class="flex min-w-0 flex-col lg:col-span-2">
+                  <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
+                    <span class="text-primary" data-catalogue>
+                      {projectMarkLabel(flagship.id)}
+                    </span>
+                    <span>
+                      {flagship.data.period} · {projectReadingTime(flagship)}
                     </span>
                   </div>
+                  <h3 class="font-display mt-4 text-2xl font-semibold tracking-tight text-balance">
+                    <a
+                      href={`/projects/${flagship.id}`}
+                      class="after:absolute after:inset-0 after:rounded-lg"
+                    >
+                      {flagship.data.title}
+                    </a>
+                  </h3>
+                  <p class="text-body mt-3 line-clamp-4 text-sm leading-relaxed">
+                    {flagship.data.summary}
+                  </p>
 
                   {/*
-                    `order-first` below lg. Stacked, the source order put the
-                    evidence frame AFTER "Read the write-up" — so on a phone the
-                    screenshot arrived below the card's own call to action,
-                    while every other row on the page leads with its number. At
-                    lg the frame sits right of the text, where DOM order is
-                    already right.
-
-                    EAGER ON EXACTLY ONE FRAME IN THE DOCUMENT: the lead card of
-                    the default lens. Everything else is lazy and is either
-                    below the fold or inside a display:none panel, so the first
-                    paint still fetches one image however many are in the
-                    markup.
+                    The headline number in the reading instrument's own voice,
+                    at `lead` size — the same MetricReadout the log renders,
+                    including the struck pair when the number is a correction.
+                    The old three-metric strip listed everything the project
+                    publishes; the spec's rack shows the ONE number the project
+                    turns on.
                   */}
-                  <div
-                    class:list={[
-                      "order-first min-w-0 lg:order-none",
-                      lead && "lg:col-span-3",
-                    ]}
-                  >
-                    <EvidenceFrame
-                      caption={frameCaption(project)}
-                      live={Boolean(project.data.links?.demo)}
-                      screenshot={project.data.screenshot}
-                      alt={`Screenshot of the ${project.data.title} live demo`}
-                      lines={project.data.terminal}
-                      sizes={
-                        lead
-                          ? "(min-width: 1024px) 55vw, (min-width: 640px) 90vw, 100vw"
-                          : "(min-width: 1024px) 45vw, (min-width: 640px) 90vw, 100vw"
-                      }
-                      eager={lead && lens.key === DEFAULT_LENS}
-                    />
+                  <MetricReadout
+                    headline={projectHeadline(flagship)}
+                    size="lead"
+                    class="mt-5"
+                  />
+
+                  <div class="mt-5 flex flex-wrap items-center gap-1.5">
+                    {flagship.data.stack.slice(0, 4).map((tech) => (
+                      <Badge variant="tag">{tech}</Badge>
+                    ))}
                   </div>
-                </article>
-              );
-            })}
+                  <span
+                    class="text-primary mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-medium"
+                    data-card-action
+                  >
+                    Read the write-up
+                    <ArrowRight class="size-3.5" aria-hidden="true" />
+                  </span>
+                </div>
+                {/*
+                  `order-first` below lg. Stacked, the source order put the
+                  evidence frame AFTER "Read the write-up" — so on a phone the
+                  screenshot arrived below the card's own call to action, while
+                  every other row on the page leads with its number. At lg the
+                  frame sits right of the text, where DOM order is already right.
+
+                  THE ONLY IMAGE ON THIS PAGE (§03 R7). `eager` on the default
+                  lens because it is the largest thing above the fold; the other
+                  two panels are display:none until a lens is chosen.
+                */}
+                <div class="order-first min-w-0 lg:order-none lg:col-span-3">
+                  <EvidenceFrame
+                    caption={frameCaption(flagship)}
+                    live={Boolean(flagship.data.links?.demo)}
+                    screenshot={flagship.data.screenshot}
+                    alt={`Screenshot of the ${flagship.data.title} live demo`}
+                    lines={flagship.data.terminal}
+                    sizes="(min-width: 1024px) 55vw, (min-width: 640px) 90vw, 100vw"
+                    eager={lens.key === DEFAULT_LENS}
+                  />
+                </div>
+              </article>
+            )}
+
+            {/*
+              THE SIBLINGS ARRIVE AS ONE BLOCK, not one row at a time.
+
+              `data-enter` sits on the <ul> rather than on each <li>, and the
+              difference is not implementation detail: staggered row-by-row, a
+              list of hairline rows reads as a slot machine, and each row is
+              only 81px tall so the reader would trigger three arrivals inside
+              one thumb-flick. The rack is two arrivals — the instrument that
+              reads, then the list of the ones that do not.
+            */}
+            {siblings.length > 0 && (
+              <ul class="mt-2 flex flex-col gap-2" data-enter="scroll">
+                {siblings.map((project) => (
+                  <li>
+                    <InstrumentRow project={project} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {bench.length > 0 && (
@@ -332,12 +296,35 @@ const allLabel = `All ${allCount} projects`;
     filtered list.
   */
 
-  /* Only the panel matching <html data-lens> is shown. Hidden by default so
-     nothing flashes before the narrowing script runs. */
-  [data-lens-panel] {
+  /*
+    THE DEFAULT LENS IS VISIBLE WITHOUT JAVASCRIPT, and this was a real hole.
+
+    Every panel used to be `display: none` until NarrowingScript wrote
+    `data-lens` on <html>. The reasoning was sound — hide them all, reveal the
+    chosen one, and nothing flashes — but the failure mode was not: with no
+    JavaScript the attribute is never written, so NO panel matched and the
+    entire featured section, rack and bench alike, was absent from the page. It
+    had been that way since the narrowing control shipped, and it went
+    unnoticed because nothing 404s and nothing throws; the section simply is
+    not there.
+
+    Inverted, it costs nothing and fixes it: the default panel is shown by
+    default and hidden only once a DIFFERENT lens has been chosen. Same
+    no-flash property — `data-lens="all"` and no attribute at all render
+    identically — and the no-JavaScript page is now the default lens rather
+    than a gap between the proof band and the footer.
+
+    Same argument as the ARRIVAL block's `data-motion` gate: the state that
+    needs a script is the exception, not the baseline.
+  */
+  [data-lens-panel="ai"],
+  [data-lens-panel="data"] {
     display: none;
   }
-  :global(html[data-lens="all"]) [data-lens-panel="all"],
+  :global(html[data-lens="ai"]) [data-lens-panel="all"],
+  :global(html[data-lens="data"]) [data-lens-panel="all"] {
+    display: none;
+  }
   :global(html[data-lens="ai"]) [data-lens-panel="ai"],
   :global(html[data-lens="data"]) [data-lens-panel="data"] {
     display: block;

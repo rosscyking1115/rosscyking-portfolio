@@ -60,7 +60,7 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
     widths and the mark should stay level with its first line.
   */
 }
-<div class="flex min-h-11 flex-col gap-3 p-4 sm:flex-row sm:items-start sm:gap-5">
+<div class="flex min-h-11 flex-col gap-3 p-4 lg:flex-row lg:items-start lg:gap-5">
   {
     /*
       `data-catalogue` is the hook the canonical-mark tests read on all three
@@ -74,7 +74,7 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
     */
   }
   <span
-    class="text-primary shrink-0 font-mono text-xs tabular-nums sm:pt-1"
+    class="text-primary shrink-0 font-mono text-xs tabular-nums lg:pt-1"
     data-catalogue
     aria-hidden={mode === "link" ? "true" : undefined}>{mark}</span
   >
@@ -127,11 +127,21 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
       the chips landed BETWEEN a value and its own label — so "41.4M" and
       "journeys unified" were split by two pills, which reads as three
       unrelated facts instead of one measurement.
+
+      AND THE RULED COLUMN STARTS AT lg, NOT sm, WHICH IS A BUG FIX. Both
+      widths were measured against the 1152px container and then applied from
+      640px up. At 768px the row is 704px wide, the two cells take 432px of it,
+      and the title is left with about 150px — so "England & Wales Housing
+      Decision Support" wrapped to four lines beside a number sitting in
+      whitespace, on every tablet, on three surfaces. A measurement taken at one
+      width is a measurement AT that width; applying it two breakpoints early is
+      how a comparison column becomes a squeeze. Between sm and lg the value
+      block sits under the title on its own line instead.
     */
   }
-  <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
-    <MetricReadout headline={headline} class="sm:w-56" />
-    <div class="flex flex-wrap items-center gap-2 sm:w-[13rem] sm:pt-0.5">
+  <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4 lg:gap-4">
+    <MetricReadout headline={headline} class="lg:w-56" />
+    <div class="flex flex-wrap items-center gap-2 lg:w-[13rem] lg:pt-0.5">
       {headline && <MetricMode mode={headline.mode} />}
       <ContentState state={state} />
     </div>
@@ -145,17 +155,25 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
       than one glyph turning over. It is also the site's own index-mark
       language, so the affordance reads as part of the system instead of as a
       widget borrowed from one.
+
+      THE TWO DIVERGE BELOW lg, AND ONLY ONE OF THEM MAY. The arrow is
+      decorative — the whole row is a link and the title says so — so it hides
+      on a phone. The [+] is the ONLY thing that says a row opens, and it was
+      `hidden sm:block` alongside the arrow, so on the device that carries most
+      of the traffic the disclosure had no affordance whatsoever. It is
+      absolutely positioned into the mark line's empty right-hand end below lg
+      and rejoins the row as a cell above it, rather than being rendered twice.
     */
   }
   {
     mode === "link" ? (
       <ArrowRight
-        class="text-muted-foreground hidden size-4 shrink-0 self-center sm:block"
+        class="text-muted-foreground hidden size-4 shrink-0 self-center lg:block"
         aria-hidden="true"
       />
     ) : (
       <span
-        class="text-primary hidden w-8 shrink-0 self-center text-center font-mono text-xs sm:block"
+        class="text-primary absolute top-4 right-4 w-8 text-center font-mono text-xs lg:static lg:shrink-0 lg:self-center"
         data-disclosure-marker
         aria-hidden="true"
       />
