@@ -1,0 +1,94 @@
+---
+import { proofStats } from "../../lib/registry-stats";
+
+/**
+ * The full-bleed numeric band (design spec §04, home route).
+ *
+ *   "Proof numbers leave the hero and go edge-to-edge at 92px; the measure
+ *    change is what fixes the flat scroll."
+ *
+ * ── WHY IT IS FULL-BLEED, WHICH IS THE WHOLE POINT ───────────────────────────
+ * Audit finding 08 was the flatness: "eleven blocks arrive at the same width
+ * off the same margin with roughly the same tonal weight. No motion system can
+ * rescue that." Every section on this site sits inside the same 1152px
+ * Container, so the page has exactly one measure from top to bottom and the eye
+ * has nothing to catch on.
+ *
+ * This band is the only element on the home page that ignores it. Narrow text,
+ * then a rule edge to edge — that change of measure is doing the work, not the
+ * type size. Putting these numbers inside the container at 92px would make them
+ * big and change nothing about the rhythm.
+ *
+ * It replaces the hero's right-hand rail (ProofStrip), where finding 05 found
+ * them: "your three best numbers sit in the hero's right column at roughly a
+ * third the size of the headline."
+ *
+ * ── DATED AND SOURCED ────────────────────────────────────────────────────────
+ * The spec calls this "the first honest thing on the page", and a number
+ * without a provenance is just a bigger claim. The date is stamped at BUILD
+ * time from the build clock — not typed, and not remembered — so it says when
+ * the count was actually taken rather than when someone last edited the copy.
+ *
+ * Every figure is `proofStats`, counted from the registry that
+ * validate-projects.mjs gates. The same `testCount()` feeds the projects log's
+ * ledger line, so the two surfaces cannot disagree (§03 R8).
+ */
+const items = [
+  { value: String(proofStats.shipped), label: "projects shipped" },
+  { value: proofStats.tests.toLocaleString("en-GB"), label: "tests across them" },
+  { value: String(proofStats.demos), label: "live demos" },
+];
+
+const counted = new Date().toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+---
+
+<section aria-label="Proof" class="border-border border-y">
+  {
+    /*
+      No Container, and no max-width. That is the measure change; wrapping this
+      in the site's 1152px column would undo the only thing it is here to do.
+
+      `divide-x` rather than three bordered cells: one hairline between each
+      pair, none at the outer edges, so the band reads as one instrument rather
+      than as three boxes that happen to be adjacent.
+    */
+  }
+  <dl
+    class="divide-border grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+    data-proof-strip
+  >
+    {
+      items.map((item) => (
+        <div class="px-6 py-8 sm:px-8 sm:py-10">
+          <dt class="sr-only">{item.label}</dt>
+          <dd>
+            {/*
+              92px is the spec's number and it is a CEILING, not a fixed size.
+              At 320px three digits of Geist Mono at 92px is 166px against a
+              268px column, which leaves the label nowhere to go — so it steps
+              down twice. `tabular-nums` keeps the three cells' digits on the
+              same rhythm even though the values have different widths.
+            */}
+            <span class="font-mono text-5xl leading-none font-medium tracking-tight tabular-nums sm:text-7xl lg:text-[92px]">
+              {item.value}
+            </span>{" "}
+            <span class="text-muted-foreground mt-4 block font-mono text-xs tracking-wider uppercase">
+              {item.label}
+            </span>
+          </dd>
+        </div>
+      ))
+    }
+  </dl>
+  <p
+    class="text-muted-foreground border-border border-t px-6 py-3 font-mono text-xs sm:px-8"
+  >
+    Counted from the project registry, which gates every published number &middot; {
+      counted
+    }
+  </p>
+</section>
