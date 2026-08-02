@@ -68,9 +68,19 @@ test.describe("contact page — UI", () => {
     expect(alerts.length).toBeGreaterThan(0);
   });
 
-  test("accepts a valid submission, clears the form, and toasts success", async ({
-    page,
-  }) => {
+  test("a valid submission returns a receipt in place, not a toast", async ({ page }) => {
+    // REWRITTEN for §04's 7a: "success returns a receipt … in place". The old
+    // assertions — the fields clear, and a toast says thank you — described the
+    // mechanism that was there, and both are now false by design: the form is
+    // replaced, so #name does not exist to be empty, and the message stays on
+    // screen instead of expiring after four seconds.
+    //
+    // The finding underneath the toast assertion is NOT lost. It was written
+    // because <Toaster> in the layout and toast() in the island loaded sonner
+    // twice and every toast vanished silently. The equivalent failure here is a
+    // success that leaves the visitor looking at a form they already sent, so
+    // that is what is asserted: after a valid send, the form is gone and the
+    // receipt is there.
     await page.goto("/contact");
     await waitForFormHydration(page);
 
@@ -82,16 +92,26 @@ test.describe("contact page — UI", () => {
 
     await page.getByRole("button", { name: /Send message/ }).click();
 
-    await expect(page.locator("#name")).toHaveValue("", { timeout: 10_000 });
-    await expect(page.locator("#email")).toHaveValue("");
-    await expect(page.locator("#message")).toHaveValue("");
+    const receipt = page.locator("[data-receipt]");
+    await expect(receipt).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("form")).toHaveCount(0);
 
-    // The toast only appears if <Toaster> and toast() share a module instance.
-    // With <Toaster> hoisted into the layout they land in separate islands,
-    // sonner loads twice, and every toast silently disappears.
-    await expect(
-      page.getByText(/I.ll be in touch within a couple of days/i),
-    ).toBeVisible();
+    // It does not navigate — the whole point of "in place" is that the reader
+    // keeps what they were sent without a round trip.
+    expect(new URL(page.url()).pathname).toBe("/contact");
+
+    // A receipt with no time on it is a thank-you note.
+    await expect(receipt.locator("[data-receipt-time]")).not.toBeEmpty();
+
+    // AND IT DOES NOT CLAIM WHAT THE ACTION DOES NOT DO. src/actions/index.ts
+    // sends one email, to Ross, with replyTo set to the sender — no copy goes
+    // to the visitor. The spec's mock says "a copy has gone to your address";
+    // writing that would make this the first false sentence on the site.
+    await expect(receipt).not.toContainText(/copy has gone/i);
+
+    // "Send another" restores the form rather than reloading the page.
+    await page.getByRole("button", { name: /send another/i }).click();
+    await expect(page.locator("#name")).toHaveValue("");
   });
 });
 

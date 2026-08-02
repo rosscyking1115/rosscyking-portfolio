@@ -85,15 +85,76 @@ const links = [
           email — I reply within a day or two.
         </p>
 
-        <span
-          class="border-border bg-background mt-8 inline-flex w-fit items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-sm font-medium"
-        >
-          <span class="bg-state-live inline-flex size-2 rounded-full" aria-hidden="true"
-          ></span>
-          {siteConfig.availability}
-        </span>
+        {
+          /*
+            THE AVAILABILITY BAND (design spec §04, 7a). A pill said one thing;
+            a band says three, in the readout voice the rest of the site uses
+            for facts.
 
-        <div class="border-border divide-border mt-8 flex flex-col divide-y border-y">
+            TWO CELLS ARE MARKED, NOT FILLED. Open item 06 asks Ross for what he
+            is seeking and his typical reply time, and the spec is explicit
+            about the second: "say it only if it is true". A plausible
+            placeholder on the one page whose whole job is to be contactable is
+            the worst place on the site to invent something, so the slots are
+            dashed and say what is missing — the same treatment the projects log
+            gives a project with no metric.
+          */
+        }
+        <dl
+          class="border-border divide-border mt-8 grid grid-cols-1 divide-y border-y sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+          data-availability-band
+        >
+          <div class="px-4 py-4 first:pl-0">
+            <dt
+              class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase"
+            >
+              Status
+            </dt>
+            {
+              /*
+              The dot is INLINE, not a flex sibling. As a flex item with
+              `items-center` it sat vertically centred against a three-line
+              value in the narrow first column — level with the second line, so
+              it read as a bullet for the wrong row.
+            */
+            }
+            <dd class="mt-1.5 text-sm font-medium">
+              <span
+                class="bg-state-live mr-2 inline-block size-1.5 rounded-full align-middle"
+                aria-hidden="true"></span>{siteConfig.availability}
+            </dd>
+          </div>
+          <div class="px-4 py-4">
+            <dt
+              class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase"
+            >
+              Seeking
+            </dt>
+            <dd
+              class="border-border text-muted-foreground mt-1.5 w-fit border border-dashed px-2 py-0.5 font-mono text-xs"
+              data-open-slot
+            >
+              not stated yet
+            </dd>
+          </div>
+          <div class="px-4 py-4">
+            <dt
+              class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase"
+            >
+              Typical reply
+            </dt>
+            <dd
+              class="border-border text-muted-foreground mt-1.5 w-fit border border-dashed px-2 py-0.5 font-mono text-xs"
+              data-open-slot
+            >
+              not stated yet
+            </dd>
+          </div>
+        </dl>
+
+        <IndexMark mark="01" label="Direct" class="mt-10" />
+
+        <div class="border-border divide-border mt-4 flex flex-col divide-y border-y">
           {
             links.map((link) => (
               <a
