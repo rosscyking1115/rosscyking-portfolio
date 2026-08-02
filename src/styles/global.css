@@ -327,6 +327,19 @@
  * strictly neither. It is included because §02's own state table lists it, and
  * because it changes no geometry — the rule that clause exists to protect. */
 .instrument {
+  /* The title's colour travels as a custom property rather than as a class on
+     the title itself. That is what lets ALL FOUR addressing inputs — the
+     reading prop, a pointer, keyboard focus, and the scroll-driven reading
+     line — move the same two levels. Before this the first three moved the
+     title and the fourth did not, so a phone got a lifted surface under a
+     still-muted heading: half the state, and only on the device that has no
+     other way to address anything.
+
+     Custom properties interpolate DISCRETELY unless registered with @property,
+     so this flips rather than tweening. That is the better behaviour here —
+     §01 bans opacity on text, and a colour tween on a heading is the same idea
+     wearing a different hat. */
+  --instrument-title: var(--muted-foreground);
   border: 1px solid var(--border);
   background-color: transparent;
   transition:
@@ -338,6 +351,7 @@
 .instrument[data-reading],
 .instrument:hover,
 .instrument:focus-within {
+  --instrument-title: var(--foreground);
   border-color: var(--instrument-reading-border);
   background-color: var(--instrument-reading-surface);
   box-shadow: var(--shadow-xs);
@@ -347,6 +361,74 @@
 .dark .instrument:hover,
 .dark .instrument:focus-within {
   box-shadow: none;
+}
+
+/* ---------- The reading line (design spec §02, third addressing input) -------
+ * §02 lists three inputs in priority order: pointer, keyboard focus, and
+ * PROXIMITY TO THE READING LINE. The first two are above. This is the third,
+ * and it exists because of the spec's own risk note on this direction:
+ *
+ *   "Hover-driven emphasis has no touch equivalent, and most of your traffic
+ *    is a phone. Mobile needs a different rule, not a fallback."
+ *
+ * So it is scoped to `(hover: none)` — a different rule for the devices that
+ * have no pointer, rather than a degraded version of the pointer rule. On a
+ * desktop it never applies, and nothing here can fight `:hover`, which is what
+ * would happen if a running animation and a hover rule both claimed the same
+ * two properties (an animation beats a plain declaration in the cascade).
+ *
+ * THIS IS NOT A REVEAL, and the distinction is the whole reason the motion
+ * contract's scroll ban had to be narrowed rather than waived. A reveal changes
+ * whether content is legible; this changes only which of ten equally legible
+ * rows is the one being read. It animates border-color and background-color and
+ * NOTHING ELSE — no opacity, no transform — which is now enforced by
+ * tests/e2e/motion.spec.ts reading the live keyframes off getAnimations().
+ *
+ * THE BAND IS NARROW ON PURPOSE. `view()` progress runs 0→1 as the element
+ * crosses the whole viewport, so for an 81px row in an 844px phone viewport the
+ * cover range spans 925px of scrolling and the row's centre reaches the 34%
+ * reading line at roughly 63% of it. The lit band is 60–66%, about 55px of
+ * scroll — narrower than one row plus its gap, so at most one row reads at a
+ * time. Those numbers are geometry, not taste: change the row height and the
+ * band moves. Verified by sweeping sixteen scroll positions on a 390x844
+ * viewport: exactly one row lit at each, walking 0→9 as the page scrolls.
+ */
+@media (hover: none) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .instrument {
+      animation: instrument-address linear both;
+      animation-timeline: view();
+      /* `auto`, and it is not optional. The `animation` shorthand above resets
+         animation-duration to its initial 0s, and a 0s active interval on a
+         progress-based timeline leaves the effect degenerate — measured, the
+         first row's progress moved 0.212 → 0.276 across 1200px of scrolling
+         and no row ever reached the lit band. The reveal this file used to
+         carry set `animation-duration: auto` for exactly this reason; deleting
+         it took the workaround away with the problem. */
+      animation-duration: auto;
+    }
+  }
+}
+
+@keyframes instrument-address {
+  0%,
+  54% {
+    --instrument-title: var(--muted-foreground);
+    border-color: var(--border);
+    background-color: transparent;
+  }
+  60%,
+  66% {
+    --instrument-title: var(--foreground);
+    border-color: var(--instrument-reading-border);
+    background-color: var(--instrument-reading-surface);
+  }
+  72%,
+  100% {
+    --instrument-title: var(--muted-foreground);
+    border-color: var(--border);
+    background-color: transparent;
+  }
 }
 
 /* ---------- Stretched-link cards ----------

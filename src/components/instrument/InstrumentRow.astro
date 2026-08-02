@@ -103,20 +103,27 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
     */
   }
   <div class="flex min-h-11 flex-col gap-3 p-4 sm:flex-row sm:items-start sm:gap-5">
+    {
+      /*
+        `data-catalogue` is the hook the canonical-mark tests read on all three
+        surfaces (home, index, write-up), so they can compare the same project's
+        number across them. Keep it: without it those tests can still find A
+        mark, which is exactly the weakness that let the mark contradict itself
+        for as long as it did.
+
+        aria-hidden because the mark is repeated as "Project 01:" inside the
+        link below, where it belongs to the accessible name.
+      */
+    }
     <span
       class="text-primary shrink-0 font-mono text-xs tabular-nums sm:pt-1"
+      data-catalogue
       aria-hidden="true">{mark}</span
     >
 
     <div class="min-w-0 flex-1">
       <h3
-        class={cn(
-          "font-display text-base font-semibold tracking-tight",
-          // The one thing that recedes. The metric below never does.
-          reading ? "text-foreground" : "text-muted-foreground",
-          "group-hover:text-foreground group-focus-within:text-foreground",
-          "ease-instrument transition-[color] duration-[var(--motion-address)]",
-        )}
+        class="font-display ease-instrument text-base font-semibold tracking-tight text-[color:var(--instrument-title)] transition-[color] duration-[var(--motion-address)]"
       >
         <a
           href={`/projects/${project.id}`}

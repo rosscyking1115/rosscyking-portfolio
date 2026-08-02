@@ -1,9 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import registry from "../../content/projects/registry.json" with { type: "json" };
 
 /**
- * Projects gallery and write-up gate (Phase B).
+ * Projects log and write-up gate.
  *
  * Enumerated from content/projects/registry.json — the same canonical source
  * scripts/validate-projects.mjs gates — so adding a project without a working
@@ -12,37 +12,186 @@ import registry from "../../content/projects/registry.json" with { type: "json" 
 
 const slugs = Object.keys(registry.projects);
 
-test.describe("gallery", () => {
-  test("lists every project with a catalogue number and stack chips", async ({
+type ProjectSpec = {
+  mark: number;
+  status?: string;
+  demo?: string | null;
+  headline?: { mode?: string } | null;
+};
+const spec = (slug: string) => (registry.projects as Record<string, ProjectSpec>)[slug]!;
+
+/** The order the READER sees, which is CSS `order`, not DOM order. */
+const painted = (page: Page) =>
+  page.locator("[data-project]").evaluateAll((rows) =>
+    rows
+      .filter((row) => (row as HTMLElement).offsetParent !== null)
+      .map((row) => ({
+        slug: row.querySelector("a")?.getAttribute("href")?.split("/").pop() ?? "",
+        order: Number(getComputedStyle(row).order),
+      }))
+      .sort((a, b) => a.order - b.order)
+      .map((row) => row.slug),
+  );
+
+test.describe("the log (design spec §04)", () => {
+  test("every project is one row, carrying its mark and its evidence", async ({
     page,
   }) => {
+    // The card grid became a ten-row log because comparison is a column
+    // problem — audit findings 04 and 05. Everything the gallery test asserted
+    // is still asserted here against the shape that replaced it, plus the two
+    // cells the grid never had.
     await page.goto("/projects");
 
     await expect(page.getByRole("heading", { level: 1, name: "Projects" })).toBeVisible();
 
-    const cards = page.locator("[data-project]");
-    await expect(cards).toHaveCount(slugs.length);
+    const rows = page.locator("[data-project]");
+    await expect(rows).toHaveCount(slugs.length);
     await expect(page.locator("[data-project-count]")).toHaveText(
-      `${slugs.length} projects`,
+      `${slugs.length} projects · one table`,
     );
-
-    // Catalogue numbers are assigned over the full list and zero-padded.
-    await expect(cards.first().locator("[data-catalogue]")).toHaveText("01");
+    await expect(rows.first().locator("[data-catalogue]")).toHaveText("01");
 
     for (const slug of slugs) {
       await expect(
         page.locator(`[data-project] a[href="/projects/${slug}"]`),
-        `${slug} is missing from the gallery`,
+        `${slug} is missing from the log`,
       ).toHaveCount(1);
     }
+
+    // Finding 05, closed: "the index — the one surface built for comparing
+    // projects — carries no numbers at all."
+    await expect(page.locator("[data-instrument] [title^='Corrected']")).not.toHaveCount(
+      0,
+    );
+    // `exact` matters: the struck pair also spells the number out for screen
+    // readers as "Withdrawn: 99.31%. Corrected to 79.92% …", so a loose match
+    // finds two elements and fails on strict mode rather than on the finding.
+    await expect(page.getByText("79.92%", { exact: true })).toBeVisible();
+  });
+
+  test("no project summary is published on two index surfaces", async ({ page }) => {
+    // §03 R2: "no summary paragraph on two index surfaces." The home showcase
+    // and this page used to print the SAME summary string, differing only in
+    // whether a screenshot sat beside the words — which is exactly what made
+    // them read as one component rendered twice (finding 04). The prose now
+    // lives only on the write-up.
+    await page.goto("/");
+    const home = (await page.locator("main").textContent()) ?? "";
+
+    await page.goto("/projects");
+    const index = (await page.locator("main").textContent()) ?? "";
+
+    // A distinctive clause from a home card. Long enough to be one project's
+    // own sentence rather than a phrase any two projects might share.
+    const marker = "Answers one question well";
+    const start = home.indexOf(marker);
+    expect(start, "the sample clause is not on the home page any more").toBeGreaterThan(
+      -1,
+    );
+    const clause = home.slice(start, start + 60);
+    expect(index, "the index is republishing a home page summary").not.toContain(clause);
+  });
+
+  test("the ledger's test total is the home page's test total", async ({ page }) => {
+    // §03 R8: "numbers are counted, not typed … a hand-written total is a
+    // number that can drift." Compares the two SURFACES rather than either
+    // against a literal, so the test cannot go stale when a project is added.
+    //
+    // The designer's mock is the worked example of the failure: its neobank row
+    // read 617 tests while its own footer said 1,681, and only one of those can
+    // be the source.
+    await page.goto("/");
+    const onHome = ((await page.locator("main").textContent()) ?? "").match(
+      /([\d,]+)\s*TESTS/i,
+    );
+    expect(onHome, "the home proof readout has no test total").not.toBeNull();
+
+    await page.goto("/projects");
+    await expect(page.getByText(`${onHome![1]} tests total`)).toBeVisible();
+  });
+});
+
+test.describe("sort — the evidence note as an axis (§04)", () => {
+  test("reading order is the canonical mark, not the publish date", async ({ page }) => {
+    await page.goto("/projects");
+    const marks = (await painted(page)).map((slug) => spec(slug).mark);
+    expect(marks).toEqual([...marks].sort((a, b) => a - b));
+  });
+
+  test("corrected first puts every correction above every other row", async ({
+    page,
+  }) => {
+    // The thesis of the page. "Show me the ones he had to correct" is only a
+    // thing a hiring manager can do if the metric mode is an axis rather than a
+    // sentence buried in the prose.
+    await page.goto("/projects?sort=corrected");
+    const order = await painted(page);
+    const modeOf = (slug: string) => spec(slug).headline?.mode ?? "NONE";
+
+    const firstOther = order.findIndex((slug) => modeOf(slug) !== "CORRECTED");
+    expect(firstOther, "no corrections rendered at all").toBeGreaterThan(0);
+    for (const slug of order.slice(firstOther)) {
+      expect(
+        modeOf(slug),
+        `${slug} is corrected but sorted below one that is not`,
+      ).not.toBe("CORRECTED");
+    }
+  });
+
+  test("a shared ?sort= link is correct before first paint", async ({ page }) => {
+    // The whole reason sorting is four precomputed ranks and one attribute: the
+    // inline head script sets `data-sort` before the browser has anything to
+    // paint, so the list never rearranges itself in front of the reader.
+    await page.goto("/projects?sort=live");
+    await expect(page.locator("html")).toHaveAttribute("data-sort", "live");
+
+    const rank = (slug: string) =>
+      spec(slug).status === "archived" ? 2 : spec(slug).demo ? 0 : 1;
+    const ranks = (await painted(page)).map(rank);
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+  });
+
+  test("an unknown sort falls back rather than emptying the page", async ({ page }) => {
+    await page.goto("/projects?sort=not-a-sort");
+    await expect(page.locator("html")).toHaveAttribute("data-sort", "order");
+    await expect(page.locator("[data-project]:visible")).toHaveCount(slugs.length);
+  });
+
+  test("changing the sort is a filter, not a navigation", async ({ page }) => {
+    // §03 R3: "No full navigation for a filter." Asserted by watching for a
+    // navigation that must not happen — the stack filter this replaced was a
+    // strip of <a> links, so every chip cost a round trip.
+    await page.goto("/projects");
+
+    // A marker on `window`, not Playwright's `framenavigated`. That event also
+    // fires for same-document history changes, so it counts the control's own
+    // `replaceState` and the test would fail against correct behaviour. A value
+    // that only survives if the document was never replaced is the real signal.
+    await page.evaluate(() => {
+      (window as unknown as { __sameDocument?: boolean }).__sameDocument = true;
+    });
+
+    await page
+      .locator('[data-narrow-chip][data-narrow="sort"][data-narrow-value="tests"]')
+      .click();
+    await expect(page.locator("html")).toHaveAttribute("data-sort", "tests");
+
+    const survived = await page.evaluate(
+      () => (window as unknown as { __sameDocument?: boolean }).__sameDocument === true,
+    );
+    expect(survived, "changing the sort reloaded the page").toBe(true);
+
+    // …and the URL still describes what is on screen, so it can be shared.
+    expect(page.url()).toContain("sort=tests");
   });
 });
 
 test.describe("stack filter", () => {
   /**
    * The Next page read `?stack=` on the server. A prerendered page cannot, so
-   * every card is rendered and an inline head script hides the rest before
-   * first paint. These assert the behaviour that replaced it.
+   * every row is rendered and an inline head script hides the rest before first
+   * paint. These assert the behaviour that replaced it.
    */
   test("a shared ?stack= link shows only matching projects", async ({ page }) => {
     await page.goto("/projects?stack=dbt");
@@ -52,39 +201,39 @@ test.describe("stack filter", () => {
     expect(count).toBeGreaterThan(0);
     expect(count).toBeLessThan(slugs.length);
 
-    for (const card of await visible.all()) {
-      expect(await card.getAttribute("data-stack")).toContain("|dbt|");
+    for (const row of await visible.all()) {
+      expect(await row.getAttribute("data-stack")).toContain("|dbt|");
     }
-    await expect(page.locator("[data-project-count]")).toHaveText(`${count} projects`);
-    await expect(page.locator('[data-stack-chip="dbt"]')).toHaveAttribute(
-      "aria-current",
-      "true",
+    await expect(page.locator("[data-project-count]")).toHaveText(
+      `${count} projects · one table`,
     );
+    await expect(
+      page.locator('[data-narrow-chip][data-narrow="stack"][data-narrow-value="dbt"]'),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   test("a stack containing a space still filters", async ({ page }) => {
-    // The reason cards carry `|`-delimited stacks: CSS's `~=` operator matches
+    // The reason rows carry `|`-delimited stacks: CSS's `~=` operator matches
     // whitespace-separated values, so "GitHub Actions" would never match.
     await page.goto("/projects?stack=GitHub%20Actions");
 
     const visible = page.locator("[data-project]:visible");
     await expect(visible).not.toHaveCount(0);
-    for (const card of await visible.all()) {
-      expect(await card.getAttribute("data-stack")).toContain("|GitHub Actions|");
+    for (const row of await visible.all()) {
+      expect(await row.getAttribute("data-stack")).toContain("|GitHub Actions|");
     }
-    for (const card of await page.locator("[data-project]").all()) {
-      if (await card.isVisible()) continue;
-      expect(await card.getAttribute("data-stack")).not.toContain("|GitHub Actions|");
+    for (const row of await page.locator("[data-project]").all()) {
+      if (await row.isVisible()) continue;
+      expect(await row.getAttribute("data-stack")).not.toContain("|GitHub Actions|");
     }
   });
 
   test("no filter shows everything", async ({ page }) => {
     await page.goto("/projects");
     await expect(page.locator("[data-project]:visible")).toHaveCount(slugs.length);
-    await expect(page.locator('[data-stack-chip=""]')).toHaveAttribute(
-      "aria-current",
-      "true",
-    );
+    await expect(
+      page.locator('[data-narrow-chip][data-narrow="stack"][data-narrow-value=""]'),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   test("an unknown stack shows the empty state rather than a blank page", async ({
@@ -95,26 +244,35 @@ test.describe("stack filter", () => {
     await expect(page.getByText(/No projects with that stack/i)).toBeVisible();
   });
 
-  test("the filter script runs inline, before the cards are parsed", async ({ page }) => {
+  test("filter and sort compose, without either forgetting the other", async ({
+    page,
+  }) => {
+    // Two independent attributes on one element rather than two passes over one
+    // list, which is what makes composing them free. Asserted anyway: "narrowed
+    // AND re-ordered" is the state a shared link is most likely to carry, and
+    // the one a JavaScript implementation is most likely to get wrong.
+    await page.goto("/projects?stack=dbt&sort=tests");
+    const visible = page.locator("[data-project]:visible");
+    await expect(visible).not.toHaveCount(0);
+    for (const row of await visible.all()) {
+      expect(await row.getAttribute("data-stack")).toContain("|dbt|");
+    }
+    await expect(page.locator("html")).toHaveAttribute("data-sort", "tests");
+  });
+
+  test("the narrowing script is inline in <head>, not bundled", async ({ page }) => {
     await page.goto("/projects?stack=dbt");
 
-    // `is:inline` keeps the script where its component sits rather than moving
-    // it to <head>, and ProjectFilter renders above the list. Parsing order is
-    // therefore what prevents the flash: the rule is injected before the
-    // browser has any cards to paint. Bundling the script would defer it past
-    // first paint and the full list would appear first.
-    const order = await page.evaluate(() => {
-      const script = [...document.querySelectorAll("script:not([src])")].find((node) =>
+    // Bundled, this script would be deferred past first paint and the full,
+    // unsorted list would flash first. The assertion moved from "precedes the
+    // grid" to "is in <head>" when the lens, the stack filter and the sort
+    // became one control with one resolver.
+    const inHead = await page.evaluate(() =>
+      [...document.head.querySelectorAll("script:not([src])")].some((node) =>
         node.textContent?.includes("data-project"),
-      );
-      const grid = document.querySelector("[data-projects-grid]");
-      if (!script || !grid) return null;
-      // Node.DOCUMENT_POSITION_FOLLOWING === 4
-      return Boolean(script.compareDocumentPosition(grid) & 4);
-    });
-
-    expect(order, "no inline filter script found").not.toBeNull();
-    expect(order, "filter script must precede the card grid").toBe(true);
+      ),
+    );
+    expect(inHead, "no inline narrowing script found in <head>").toBe(true);
   });
 });
 
@@ -143,7 +301,7 @@ test.describe("write-ups", () => {
     await expect(page.locator("main h1")).toHaveText(
       "London Cycle-Hire Analytics Platform",
     );
-    // Catalogue number matches the gallery's, not a per-page counter.
+    // Catalogue number matches the log's, not a per-page counter.
     await expect(page.locator("header span.text-primary").first()).toHaveText("[ 01 ]");
 
     // Pinned metrics come from the MDX front matter, which validate-projects
@@ -275,9 +433,7 @@ test.describe("the canonical mark (2026-08-01 design audit, finding 01)", () => 
     expect(rendered.length).toBeGreaterThan(0);
     for (const { slug, mark } of rendered) {
       const id = slug.replace("/projects/", "");
-      const expected = String(
-        (registry.projects as Record<string, { mark: number }>)[id]!.mark,
-      ).padStart(2, "0");
+      const expected = String(spec(id).mark).padStart(2, "0");
       expect(mark, `${id} renders ${mark} but the registry says ${expected}`).toBe(
         expected,
       );

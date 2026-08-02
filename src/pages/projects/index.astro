@@ -1,30 +1,87 @@
 ---
-import { ArrowRight, Search } from "@lucide/astro";
-
+import NarrowingControl from "../../components/controls/NarrowingControl.astro";
+import InstrumentRow from "../../components/instrument/InstrumentRow.astro";
 import Container from "../../components/layout/Container.astro";
 import IndexMark from "../../components/layout/IndexMark.astro";
-import ProjectFilter from "../../components/projects/ProjectFilter.astro";
-import Badge from "../../components/ui/Badge.astro";
 import Base from "../../layouts/Base.astro";
 import {
+  getAllProjects,
   getFilterStacks,
-  getNumberedProjects,
-  projectReadingTime,
+  projectHeadline,
+  projectState,
+  SORT_LABELS,
+  SORTS,
+  sortRanks,
 } from "../../lib/projects";
+import { proofStats } from "../../lib/registry-stats";
 
 /**
- * Ported from src/app/projects/page.tsx.
+ * The projects log (design spec §04): "Header readout → filter + sort → 10-row
+ * log, one expanded. Cards become a table; evidence note is a sortable column."
  *
- * Every card for every project is rendered; ProjectFilter hides the ones that
- * do not match `?stack=`, before first paint. See the note in that component
- * for why the filtering moved from the server to a CSS rule.
+ * ── WHY THE CARDS WENT ───────────────────────────────────────────────────────
+ * Audit finding 04 was that this page and the home showcase were the same
+ * component twice, and finding 05 that the index — "the one surface built for
+ * comparing projects" — carried no numbers at all. A card grid answers neither.
+ * Nobody compares ten eighty-word paragraphs; comparison is a column problem.
  *
- * `data-stack` carries `|`-delimited values so the filter can match a stack
- * containing spaces. `data-project` is the hook the filter and its tests use.
+ * So each project is one InstrumentRow: mark, title, headline number, evidence
+ * note, content state, one action. The summary paragraph is gone from this
+ * surface entirely, which is §03 R2 — "no summary paragraph on two index
+ * surfaces" — and it still lives in full on the write-up, so no prose is
+ * published twice.
+ *
+ * ── FILTER AND SORT ARE THE SAME CONTROL ─────────────────────────────────────
+ * Both are <NarrowingControl>, the component the home lens also uses (§03 R3).
+ * The stack filter used to be a strip of <a> links, so every filter was a full
+ * page navigation — which R3 rules out by name and which made two controls that
+ * looked identical behave differently.
+ *
+ * Neither one touches the DOM. Both set an attribute on <html> that CSS reads:
+ * `data-stack` hides non-matching rows, `data-sort` picks which of four
+ * precomputed ranks `order` uses. Nothing re-renders, nothing rehydrates, and
+ * both are resolved before first paint by NarrowingScript, so a shared
+ * /projects?stack=dbt&sort=corrected link arrives correct rather than
+ * rearranging itself after the fact.
+ *
+ * ── EVERY NUMBER ON THIS PAGE IS COUNTED ─────────────────────────────────────
+ * §03 R8. The header count, the totals in the footer and the per-row test
+ * numbers all derive from the registry the validator already gates — and the
+ * footer's test total is `proofStats.tests`, the same value the home page's
+ * proof readout prints. See the note on testCount() in registry-stats.ts for
+ * the mock's worked example of what happens when they are separate sums.
  */
-const numbered = await getNumberedProjects();
+const projects = await getAllProjects();
 const filterStacks = await getFilterStacks();
-const total = numbered.length;
+const ranks = sortRanks(projects);
+
+const total = projects.length;
+
+/** Counted, never typed — §03 R8. */
+const corrected = projects.filter(
+  (project) => projectHeadline(project)?.mode === "CORRECTED",
+).length;
+const controlled = projects.filter(
+  (project) => projectHeadline(project)?.mode === "CONTROLLED",
+).length;
+const live = projects.filter((project) => projectState(project.id) === "LIVE").length;
+
+const stackOptions = [
+  { value: "", label: "All" },
+  ...filterStacks.map((stack) => ({ value: stack, label: stack })),
+];
+const sortOptions = SORTS.map((sort) => ({ value: sort, label: SORT_LABELS[sort] }));
+
+/**
+ * The reading instrument, and the one thing on this page that is a choice
+ * rather than a derivation.
+ *
+ * §03 R7: "only the reading instrument loads an image", so exactly one row may
+ * be it. The first row in reading order is the honest default — it is the
+ * project Ross wants read first, which is what the canonical mark encodes.
+ * Pointer, focus and (on touch) the reading line move it from there.
+ */
+const readingSlug = projects.find((project) => ranks.get(project.id)?.order === 1)?.id;
 ---
 
 <Base
@@ -34,68 +91,61 @@ const total = numbered.length;
 >
   <Container class="py-12 sm:py-16">
     <IndexMark mark="Index">
-      {/* The filter script rewrites this when ?stack= narrows the list. */}
       <span slot="label" data-project-count>
-        {total} project{total === 1 ? "" : "s"}
+        {total} project{total === 1 ? "" : "s"} &middot; one table
       </span>
     </IndexMark>
     <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
       Projects
     </h1>
+    {
+      /*
+        ONE WORD CHANGED: "every card links to a full write-up" → "every row".
+        The design spec lists this as the only copy alteration it asked for in
+        thirteen turns, and it is a factual correction rather than a rewrite —
+        they are rows now, so the old sentence became untrue the moment the
+        grid went. Ross approved the fix on 2026-08-02.
+      */
+    }
     <p class="text-muted-foreground mt-3 max-w-prose text-lg leading-relaxed text-pretty">
-      Evaluation harnesses, AI-safety work, and data products. Filter by stack — every
-      card links to a full write-up with the methods and numbers.
+      Evaluation harnesses, AI-safety work, and data products. Filter by stack, or sort by
+      the evidence — every row links to a full write-up with the methods and numbers.
     </p>
 
-    <div class="border-border mt-8 border-y py-4">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <span
-          class="text-muted-foreground shrink-0 font-mono text-xs tracking-wider uppercase"
-        >
-          Filter by stack
-        </span>
-        <ProjectFilter stacks={filterStacks} />
-      </div>
+    <div class="border-border mt-8 flex flex-col gap-4 border-y py-4">
+      <NarrowingControl
+        name="stack"
+        label="Filter"
+        groupLabel="Filter projects by tech stack"
+        options={stackOptions}
+        defaultValue=""
+      />
+      <NarrowingControl
+        name="sort"
+        label="Sort"
+        groupLabel="Sort projects"
+        options={sortOptions}
+        defaultValue="order"
+      />
     </div>
 
-    <ul class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3" data-projects-grid>
+    {
+      /*
+        `flex-col` rather than a list of blocks, because CSS `order` only means
+        anything to a flex or grid child — that is what lets the sort be four
+        precomputed ranks and no JavaScript at all.
+      */
+    }
+    <ul class="mt-8 flex flex-col gap-2" data-projects-log>
       {
-        numbered.map(({ project, index }) => (
+        projects.map((project) => (
           <li
             data-project
             data-stack={`|${project.data.stack.join("|")}|`}
             class="min-w-0"
+            style={`--o-order:${ranks.get(project.id)!.order};--o-tests:${ranks.get(project.id)!.tests};--o-corrected:${ranks.get(project.id)!.corrected};--o-live:${ranks.get(project.id)!.live}`}
           >
-            <article class="linked-card group border-border bg-card hover:border-instrument-reading-border ease-instrument relative flex h-full flex-col rounded-lg border p-6 shadow-xs transition-[border-color] duration-[var(--motion-address)]">
-              <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
-                <span class="text-primary" data-catalogue>
-                  {String(index).padStart(2, "0")}
-                </span>
-                <span>
-                  {project.data.period} · {projectReadingTime(project)}
-                </span>
-              </div>
-              <h2 class="font-display mt-4 text-lg font-semibold tracking-tight">
-                <a
-                  href={`/projects/${project.id}`}
-                  class="after:absolute after:inset-0 after:rounded-lg"
-                >
-                  {project.data.title}
-                </a>
-              </h2>
-              <p class="text-muted-foreground mt-2 line-clamp-3 flex-1 text-sm leading-relaxed">
-                {project.data.summary}
-              </p>
-              <div class="mt-5 flex flex-wrap gap-1.5">
-                {project.data.stack.slice(0, 4).map((tech) => (
-                  <Badge variant="tag">{tech}</Badge>
-                ))}
-              </div>
-              <span class="text-primary mt-5 inline-flex items-center gap-1.5 text-sm font-medium">
-                Read write-up
-                <ArrowRight class="size-3.5" aria-hidden="true" />
-              </span>
-            </article>
+            <InstrumentRow project={project} reading={project.id === readingSlug} />
           </li>
         ))
       }
@@ -104,33 +154,106 @@ const total = numbered.length;
     <div
       data-projects-empty
       hidden
-      class="border-border mt-8 flex flex-col items-center justify-center rounded-lg border border-dashed py-20 text-center"
+      class="border-border mt-8 rounded-lg border border-dashed py-16 text-center"
     >
-      <Search class="text-muted-foreground size-8" aria-hidden="true" />
-      <p class="mt-4 text-sm font-medium">No projects with that stack — yet.</p>
+      <p class="text-sm font-medium">No projects with that stack — yet.</p>
       <p class="text-muted-foreground mt-1 text-sm">
-        Try another filter, or <a
-          href="/projects"
-          class="text-primary font-medium underline-offset-2 hover:underline">clear it</a
+        Pick another chip, or <button
+          type="button"
+          data-narrow="stack"
+          data-narrow-value=""
+          class="text-primary cursor-pointer font-medium underline-offset-2 hover:underline"
+          >clear the filter</button
         >.
       </p>
     </div>
+
+    {/* The ledger line. Every figure counted from the registry — §03 R8. */}
+    <dl
+      class="border-border text-muted-foreground mt-8 flex flex-wrap gap-x-8 gap-y-2 border-t pt-4 font-mono text-xs"
+    >
+      <div class="flex gap-2">
+        <dt class="sr-only">Shown</dt>
+        <dd><span data-shown-count>{total}</span> shown of {total}</dd>
+      </div>
+      <div class="flex gap-2">
+        <dt class="sr-only">Tests</dt>
+        <dd>{proofStats.tests.toLocaleString("en-GB")} tests total</dd>
+      </div>
+      <div class="flex gap-2">
+        <dt class="sr-only">Evidence</dt>
+        <dd>{corrected} corrected &middot; {controlled} controlled</dd>
+      </div>
+      <div class="flex gap-2">
+        <dt class="sr-only">Live</dt>
+        <dd>{live} live</dd>
+      </div>
+    </dl>
   </Container>
 </Base>
 
-{
-  /*
-    The scroll reveal these cards used to carry is gone — see the MOTION
-    CONTRACT in src/styles/global.css. It mattered most here, because a
-    ten-card gallery is mostly below the fold at any width, so on this page
-    the fade was the difference between a card being painted and not. That is
-    the argument against it, not for it: the reader who lands on /projects
-    wants to compare ten things, and nine of them were transparent.
+<script>
+  /**
+   * The two things CSS cannot say: how many rows survived the filter, and what
+   * to show when none did.
+   *
+   * Driven by the `narrow` event the control dispatches rather than by its own
+   * URL parsing, so this cannot disagree with what the chips think is active.
+   * It also runs once on load, because the inline head script has already
+   * narrowed the list by the time this executes.
+   */
+  const rows = [...document.querySelectorAll<HTMLElement>("[data-project]")];
+  const counter = document.querySelector("[data-project-count]");
+  const shownCount = document.querySelector("[data-shown-count]");
+  const empty = document.querySelector<HTMLElement>("[data-projects-empty]");
+  const log = document.querySelector<HTMLElement>("[data-projects-log]");
 
-    The third column arrives at xl, not lg. These cards are text only — no
-    evidence frame to fill the width — so they need more measure than the home
-    page's 3-up does. At a 1024px viewport the container is 976px and three
-    columns would leave each summary about 40 characters a line; at xl the
-    container is at its 1152px cap and they get about 45.
+  function refresh() {
+    const stack = document.documentElement.dataset.stack ?? "";
+    const shown = stack
+      ? rows.filter((row) => (row.dataset.stack ?? "").includes(`|${stack}|`)).length
+      : rows.length;
+
+    if (counter) {
+      counter.textContent = `${shown} project${shown === 1 ? "" : "s"} · one table`;
+    }
+    if (shownCount) shownCount.textContent = String(shown);
+    if (empty) empty.hidden = shown !== 0;
+    if (log) log.hidden = shown === 0;
+  }
+
+  document.addEventListener("narrow", refresh);
+  refresh();
+</script>
+
+<style>
+  /*
+    SORTING IS FOUR NUMBERS AND ONE ATTRIBUTE.
+
+    Each row carries all four ranks as custom properties, set at build time; the
+    attribute on <html> chooses which one `order` reads. Changing the sort moves
+    nothing in the DOM — no re-render, no reflow of ten subtrees, no hydration —
+    and a shared ?sort= link is already correct at first paint because
+    NarrowingScript sets the attribute inline in <head>.
+
+    `order` is also why the list is a flex column rather than a stack of blocks:
+    the property means nothing to a child that is not a flex or grid item.
+
+    Only three rules are needed. `order` defaults to 0 for every item, and the
+    ranks start at 1, so the default sort needs no rule of its own — but it gets
+    one anyway, because relying on "no rule" to mean "reading order" is the kind
+    of implicit behaviour that breaks silently when someone adds a fifth sort.
   */
-}
+  :global([data-sort="order"]) [data-project] {
+    order: var(--o-order);
+  }
+  :global([data-sort="tests"]) [data-project] {
+    order: var(--o-tests);
+  }
+  :global([data-sort="corrected"]) [data-project] {
+    order: var(--o-corrected);
+  }
+  :global([data-sort="live"]) [data-project] {
+    order: var(--o-live);
+  }
+</style>

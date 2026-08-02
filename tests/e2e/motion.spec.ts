@@ -15,7 +15,8 @@ import { expect, test, type Page } from "@playwright/test";
  *   NOTHING TRANSLATES   no transform at rest, and no transition may name a
  *                        transform property
  *   NO OPACITY ON TEXT   every element carrying text is fully opaque
- *   NEVER                nothing animates on arrival, on scroll, or continuously
+ *   NEVER                nothing animates on arrival or continuously, and no
+ *                        scroll-driven animation touches opacity or transform
  *   VOCABULARY           every transition on the page uses one of the three
  *                        durations and the one easing
  *
@@ -67,12 +68,12 @@ async function sweep(page: Page) {
     for (const el of document.querySelectorAll("*")) {
       const style = getComputedStyle(el);
 
-      if (style.animationName !== "none") {
+      // An animation on the DOCUMENT timeline is one that runs on arrival or
+      // runs forever — both banned. An animation on a scroll or view timeline
+      // is driven by the reader and is how §02's reading line works, so it is
+      // allowed and checked separately, below, for what it animates.
+      if (style.animationName !== "none" && style.animationTimeline === "auto") {
         animating.push(`${describe(el)} → ${style.animationName}`);
-      }
-      // `view()` and `scroll()` both report as something other than "auto".
-      if (style.animationTimeline && style.animationTimeline !== "auto") {
-        scrollDriven.push(`${describe(el)} → ${style.animationTimeline}`);
       }
       if (style.transform !== "none") {
         transformed.push(`${describe(el)} → ${style.transform}`);
@@ -133,6 +134,37 @@ async function sweep(page: Page) {
       });
     }
 
+    // Scroll-driven animations, checked for what they animate rather than for
+    // existing. This reads the LIVE keyframes off getAnimations(), which is the
+    // only way to know what a running animation actually touches — a CSS text
+    // scan can be defeated by a keyframe assembled from custom properties, and
+    // getComputedStyle reports the current frame rather than the recipe.
+    //
+    // The rule: a scroll-driven animation may change colour. The moment one
+    // touches opacity or transform it is a reveal, which §01 bans outright, and
+    // the fact that a reader is driving it does not make it not a reveal.
+    for (const animation of document.getAnimations()) {
+      const timeline = animation.timeline;
+      if (!timeline || timeline.constructor.name === "DocumentTimeline") continue;
+      const effect = animation.effect;
+      if (!(effect instanceof KeyframeEffect)) continue;
+
+      const properties = new Set<string>();
+      for (const frame of effect.getKeyframes()) {
+        for (const key of Object.keys(frame)) {
+          if (["offset", "computedOffset", "easing", "composite"].includes(key)) continue;
+          properties.add(key);
+        }
+      }
+      const banned = [...properties].filter((property) =>
+        /^(opacity|transform|translate|scale|rotate)$/.test(property),
+      );
+      if (banned.length) {
+        const target = effect.target ? describe(effect.target) : "(detached)";
+        scrollDriven.push(`${target} → scroll-driven ${banned.join(", ")}`);
+      }
+    }
+
     // Deduped: `transition-colors` expands to eleven properties, so one
     // offending class string on one repeated component produced 662 identical
     // lines and buried the finding it was reporting.
@@ -160,7 +192,10 @@ test.describe("motion contract (design spec §01)", () => {
       // screenshot zoom. One assertion per rule, so a failure names which rule
       // broke rather than "motion changed".
       expect(found.animating, "elements animating with nothing addressed").toEqual([]);
-      expect(found.scrollDriven, "elements driven by a scroll timeline").toEqual([]);
+      expect(
+        found.scrollDriven,
+        "a scroll-driven animation is moving or fading something — that is a reveal",
+      ).toEqual([]);
       expect(found.transformed, "elements displaced from their layout position").toEqual(
         [],
       );

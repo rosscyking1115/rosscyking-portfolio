@@ -8,6 +8,7 @@ import {
   projectReadingTime,
   type Project,
 } from "../../lib/projects";
+import NarrowingControl from "../controls/NarrowingControl.astro";
 import Container from "../layout/Container.astro";
 import IndexMark from "../layout/IndexMark.astro";
 import Badge from "../ui/Badge.astro";
@@ -50,41 +51,28 @@ const allLabel = `All ${allCount} projects`;
   <div class="border-border/70 mb-8 border-b border-dashed pb-6">
     {
       /*
-      Ported from src/components/home/lens-switcher.tsx. The first cut of this
-      component was written from scratch rather than from that file and drifted
-      on three counts: it dropped the "Viewing as →" caption, set the buttons in
-      the sans face instead of mono, and inverted the active treatment to a
-      solid primary fill. Next tints the active pill to 10% and keeps the label
-      in primary — restored here.
+      THE LENS IS NOW THE SHARED NARROWING CONTROL (spec §03 R3), the same
+      component the projects index uses for its stack filter and its sort.
 
-      The active state is driven by `aria-pressed` rather than a React prop, so
-      the styling hangs off the aria-pressed: variant and the attribute stays
-      the single source of truth for both look and assistive tech.
+      What was here before was the first of the site's two narrowing mechanics:
+      buttons with `aria-pressed`, a click handler, and a `replaceState` call,
+      all written out inline. The index had the second — a strip of <a> links
+      that navigated. Two controls that looked alike and behaved differently.
+
+      Everything that made this one right is preserved, because it was the
+      better of the two: mono chips rather than sans, the active pill tinted to
+      10% with the label in primary rather than a solid fill, `aria-pressed` as
+      the single source of truth for both look and assistive tech, and the
+      "Viewing as →" caption that the first port dropped.
     */
     }
-    <div
-      role="group"
-      aria-label="View this portfolio by role"
-      class="flex flex-wrap items-center gap-x-3 gap-y-2"
-    >
-      <span class="text-muted-foreground font-mono text-xs tracking-wider uppercase">
-        Viewing as&nbsp;→
-      </span>
-      <div class="flex flex-wrap gap-1.5">
-        {
-          allLenses.map((lens) => (
-            <button
-              type="button"
-              data-lens-button={lens.key}
-              aria-pressed={lens.key === DEFAULT_LENS ? "true" : "false"}
-              class="focus-visible:ring-ring border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-primary ease-instrument cursor-pointer rounded-full border px-3 py-1 font-mono text-xs whitespace-nowrap transition-colors duration-[var(--motion-state)] focus-visible:ring-2 focus-visible:outline-none aria-pressed:font-medium"
-            >
-              {lens.label}
-            </button>
-          ))
-        }
-      </div>
-    </div>
+    <NarrowingControl
+      name="lens"
+      label="Viewing as"
+      groupLabel="View this portfolio by role"
+      options={allLenses.map((lens) => ({ value: lens.key, label: lens.label }))}
+      defaultValue={DEFAULT_LENS}
+    />
   </div>
 
   {
@@ -268,33 +256,3 @@ const allLabel = `All ${allCount} projects`;
     display: block;
   }
 </style>
-
-<script>
-  import { DEFAULT_LENS, isLensKey, lensHref, type LensKey } from "../../lib/lenses";
-
-  const buttons = document.querySelectorAll<HTMLButtonElement>("[data-lens-button]");
-
-  function select(lens: LensKey, pushUrl: boolean) {
-    document.documentElement.dataset.lens = lens;
-    for (const button of buttons) {
-      button.setAttribute("aria-pressed", String(button.dataset.lensButton === lens));
-    }
-    if (pushUrl) {
-      // replaceState, not pushState: switching lens is a filter, not a
-      // navigation. Back should leave the page, as it did in the Next app.
-      window.history.replaceState({}, "", lensHref(lens));
-    }
-  }
-
-  // The inline head script already resolved the lens (including retired-name
-  // aliases); adopt it rather than re-parsing the URL and risking a mismatch.
-  const initial = document.documentElement.dataset.lens ?? DEFAULT_LENS;
-  select(isLensKey(initial) ? initial : DEFAULT_LENS, false);
-
-  for (const button of buttons) {
-    button.addEventListener("click", () => {
-      const key = button.dataset.lensButton;
-      if (key && isLensKey(key)) select(key, true);
-    });
-  }
-</script>

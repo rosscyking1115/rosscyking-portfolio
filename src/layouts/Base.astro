@@ -3,7 +3,7 @@ import Analytics from "@vercel/analytics/astro";
 import { Font } from "astro:assets";
 import SpeedInsights from "@vercel/speed-insights/astro";
 
-import LensScript from "../components/LensScript.astro";
+import NarrowingScript from "../components/controls/NarrowingScript.astro";
 import Footer from "../components/layout/Footer.astro";
 import Nav from "../components/layout/Nav.astro";
 import ThemeScript from "../components/ThemeScript.astro";
@@ -16,10 +16,11 @@ import "../styles/global.css";
  * The site shell.
  *
  * Order inside <head> is load-bearing, not stylistic:
- *   1. ThemeScript and LensScript are inline and come FIRST, so the theme class
- *      and lens attribute are on <html> before the browser has any CSS to paint
- *      with. Move them below the stylesheet and you get a flash of the wrong
- *      theme — see risks #5 and #6.
+ *   1. ThemeScript and NarrowingScript are inline and come FIRST, so the theme
+ *      class and every narrowing attribute (lens, stack, sort) are on <html>
+ *      before the browser has any CSS to paint with. Move them below the
+ *      stylesheet and you get a flash of the wrong theme, or of an unfiltered
+ *      and unsorted projects log — see risks #5 and #6.
  *   2. <Font /> emits the preload links and @font-face rules for Astro's Fonts
  *      API. Self-hosted from _astro/fonts, so the CSP needs no font CDN origin.
  *
@@ -79,7 +80,7 @@ const fullTitle =
 
     {/* Must precede the stylesheet — see the note above. */}
     <ThemeScript />
-    <LensScript />
+    <NarrowingScript />
 
     <Font cssVariable="--font-geist-sans" preload />
     <Font cssVariable="--font-geist-mono" />
