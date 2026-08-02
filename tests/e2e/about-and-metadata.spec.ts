@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+import { certifications, virtualTraining } from "../../src/lib/certifications";
+import { education } from "../../src/lib/experience";
+
 import registry from "../../content/projects/registry.json" with { type: "json" };
 
 /**
@@ -26,13 +29,16 @@ test.describe("about page", () => {
       .locator("main .text-primary")
       .filter({ hasText: /^\[/ })
       .allTextContents();
+    // SIX MARKS BECAME FOUR, and the reduction is the change rather than a
+    // loss: education, certifications and virtual training were three sections
+    // separated by ruler dividers and are now one Record rack, so [ 01 ] to
+    // [ 03 ] collapsed into one. The finding this test was written for — "losing
+    // one means a section silently vanished" — is unchanged.
     expect(marks.map((m) => m.trim())).toEqual([
-      "[ About ]",
+      "[ Ross King ]",
       "[ 01 ]",
       "[ 02 ]",
       "[ 03 ]",
-      "[ 04 ]",
-      "[ 05 ]",
     ]);
   });
 
@@ -48,16 +54,34 @@ test.describe("about page", () => {
     await expect(bio).toContainText("MSc Artificial Intelligence candidate");
   });
 
-  test("education, certifications and virtual training all populate", async ({
-    page,
-  }) => {
+  test("the record rack loses nothing when three lists become one", async ({ page }) => {
+    // REWRITTEN for the merge, and stronger than what it replaces. The old
+    // version checked that three sections each rendered something; merging them
+    // means the risk is different and worse — a source list quietly not
+    // contributing, which looks identical to a shorter record.
+    //
+    // So it counts: every entry in education, certifications and virtualTraining
+    // must appear, and the total is recomputed from the source rather than
+    // written down.
     await page.goto("/about");
-    await expect(page.locator("main ol li h3")).not.toHaveCount(0);
 
-    const lists = page.locator("main ul.divide-y");
-    await expect(lists).toHaveCount(2);
-    for (const list of await lists.all()) {
-      await expect(list.locator("li")).not.toHaveCount(0);
+    const expected = education.length + certifications.length + virtualTraining.length;
+    await expect(
+      page.locator("[data-record]"),
+      "the record rack is not showing every authored entry",
+    ).toHaveCount(expected);
+
+    // One title from each of the three sources, so a whole list going missing
+    // cannot be hidden by another gaining an entry.
+    for (const title of [
+      education[0]!.title,
+      certifications[0]!.title,
+      virtualTraining[0]!.title,
+    ]) {
+      await expect(
+        page.locator("[data-record]").filter({ hasText: title }),
+        `${title} is missing from the record`,
+      ).toHaveCount(1);
     }
   });
 
@@ -65,7 +89,7 @@ test.describe("about page", () => {
     await page.goto("/about");
 
     const toolbox = page.locator("[data-toolbox]");
-    await expect(toolbox.locator("> div")).not.toHaveCount(0);
+    await expect(toolbox.locator("ul")).not.toHaveCount(0);
     // Languages get their own block below; duplicating them in the toolbox was
     // the behaviour the Next page deliberately filtered out.
     await expect(toolbox).not.toContainText("Languages");

@@ -1,32 +1,74 @@
 ---
+import { ArrowRight, Download } from "@lucide/astro";
+
 import { Content as Bio } from "../../content/about.mdx";
 
-import CredentialList from "../components/about/CredentialList.astro";
-import ExperienceTimeline from "../components/about/ExperienceTimeline.astro";
+import RecordRack from "../components/about/RecordRack.astro";
 import Container from "../components/layout/Container.astro";
 import IndexMark from "../components/layout/IndexMark.astro";
+import Button from "../components/ui/Button.astro";
 import Base from "../layouts/Base.astro";
-import { certifications, virtualTraining } from "../lib/certifications";
-import { education, languages } from "../lib/experience";
+import { languages } from "../lib/experience";
+import { stackCounts } from "../lib/projects";
+import { record } from "../lib/record";
 import { siteConfig } from "../lib/site-config";
 import { skillGroups } from "../lib/skills";
 
 /**
- * Ported from src/app/about/page.tsx.
+ * About (design spec §04, 6a): "Bio at 20px → record rack → provenance
+ * toolbox. Every tool carries a count that links to the filtered index."
  *
- * The bio is imported straight from content/about.mdx at the repo root. It has
- * no front matter and there is exactly one of it, so a content collection would
- * be ceremony — a direct MDX import gives the same rendering (and the same
- * single source) with less machinery. The Next app read it with fs + a
- * hand-rolled cache; both disappear.
+ * ── THE STICKY PANEL GOES, AND THE BIO GETS THE PAGE ─────────────────────────
+ *   "This is the only surface where you speak, and it was sharing attention
+ *    with a list of nouns. Bio sets at 20px on a 760px measure — the largest
+ *    body type on the site."
  *
- * The Toolbox aside now owns the skills list outright: SkillsCluster was cut
- * from the home page so the site stops saying the same thing twice (Ross's
- * Phase 0 call, 2026-07-27).
+ * The toolbox was a sticky aside pinned beside the bio at every desktop width,
+ * so the one page where Ross writes in the first person ran in a narrow column
+ * next to a permanent wall of forty skill chips. It is now below, where a
+ * reader arrives at it having already read the argument it supports.
+ *
+ * ── THE TOOLBOX WAS THE LEAST HONEST THING ON THE SITE ───────────────────────
+ *   "A bare skills list is a claim with nothing behind it — on a site whose
+ *    argument is that every number traces to the test that produced it, that
+ *    stood out. Now each tool is counted, and every count is a link."
+ *
+ * Counts come from `stackCounts()`, over the same project stacks the index
+ * filters on, and each links to that filter: "dbt 4" goes to
+ * /projects?stack=dbt and the reader lands on the four.
+ *
+ * WHAT THAT EXPOSED, left visible rather than tidied away: a third of the
+ * toolbox has no project behind it. Almost all of those are PRACTICES rather
+ * than tools — "Model evaluation", "Red-team testing", "Guardrail checks" —
+ * which cannot appear in a dependency list even when a project plainly
+ * demonstrates them. They are kept, and rendered without a count, a border or a
+ * link, so the difference between "here is the evidence" and "here is a claim"
+ * is legible instead of being flattened into identical chips. Whether they stay
+ * at all is Ross's call; what this page must not do is present both as the same
+ * kind of statement.
+ *
+ * ── OPEN ITEM 05, ANSWERED FROM THE REPOSITORY ───────────────────────────────
+ * The spec asks Ross for "your timeline entries — certifications, training,
+ * undergraduate degree. I would not invent credentials." It did not need
+ * asking: all three are already authored in src/lib/experience.ts and
+ * src/lib/certifications.ts, including the BSc from Queen's University Belfast.
+ * The designer had the screenshots, not the repo. Nothing here is invented —
+ * see src/lib/record.ts, where every status token is derived from a field that
+ * was already there.
  */
+const counts = await stackCounts();
 
-// Languages live in their own sidebar block, so drop that group from the toolbox.
-const toolboxGroups = skillGroups.filter((group) => group.label !== "Languages");
+/** Languages have their own block; drop that group from the toolbox. */
+const toolboxGroups = skillGroups
+  .filter((group) => group.label !== "Languages")
+  .map((group) => ({
+    label: group.label,
+    items: group.items.map((name) => ({ name, count: counts.get(name) ?? 0 })),
+  }));
+
+/** Counted, not typed — the page making a claim about itself (§03 R8). */
+const allTools = toolboxGroups.flatMap((group) => group.items);
+const evidenced = allTools.filter((item) => item.count > 0).length;
 ---
 
 <Base
@@ -34,80 +76,129 @@ const toolboxGroups = skillGroups.filter((group) => group.label !== "Languages")
   description="MSc Artificial Intelligence at the University of Sheffield. I build software for evaluating AI honestly: release gates, benchmarks that can fail, and evidence you can trace back to where it came from."
   canonical="/about"
 >
-  <Container class="py-12 sm:py-16">
-    <div class="grid gap-12 lg:grid-cols-[1fr_18rem]">
-      {/* Bio + education */}
-      <div class="max-w-prose">
-        <IndexMark mark="About" label={siteConfig.name} />
-        <h1
-          class="font-display mt-4 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
-        >
-          I build software for evaluating AI honestly.
-        </h1>
+  <Container class="py-12 sm:py-16" size="md">
+    <IndexMark mark={siteConfig.shortName} label="Sheffield, UK" />
+    <h1
+      class="font-display mt-4 text-4xl font-bold tracking-tight text-balance sm:text-5xl"
+    >
+      I build software for evaluating AI honestly.
+    </h1>
 
-        <div
-          class="text-muted-foreground [&_a]:text-primary [&_strong]:text-foreground mt-6 text-lg leading-relaxed [&_a]:underline [&_a]:underline-offset-2 [&_strong]:font-semibold [&>p+p]:mt-4"
-          data-bio
-        >
-          <Bio />
-        </div>
-
-        <div class="ruler my-12" aria-hidden="true"></div>
-
-        <IndexMark mark="01" label="Education" />
-        <ExperienceTimeline items={education} />
-
-        <div class="ruler my-12" aria-hidden="true"></div>
-
-        <IndexMark mark="02" label="Certifications" />
-        <CredentialList items={certifications} />
-
-        <div class="ruler my-12" aria-hidden="true"></div>
-
-        <IndexMark mark="03" label="Virtual training" />
-        <CredentialList items={virtualTraining} />
-      </div>
-
-      {/* Toolbox + languages */}
-      <aside class="lg:sticky lg:top-24 lg:self-start">
-        <div class="border-border rounded-lg border p-6">
-          <IndexMark mark="04" label="Toolbox" />
-          <div class="mt-5 space-y-5" data-toolbox>
-            {
-              toolboxGroups.map((group) => (
-                <div>
-                  <div class="text-primary font-mono text-[11px] tracking-wider uppercase">
-                    {group.label}
-                  </div>
-                  <div class="mt-2 flex flex-wrap gap-1.5">
-                    {group.items.map((item) => (
-                      <span class="border-border bg-background rounded border px-2 py-0.5 text-xs">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))
-            }
-          </div>
-
-          <div class="bg-border my-6 h-px w-full"></div>
-
-          <IndexMark mark="05" label="Languages" />
-          <ul class="mt-4 space-y-2.5 text-sm" data-languages>
-            {
-              languages.map((language) => (
-                <li class="flex items-center justify-between gap-3">
-                  <span>{language.name}</span>
-                  <span class="text-muted-foreground font-mono text-xs">
-                    {language.level}
-                  </span>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-      </aside>
+    {
+      /*
+        20px — the largest body type on the site, larger than the home page's
+        standfirst. Deliberate: this is the only page where Ross is speaking
+        rather than a number is.
+      */
+    }
+    <div
+      class="text-muted-foreground [&_a]:text-primary [&_strong]:text-foreground mt-6 max-w-[46rem] text-xl leading-relaxed [&_a]:underline [&_a]:underline-offset-2 [&_strong]:font-semibold [&>p+p]:mt-5"
+      data-bio
+    >
+      <Bio />
     </div>
+
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <Button href="/contact">
+        Get in touch
+        <ArrowRight aria-hidden="true" />
+      </Button>
+      <Button href="/cv.pdf" variant="outline" download="Cheng-Yuan-King-CV.pdf">
+        <Download aria-hidden="true" />
+        Download CV
+      </Button>
+    </div>
+
+    <section class="mt-14">
+      <IndexMark mark="01" label="Record" />
+      <p class="text-muted-foreground mt-3 max-w-prose text-sm leading-relaxed">
+        Education, certification and training in one order, newest first. Every status is
+        derived from the record itself — a course still running, a degree completed, a
+        credential you can check.
+      </p>
+      <RecordRack entries={record} />
+    </section>
+
+    <section class="mt-14" data-toolbox>
+      <IndexMark mark="02" label="Toolbox" />
+      <h2 class="font-display mt-3 text-2xl font-semibold tracking-tight text-balance">
+        Every tool is counted, and every count is a link
+      </h2>
+      <p class="text-muted-foreground mt-3 max-w-prose text-sm leading-relaxed">
+        {evidenced} of {allTools.length} carry a project behind them, and the count opens the
+        filtered index. The rest are practices rather than dependencies — they cannot appear
+        in a stack list, so they carry no count and no link, and are marked that way rather
+        than dressed as evidence.
+      </p>
+
+      <div class="mt-6 flex flex-col gap-8">
+        {
+          toolboxGroups.map((group) => (
+            <div>
+              <h3 class="text-primary font-mono text-[11px] tracking-wider uppercase">
+                {group.label}
+              </h3>
+              <ul class="mt-3 flex flex-wrap gap-2">
+                {group.items.map((item) =>
+                  item.count > 0 ? (
+                    <li>
+                      {/*
+                        A real link, to the filter that proves it. The count is
+                        the evidence and the href is where to check it — the
+                        same shape as a project's headline number pointing at
+                        its own write-up.
+                      */}
+                      <a
+                        href={`/projects?stack=${encodeURIComponent(item.name)}`}
+                        class="border-border hover:border-instrument-reading-border hover:bg-instrument-reading ease-instrument inline-flex items-center gap-2 rounded border px-2.5 py-1 text-xs transition-[border-color,background-color] duration-[var(--motion-state)]"
+                        data-tool-linked
+                      >
+                        {item.name}
+                        <span class="text-muted-foreground font-mono tabular-nums">
+                          {item.count}
+                        </span>
+                      </a>
+                    </li>
+                  ) : (
+                    <li>
+                      {/*
+                        No count, no border, no link. A practice this site cannot
+                        point at is still true — it is just not evidence, and it
+                        must not look like the chips that are.
+                      */}
+                      <span
+                        class="text-muted-foreground inline-flex items-center px-2.5 py-1 text-xs"
+                        data-tool-unlinked
+                      >
+                        {item.name}
+                      </span>
+                    </li>
+                  ),
+                )}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="mt-14">
+      <IndexMark mark="03" label="Languages" />
+      <ul
+        class="border-border divide-border mt-4 flex max-w-md flex-col divide-y border-y"
+        data-languages
+      >
+        {
+          languages.map((language) => (
+            <li class="flex items-center justify-between gap-3 py-3 text-sm">
+              <span>{language.name}</span>
+              <span class="text-muted-foreground font-mono text-xs">
+                {language.level}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
   </Container>
 </Base>
