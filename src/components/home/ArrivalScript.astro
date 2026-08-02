@@ -1,0 +1,172 @@
+---
+/**
+ * The home page's arrival sequence — the JavaScript half of the amended motion
+ * contract (see the MOTION CONTRACT block in src/styles/global.css).
+ *
+ * ── WHY THIS IS `is:inline` AND SITS BEFORE THE MASTHEAD ─────────────────────
+ * The same reason ThemeScript and NarrowingScript do: it writes an attribute on
+ * <html> that the stylesheet keys off, and it has to have written it before the
+ * browser paints the element that attribute hides. Bundled, it would load after
+ * first paint and the masthead would appear complete and then drop to zero
+ * opacity to animate in — the exact flash the theme script exists to prevent,
+ * one system over.
+ *
+ * ── THE FLAG IS OPT-IN, WHICH IS THE WHOLE SAFETY ARGUMENT ───────────────────
+ * Nothing on this page is hidden by default. `data-motion` is what hides it,
+ * and it is only ever set here, in a try/catch that removes it again if
+ * anything in this file throws. So the failure modes are:
+ *
+ *   no JavaScript           attribute never set — the finished page
+ *   script throws early     attribute removed by the catch — the finished page
+ *   prefers-reduced-motion  attribute never set — the finished page
+ *   no IntersectionObserver attribute removed — the finished page
+ *
+ * There is no path here that leaves a reader looking at an empty column, which
+ * is the standard failure of "animate in on scroll" and the reason this repo's
+ * previous system was CSS-only.
+ *
+ * ── ONE OBSERVER, TWO JOBS, AND WHY THEY SHARE IT ────────────────────────────
+ * The rack cards arrive on first sight and the proof figures count on first
+ * sight. Those are the same trigger, so they are the same observer with the
+ * same one-shot unobserve — a second observer with a second threshold is how
+ * two elements that should move together drift apart.
+ *
+ * ── WHERE THE COUNTERS ACTUALLY GET SET TO ZERO, AND WHY NOT HERE ────────────
+ * In ProofBand.astro, in a second inline script sitting immediately after the
+ * figures it blanks. That looks like a needless split and is not:
+ *
+ * This file runs before the band exists, so it cannot blank anything. The only
+ * hook it has is DOMContentLoaded — which fires after the whole document
+ * parses, and a browser is free to have painted long before that. Blanking
+ * there means the reader can see the real figures, then watch them drop to
+ * zero and climb back. Not a race that fails a test; a race that looks like a
+ * bug on exactly the connections where it matters.
+ *
+ * A synchronous inline script directly after the markup blocks the parser at
+ * that point, so the figures cannot be painted un-blanked and then blanked.
+ * The zeroing belongs next to the thing it zeroes; the animating belongs with
+ * the observer that triggers it.
+ */
+---
+
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+
+    try {
+      const reduced =
+        typeof matchMedia === "function" &&
+        matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (!("IntersectionObserver" in window)) return;
+      if (!reduced) root.setAttribute("data-motion", "");
+
+      /**
+       * Count from zero to the value already in the DOM.
+       *
+       * The easing is the cubic ease-out that --motion-ease-entrance draws, so
+       * the figures decelerate on the same curve the masthead rises on. It is
+       * duplicated here rather than read from CSS because a cubic-bezier string
+       * is not something JavaScript can evaluate without reimplementing it
+       * anyway — and a 3-line approximation that admits it is one is better
+       * than a 40-line solver that pretends otherwise.
+       */
+      const count = (el) => {
+        const target = Number(el.getAttribute("data-count-to"));
+        if (!Number.isFinite(target) || target <= 0) return;
+
+        const parsed = Number.parseFloat(
+          getComputedStyle(root).getPropertyValue("--motion-count"),
+        );
+        const ms = Number.isFinite(parsed) && parsed > 0 ? parsed : 900;
+
+        let started = null;
+        const frame = (now) => {
+          if (started === null) started = now;
+          const t = Math.min(1, (now - started) / ms);
+          const eased = 1 - Math.pow(1 - t, 3);
+          el.textContent = Math.round(target * eased).toLocaleString("en-GB");
+          if (t < 1) requestAnimationFrame(frame);
+          // A DONE FLAG, AND IT IS FOR THE TESTS RATHER THAN FOR THE PAGE.
+          // Nothing renders off it. It exists because a figure that is
+          // legitimately mid-count reads as a smaller number, and any test that
+          // samples the home page's totals without waiting will occasionally
+          // capture one — which is exactly what happened: the gate comparing
+          // the home total against the /projects ledger read "500" off a
+          // counter on its way to 1,681 and reported a drift that did not
+          // exist. A rAF loop is not a CSS animation, so there is nothing on
+          // `getAnimations()` for a test to wait on. This is the hook.
+          else el.setAttribute("data-counted", "");
+        };
+        requestAnimationFrame(frame);
+      };
+
+      /**
+       * -12% at the bottom, and the number is the behaviour Ross asked for:
+       * "when scrolling almost done with the first project, the second gets its
+       * show animation". A card arrives when its top edge has climbed to 88% of
+       * the viewport height — far enough in that the previous card still owns
+       * the screen, close enough that the movement is inside peripheral vision
+       * rather than happening off-stage.
+       */
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const el = entry.target;
+            observer.unobserve(el); // ONCE. Scrolling back does not replay it.
+            if (el.hasAttribute("data-count-to")) count(el);
+            else el.setAttribute("data-shown", "");
+          }
+        },
+        { rootMargin: "0px 0px -12% 0px" },
+      );
+
+      /**
+       * `data-motion` is the single gate for both jobs. It is not just "the
+       * reader allows motion" — it is also the flag ProofBand.astro checks
+       * before blanking its figures, so observing a counter without it would
+       * count from the value to itself and do nothing visible at best.
+       *
+       * THE COUNTERS ARE NOT SIMPLY OBSERVED, and the reason is measured. Ross
+       * asked for them to count "as the page loaded". Handing them to the
+       * observer instead makes that false on the most common desktop: at
+       * 1280x720 the band's top edge sits at 640px, the observer's own -12%
+       * bottom margin puts its trigger line at 634px, and the figures sit six
+       * pixels below it — so they stay at zero until the reader scrolls, which
+       * is not what was asked for and looks like a bug rather than a choice.
+       *
+       * So a counter already in the viewport counts NOW, and one below the fold
+       * waits to be reached. Both readings of "as the page loaded" are honoured
+       * and neither counts to itself off-screen. The plain viewport test here
+       * is deliberately not the observer's margin: this asks "can they see it",
+       * not "are they nearly at it".
+       */
+      const observeAll = () => {
+        if (!root.hasAttribute("data-motion")) return;
+
+        for (const el of document.querySelectorAll(
+          '[data-enter="scroll"]:not([data-shown])',
+        )) {
+          observer.observe(el);
+        }
+
+        for (const el of document.querySelectorAll("[data-count-to]")) {
+          const box = el.getBoundingClientRect();
+          if (box.top < window.innerHeight && box.bottom > 0) count(el);
+          else observer.observe(el);
+        }
+      };
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", observeAll, { once: true });
+      } else {
+        observeAll();
+      }
+    } catch {
+      // Whatever went wrong, the page must be readable. Removing the flag
+      // reverts every rule in the ARRIVAL block to the finished design.
+      root.removeAttribute("data-motion");
+    }
+  })();
+</script>

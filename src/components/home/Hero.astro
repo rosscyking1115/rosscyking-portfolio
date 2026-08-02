@@ -74,21 +74,79 @@ const ROLES = [
       </span>
     </div>
 
+    {
+      /*
+        THE HEADLINE IS THREE CHUNKS, and the split is Ross's (2 Aug 2026):
+        "I work on / AI evaluation / and reliability", arriving in that order
+        with a beat between each.
+
+        `inline-block`, because a transform does not apply to an inline box —
+        the spans would have arrived at full opacity with no rise at all, which
+        looks like a fade someone forgot to finish. What that costs is a
+        wrapping constraint: an inline-block wraps as a unit, so the line can
+        only break BETWEEN chunks, never inside one. Measured at 320px, the
+        narrowest viewport the responsive gate tests: "and reliability." is the
+        widest chunk at 232px against a 272px column, so all three fit. Nothing
+        smaller than that is supported, and a chunk that outgrew the column
+        would still wrap internally rather than overflow, because no
+        `white-space` rule is set here.
+
+        The text content is unchanged — "I work on AI evaluation and
+        reliability." — so the accessible name, the <title> and every existing
+        assertion still read one sentence. THE `{" "}` BETWEEN THE SPANS IS
+        LOAD-BEARING and is not formatting: written as plain newlines, the
+        compiler emitted `</span><span>` with no separator at all and the
+        heading rendered "I work onAI evaluationand reliability." A three-way
+        split of a sentence is exactly the change where that is easy to ship —
+        it looks like a wrapping quirk rather than a missing character.
+      */
+    }
     <h1
       class="font-display mt-6 text-4xl leading-[1.05] font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl"
+      data-headline
     >
-      I work on <span class="text-primary">AI evaluation and reliability.</span>
+      <span class="inline-block" data-enter="load">I work on</span>{" "}
+      <span
+        class="text-primary inline-block"
+        data-enter="load"
+        style="--enter-delay: calc(var(--motion-stagger) * 1)">AI evaluation</span
+      >{" "}
+      <span
+        class="text-primary inline-block"
+        data-enter="load"
+        style="--enter-delay: calc(var(--motion-stagger) * 2)">and reliability.</span
+      >
     </h1>
 
-    <p class="text-body mt-6 max-w-prose text-lg leading-relaxed text-pretty">
+    {
+      /*
+        The rest of the masthead arrives as ONE beat rather than as three more,
+        because a six-step sequence stops reading as an opening and starts
+        reading as a queue. The standfirst leads it by 110ms; the roles line and
+        the button row land together.
+      */
+    }
+    <p
+      class="text-body mt-6 max-w-prose text-lg leading-relaxed text-pretty"
+      data-enter="load"
+      style="--enter-delay: calc(var(--motion-stagger) * 3)"
+    >
       {siteConfig.description}
     </p>
 
-    <p class="text-muted-foreground mt-6 font-mono text-xs tracking-wide">
+    <p
+      class="text-muted-foreground mt-6 font-mono text-xs tracking-wide"
+      data-enter="load"
+      style="--enter-delay: calc(var(--motion-stagger) * 4)"
+    >
       {ROLES.join(" · ")}
     </p>
 
-    <div class="mt-8 flex flex-wrap items-center gap-3">
+    <div
+      class="mt-8 flex flex-wrap items-center gap-3"
+      data-enter="load"
+      style="--enter-delay: calc(var(--motion-stagger) * 4)"
+    >
       <Button href="/projects">
         View projects
         <ArrowRight aria-hidden="true" />

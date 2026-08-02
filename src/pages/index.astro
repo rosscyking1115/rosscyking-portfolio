@@ -1,4 +1,5 @@
 ---
+import ArrivalScript from "../components/home/ArrivalScript.astro";
 import FeaturedProjects from "../components/home/FeaturedProjects.astro";
 import Hero from "../components/home/Hero.astro";
 import ProofBand from "../components/home/ProofBand.astro";
@@ -23,6 +24,16 @@ const all = await getAllProjects();
   canonical="/"
   titleForm="default"
 >
+  {
+    /*
+      FIRST, AND THAT IS THE ONLY THING THAT MATTERS ABOUT ITS POSITION. It
+      writes `data-motion` on <html>, which is what the ARRIVAL rules in
+      global.css key off — so it has to have run before the browser paints the
+      masthead it hides. Below <Hero /> and the headline appears complete, then
+      drops to zero opacity to animate in.
+    */
+  }
+  <ArrivalScript />
   <Hero />
   <ProofBand />
   <FeaturedProjects allCount={all.length} />

@@ -108,6 +108,29 @@
   --motion-disclose: 220ms;
   --motion-ease: cubic-bezier(0.2, 0, 0, 1);
 
+  /* ---------- The arrival vocabulary (Ross, 2 Aug 2026) ----------
+   * FOUR MORE TOKENS, and they exist because the ban they sit under was
+   * lifted. §01 forbade motion on arrival and on scroll outright; Ross's call
+   * is that the home page opens with a sequence and the featured rack arrives
+   * as you reach it. The full reasoning, and what is still forbidden, is in the
+   * MOTION CONTRACT block further down — read that before adding a fifth.
+   *
+   *   entrance  one element arriving, once, and never again
+   *   stagger   the beat between two arrivals in the same sequence
+   *   count     a figure counting to its value
+   *
+   * A SECOND EASING, which is the part worth arguing about. The instrument
+   * easing is cubic-bezier(.2, 0, 0, 1) — it leaves immediately and stops
+   * dead, which is right for a 120ms state change and wrong for a 520ms
+   * arrival, where it reads as a shove. This one decelerates over the whole
+   * duration instead. Both control points stay inside [0,1], so neither
+   * overshoots: "nothing bounces" is unchanged and is now checked numerically
+   * rather than by naming easings, in tests/unit/motion-contract.test.ts. */
+  --motion-entrance: 520ms;
+  --motion-stagger: 110ms;
+  --motion-count: 900ms;
+  --motion-ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+
   /* ---------- Instrument states (design spec §02) ----------
    * Addressing has two states and the difference between them is colour,
    * border and surface — NEVER height. See the hard requirement in the motion
@@ -329,67 +352,90 @@
   );
 }
 
-/* ---------- MOTION CONTRACT (design spec §01) ----------
- * The bans, which are the load-bearing half of the motion system. The three
+/* ---------- MOTION CONTRACT (design spec §01, as amended 2 Aug 2026) --------
+ * The bans, which are the load-bearing half of the motion system. The
  * durations at the top of this file say when motion is allowed; this says when
  * it is not. `tests/e2e/motion.spec.ts` enforces all of it against the rendered
  * page, and `tests/unit/motion-contract.test.ts` against the source.
  *
- *   NOTHING TRANSLATES   No element slides, rises or drifts, in any state,
- *                        ever. That includes hover lift, arrow nudge and
- *                        padding growth — all three shipped here before.
- *   NO OPACITY ON TEXT   At any state, in either theme.
- *   NEVER                On arrival. On scroll, as a reveal. Between pages.
- *                        Continuously.
- *   EASING               cubic-bezier(.2, 0, 0, 1) for all three durations.
- *                        Nothing bounces or overshoots.
+ * ── STILL BANNED, AND THESE DID NOT MOVE ─────────────────────────────────────
+ *   NOTHING TRANSLATES   ...in any STATE. No hover lift, no arrow nudge, no
+ *      AT REST           padding growth — all three shipped here before. A
+ *                        thing that has arrived does not move again.
+ *   NOTHING REPLAYS      An arrival happens once per element per page load.
+ *                        Re-entering the viewport is not a new arrival, and
+ *                        neither is switching lens back.
+ *   NOTHING CONTINUES    No infinite animation, anywhere. The progress
+ *                        hairline is a position readout, not an animation.
+ *   NOTHING BOUNCES      Both control points of every easing stay inside
+ *                        [0,1]. Checked numerically, not by name.
+ *   NOTHING BETWEEN      No page-transition animation.
+ *      PAGES
  *
- * HARD REQUIREMENT, and the reason CLS is the one live risk in the performance
- * budget: receded and reading differ in colour, border and surface only —
- * NEVER in height. Both states must reserve identical layout. Implement
+ * HARD REQUIREMENT, UNCHANGED, and the reason CLS is the one live risk in the
+ * performance budget: receded and reading differ in colour, border and surface
+ * only — NEVER in height. Both states must reserve identical layout. Implement
  * receding as a height change and the page shifts under the reader's thumb.
+ * A reader-initiated DISCLOSURE is the sole height change on the site, and it
+ * is not an addressing state: the reader asked for it and is looking at it.
  *
- * WHAT THIS REPLACED, and why it is not a regression.
+ * ── WHAT WAS LIFTED, BY WHOM, AND WHAT IT COST ───────────────────────────────
+ * §01 read "NEVER — on arrival, on scroll as a reveal, between pages,
+ * continuously", and three of those four still hold. Ross's call on 2 Aug 2026
+ * was that the home page should open with a sequence and that the featured
+ * rack should arrive as the reader reaches it. That is a design decision, not
+ * a defect, so it is recorded here as one — with its price stated, because the
+ * ban was bought with something:
  *
- * A `.reveal` / `.reveal-on-scroll` pair used to live here: a shared keyframe
- * fading and translating elements in, driven by `animation-timeline: view()`
- * where supported. It was a genuine improvement on what preceded it — four
- * components each carrying their own copy of the same keyframe at three
- * different value pairs — and it was measured, staggered and reduced-motion
- * correct. It still violates three of the four rules above: it translated, it
- * put opacity on text, and it fired on arrival and on scroll.
+ *   1. THE A11Y GATE HAD TO CHANGE — AND THE PREDICTION HERE WAS WRONG,
+ *      CORRECTED RATHER THAN DELETED. This block first said the gate would go
+ *      back to scanning the home page under reduced motion, because axe blends
+ *      opacity into the foreground colour and an element mid-arrival measures
+ *      as unreadable. The first half was right and was observed: the third
+ *      headline chunk failed at 1.25:1, #dde2e6 on #fafafb, caught halfway
+ *      through its fade.
  *
- * Removing it is worth more than the animation was:
- *
- *   1. LCP — AND THE PREDICTION HERE WAS WRONG, recorded rather than quietly
- *      deleted. The reasoning was that an element at opacity 0 is not
- *      "painted", so a faded hero must gate Largest Contentful Paint on the
- *      animation rather than on the byte. Measured on the PR-85 preview
- *      against production, five cold loads each:
+ *      The conclusion was wrong. Reduced motion grades a page the visitor never
+ *      sees; the gate now WAITS for every animation to finish and then scans
+ *      the page the visitor does see. Measured: one violation without the wait,
+ *      none with it, none under the flag — so the flag and the wait agree about
+ *      the design, and only the wait agrees about the page. §01's "graded as
+ *      loaded" survives the amendment intact on every route.
+ *   2. THERE IS A SECOND CODE PATH AGAIN. `html[data-motion]` is set by an
+ *      inline script only when JavaScript runs AND the reader has not asked
+ *      for less motion. Without it every rule below is inert and the page is
+ *      the finished article on arrival — the same page §01 shipped. That is
+ *      the fallback, and it is also what a reduced-motion visitor gets, so it
+ *      is not a lesser experience; it is the previous design, still intact.
+ *   3. LCP IS NOW A REAL RISK RATHER THAN A HYPOTHETICAL ONE, and this is the
+ *      correction of a wrong prediction, kept rather than deleted. The old
+ *      claim was that removing the reveal would IMPROVE LCP because an element
+ *      at opacity 0 is not painted. Measured on the PR-85 preview against
+ *      production, five cold loads each:
  *
  *          production (reveal)  FCP 248ms · LCP 248ms · gap 0ms
  *          preview (no reveal)  FCP 212ms · LCP 212ms · gap 0ms
  *
  *      A 0ms gap on every run of both. What the reveal actually did was change
  *      WHICH element counted — Chrome skips opacity-0 candidates, so the faded
- *      <h1> was disqualified and a lens button won instead — but LCP still
- *      landed on the same frame as FCP, because an unfaded element was always
- *      available to be it. The absolute difference is two deployments with
- *      different cache warmth and is not attributable to this change.
+ *      <h1> was disqualified and a lens button won instead. So the arrival
+ *      does not delay the paint; it changes the candidate. The <h1> is once
+ *      again disqualified as an LCP candidate while it rises, and the proof
+ *      band's figures are the largest thing that is never hidden.
  *
- *      So there is no LCP win. Reasons 2 and 3 stand on their own, and §01
- *      bans the motion regardless.
- *   2. The a11y gate gets STRICTER, not weaker. tests/e2e/a11y.spec.ts had to
- *      scan under `reducedMotion: "reduce"`, because axe blends opacity into
- *      the foreground colour and an un-scrolled card reported its body text at
- *      1.13:1 — a measurement of a transient frame, not of the design. The
- *      spec's contrast rule is "graded on the page AS LOADED", and only now
- *      can that be what runs.
- *   3. There is no second code path. "No scroll-driven animation support" used
- *      to mean a different, lesser experience; now every browser gets the one
- *      design, which is also exactly what a reduced-motion visitor sees.
+ * ── WHAT IS ALLOWED, EXHAUSTIVELY ────────────────────────────────────────────
+ *   ARRIVAL     `[data-enter]`, 520ms, decelerating, opacity and a 14px rise.
+ *               Two triggers and no third: "load" fires immediately, "scroll"
+ *               fires the first time an IntersectionObserver sees the element
+ *               and then never again. The elements carrying it are ENUMERATED
+ *               in tests/e2e/motion.spec.ts — a component that adds itself to
+ *               the sequence fails a test rather than shipping quietly.
+ *   COUNT       A figure counting to a value it already renders, once, 900ms.
+ *               The DOM ships the final number; the script counts down from it
+ *               and back. No JavaScript means the right answer, not zero.
+ *   DISCLOSE    A reader-initiated open, 220ms, height and nothing else.
  *
- * The site is finished when it arrives. The reader opens what they want. */
+ * Everything else on this site is still finished when it arrives. */
 
 /* ---------- The instrument: addressing (design spec §02) ----------
  * ONE rule for the whole addressing system, rather than a pile of Tailwind
@@ -569,6 +615,173 @@
   to {
     width: 100%;
   }
+}
+
+/* ---------- ARRIVAL (motion contract, amended) ------------------------------
+ * ONE keyframe and one pair of rules for every arrival on the site, for the
+ * reason four separate entrance mechanisms once existed here: a shared
+ * primitive is the only thing that stops the fifth being written.
+ *
+ * THE GATE IS `html[data-motion]`, AND IT IS OPT-IN RATHER THAN OPT-OUT. The
+ * inline script in src/components/home/ArrivalScript.astro sets it only when
+ * JavaScript runs and `prefers-reduced-motion` is not `reduce`. Every rule
+ * below is scoped under it, so the default — no JS, an error before the flag
+ * is set, or a reader who asked for less motion — is the finished page with
+ * nothing hidden. This is the difference between "hide it, then reveal it with
+ * JS" and "reveal it only if we know we can": the first ships a blank page to
+ * anyone the script fails for, and this cannot.
+ *
+ * TWO TRIGGERS, AND THE DIFFERENCE IS ONE ATTRIBUTE VALUE:
+ *
+ *   [data-enter="load"]    animates the moment it parses. Used by the masthead
+ *                          sequence, which is above the fold by definition.
+ *   [data-enter="scroll"]  holds at its start frame until the observer marks
+ *                          it [data-shown], which happens once. Scrolling back
+ *                          up does not un-mark it, which is the whole reason
+ *                          this is an IntersectionObserver and not a `view()`
+ *                          timeline — a scroll timeline is SCRUBBED, so it
+ *                          plays backwards on the way up, and "shows once" is
+ *                          not expressible in it.
+ *
+ * `both` on the fill, so the load variant holds its first frame through any
+ * delay rather than flashing at full opacity and then dropping to zero.
+ *
+ * THE REDUCED-MOTION BLOCK IS NOT REDUNDANT. `data-motion` is decided once, at
+ * parse time; a reader who changes the OS setting on a page that is already
+ * open would otherwise keep the arrivals. The media query neutralises them
+ * live, and — critically — sets the START frame's properties to their final
+ * values rather than merely zeroing the duration, so a "scroll" element whose
+ * observer never fires is still visible. */
+html[data-motion] [data-enter] {
+  animation: enter-rise var(--motion-entrance) var(--motion-ease-entrance)
+    var(--enter-delay, 0ms) both;
+}
+
+/* Held at the start frame — declared rather than inherited from the keyframe,
+   because the animation is not applied at all until the observer marks it. */
+html[data-motion] [data-enter="scroll"]:not([data-shown]) {
+  animation: none;
+  opacity: 0;
+  transform: translateY(var(--enter-shift, 14px));
+}
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--enter-shift, 14px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-motion] [data-enter],
+  html[data-motion] [data-enter="scroll"]:not([data-shown]) {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- The rack card: hover, and the one cursor on the site ------------
+ * §02 gives an instrument two states, receded and reading, and every card in
+ * the featured rack is now permanently reading — they are all open, which is
+ * what Ross asked for. That is a problem the two-state system does not solve
+ * on its own: `.instrument[data-reading]` and `.instrument:hover` resolve to
+ * the SAME declaration block, so pointing at an open card did nothing at all.
+ * Three cards that never respond to a pointer read as an image, not a control.
+ *
+ * So a reading instrument gets a third level, and it is the accent rather than
+ * another step of the same grey: the border goes from the reading state's
+ * #cdd0d6 to --primary, and the card's call to action underlines. Colour and
+ * text-decoration only — nothing lifts, nothing grows, and the border width is
+ * unchanged, so this still costs no layout.
+ *
+ * THE CURSOR IS THE ONE PIECE OF DECORATION ON THE SITE, and it is here
+ * because it is the only hover affordance that works on a card whose entire
+ * surface is already the hit area. A reticle: this page presents everything as
+ * an instrument reading, and a reticle is what you point at a reading with.
+ * Two strokes — a white halo under a --primary core — because a cursor is
+ * composited over both themes and a single-colour one disappears into one of
+ * them. `pointer` is the fallback for any browser that rejects the SVG, and
+ * the hotspot is centred at 11,11 on a 22px canvas. */
+.instrument[data-reading]:hover,
+.instrument[data-reading]:focus-within {
+  border-color: var(--primary);
+}
+
+.instrument[data-reading]:hover [data-card-action],
+.instrument[data-reading]:focus-within [data-card-action] {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.reticle-cursor {
+  cursor:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"><g fill="none" stroke="%23ffffff" stroke-width="3.5" stroke-linecap="round"><circle cx="11" cy="11" r="5.5"/><path d="M11 1v3M11 18v3M1 11h3M18 11h3"/></g><g fill="none" stroke="%233d5a73" stroke-width="1.4" stroke-linecap="round"><circle cx="11" cy="11" r="5.5"/><path d="M11 1v3M11 18v3M1 11h3M18 11h3"/></g></svg>')
+      11 11,
+    pointer;
+}
+
+/* ---------- DISCLOSURE (motion contract, amended) ---------------------------
+ * The bench rows open. `<details>` rather than a button and a script, because
+ * the element already carries the expanded state, the keyboard handling and
+ * the in-page-find behaviour that a hand-built disclosure has to reimplement
+ * and usually gets wrong.
+ *
+ * `interpolate-size: allow-keywords` is what makes `height: auto` animatable
+ * at all; without it the browser has no start and end length to interpolate
+ * and the open is instant. It is declared on :root because the property
+ * inherits and the alternative is repeating it on every disclosure.
+ *
+ * `::details-content` is Chromium-only at the time of writing. Where it is
+ * unsupported the panel opens instantly, which is a complete behaviour rather
+ * than a broken one — the same standard the reading line is held to.
+ *
+ * THE CHEVRON DOES NOT ROTATE. "Nothing translates at rest" covers rotation,
+ * and a rotating chevron is the single most common way that ban gets broken,
+ * so the marker is a mono [+] / [−] swapped on [open] instead — which also
+ * matches the index-mark language the rest of the site is written in. */
+:root {
+  interpolate-size: allow-keywords;
+}
+
+details[data-disclosure]::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size var(--motion-disclose) var(--motion-ease),
+    content-visibility var(--motion-disclose) var(--motion-ease) allow-discrete;
+}
+
+details[data-disclosure][open]::details-content {
+  block-size: auto;
+}
+
+details[data-disclosure] > summary {
+  list-style: none;
+}
+details[data-disclosure] > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The marker, in the site's own index-mark language rather than a chevron.
+   Content only, so nothing rotates and nothing moves. */
+details[data-disclosure] [data-disclosure-marker]::before {
+  content: "[+]";
+}
+details[data-disclosure][open] [data-disclosure-marker]::before {
+  /* MINUS SIGN, not a hyphen — a hyphen sits low and short beside a "+". */
+  content: "[\2212]";
+}
+
+/* The summary is the row's hit area, so the focus ring is the row's shape.
+   Same argument as `.linked-card`, which this mode replaces. */
+details[data-disclosure] > summary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 /* ---------- TWO CONFLICTS IN THE SPEC, AND HOW THEY ARE RESOLVED ----------

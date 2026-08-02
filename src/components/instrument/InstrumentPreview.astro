@@ -1,0 +1,103 @@
+---
+import { ArrowRight } from "@lucide/astro";
+
+import type { Project } from "../../lib/projects";
+import EvidenceFrame from "../home/EvidenceFrame.astro";
+import Badge from "../ui/Badge.astro";
+
+/**
+ * What a bench row shows when the reader opens it (Ross, 2 Aug 2026): "a simple
+ * version of the feature card, and all interactive".
+ *
+ * ── WHY THIS IS NOT THE FEATURE CARD ─────────────────────────────────────────
+ * §03 R2 forbids the same project carrying a summary paragraph on two index
+ * surfaces, and the rack above already gives its three the full treatment. If
+ * this rendered the same component the bench would just be the rack again with
+ * a click in front of it, and the page would be back to audit finding 04 — the
+ * showcase and the index doing the same job twice.
+ *
+ * So it is the SHORT form: the evidence, four lines of prose, the stack, and a
+ * way out — what the ROW cannot fit, rather than a smaller copy of what the row
+ * already says. The headline number is deliberately not repeated; see the note
+ * where it used to be.
+ *
+ * ── THE IMAGES COST NOTHING UNTIL THEY ARE ASKED FOR ─────────────────────────
+ * Seven bench rows across three prerendered lens panels is twenty-one frames in
+ * the markup, which would be indefensible as twenty-one requests. It is not
+ * one: a `loading="lazy"` image inside a closed <details> is never fetched,
+ * because the element is not being rendered, and a hidden lens panel is
+ * display:none for the same reason. The bytes that ship are the markup only,
+ * and the request happens on the click that asks for it.
+ */
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+
+/** The visual's host, or a run label — the same rule the rack frame uses. */
+const source = project.data.links?.demo ?? project.data.links?.report;
+const caption = source ? new URL(source).hostname : "run log";
+---
+
+{
+  /*
+    A 2:3 SPLIT, NOT A HALF. Measured at 1440px, an even split gives the frame
+    a 500px box — 355px tall at 16:10 — against about 170px of text, so the
+    panel opened to a screenshot with a caption beside it and 180px of nothing
+    under the caption. Two-fifths puts the frame at roughly 220px, which is
+    within 30px of the text column and reads as a preview rather than as a
+    gallery. It also makes the summary run three lines instead of five, which
+    is the right length for something whose job is to get you to the write-up.
+  */
+}
+<div
+  class="border-border/70 grid gap-5 border-t border-dashed px-4 pt-5 pb-5 sm:grid-cols-5 sm:gap-6"
+>
+  <EvidenceFrame
+    class="sm:col-span-2"
+    caption={caption}
+    live={Boolean(project.data.links?.demo)}
+    screenshot={project.data.screenshot}
+    alt={`Screenshot of the ${project.data.title} live demo`}
+    lines={project.data.terminal}
+    sizes="(min-width: 640px) 26vw, 100vw"
+  />
+
+  <div class="flex min-w-0 flex-col sm:col-span-3">
+    <p class="text-body line-clamp-4 text-sm leading-relaxed">
+      {project.data.summary}
+    </p>
+
+    {
+      /*
+        NO METRIC READOUT, AND ITS ABSENCE IS THE POINT. The first cut put one
+        here, which put "7,264 / MSOAs scored" twice on screen four rows apart —
+        the row's own readout, then the preview's copy of it. §03 R8 is about
+        numbers being counted rather than typed; this is the same idea one level
+        up, because a number repeated is a number that can disagree with itself
+        the moment one of the two is edited. The row states it, and the panel
+        adds what the row cannot fit.
+      */
+    }
+    <div class="mt-4 flex flex-wrap items-center gap-1.5">
+      {project.data.stack.slice(0, 4).map((tech) => <Badge variant="tag">{tech}</Badge>)}
+    </div>
+
+    {
+      /*
+        The only link in here, and it is a real one rather than a stretched
+        overlay. A stretched link inside a disclosure would swallow the summary
+        row's own click target and make the panel impossible to close by
+        pointing at the thing you just opened.
+      */
+    }
+    <a
+      href={`/projects/${project.id}`}
+      class="text-primary ease-instrument inline-flex items-center gap-1.5 pt-5 text-sm font-medium underline-offset-4 transition-[color] duration-[var(--motion-state)] hover:underline"
+    >
+      Read the write-up
+      <ArrowRight class="size-3.5" aria-hidden="true" />
+    </a>
+  </div>
+</div>

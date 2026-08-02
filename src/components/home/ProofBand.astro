@@ -33,10 +33,23 @@ import { proofStats } from "../../lib/registry-stats";
  * validate-projects.mjs gates. The same `testCount()` feeds the projects log's
  * ledger line, so the two surfaces cannot disagree (§03 R8).
  */
+/**
+ * `count` is the same figure as `value`, unformatted, so the script has a
+ * number to animate towards without parsing "7,264" back out of the markup.
+ * The rendered text is still the FINAL value — see the note on the span below.
+ */
 const items = [
-  { value: String(proofStats.shipped), label: "projects shipped" },
-  { value: proofStats.tests.toLocaleString("en-GB"), label: "tests across them" },
-  { value: String(proofStats.demos), label: "live demos" },
+  {
+    value: String(proofStats.shipped),
+    count: proofStats.shipped,
+    label: "projects shipped",
+  },
+  {
+    value: proofStats.tests.toLocaleString("en-GB"),
+    count: proofStats.tests,
+    label: "tests across them",
+  },
+  { value: String(proofStats.demos), count: proofStats.demos, label: "live demos" },
 ];
 
 const counted = new Date().toLocaleDateString("en-GB", {
@@ -72,8 +85,23 @@ const counted = new Date().toLocaleDateString("en-GB", {
               268px column, which leaves the label nowhere to go — so it steps
               down twice. `tabular-nums` keeps the three cells' digits on the
               same rhythm even though the values have different widths.
+
+              THE FINAL VALUE IS WHAT SHIPS. `data-count-to` is the same number
+              again, and the script counts from zero UP to what is already
+              rendered — so no JavaScript, an observer that never fires, or a
+              reader who asked for less motion all get the right figure rather
+              than a zero that never moves. This is the "assert absence" habit
+              applied to a script: the page must be correct with it deleted.
+
+              It cannot shift the layout either, and that is structural rather
+              than lucky: the label below is `block`, so it sits on its own line
+              and the figure's width reaches nothing. `tabular-nums` keeps every
+              intermediate frame on the same digit rhythm.
             */}
-            <span class="font-mono text-5xl leading-none font-medium tracking-tight tabular-nums sm:text-7xl lg:text-[92px]">
+            <span
+              class="font-mono text-5xl leading-none font-medium tracking-tight tabular-nums sm:text-7xl lg:text-[92px]"
+              data-count-to={item.count}
+            >
               {item.value}
             </span>{" "}
             <span class="text-muted-foreground mt-4 block font-mono text-xs tracking-wider uppercase">
@@ -84,6 +112,33 @@ const counted = new Date().toLocaleDateString("en-GB", {
       ))
     }
   </dl>
+
+  {
+    /*
+      BLANKED HERE, SYNCHRONOUSLY, IMMEDIATELY AFTER THE FIGURES.
+
+      The counting itself lives in ArrivalScript.astro, with the observer that
+      triggers it. This one line does not, and the split is deliberate: that
+      script runs before this band exists, so its earliest hook is
+      DOMContentLoaded — and a browser may well have painted before then. Blank
+      the figures there and a reader on a slow connection sees the real numbers,
+      then watches them drop to zero and climb back.
+
+      An inline script blocks the parser where it sits, so the figures above
+      cannot reach a paint un-blanked. `data-motion` is the gate: without it —
+      no JavaScript, an error, or a reader who asked for less motion — this
+      never runs and the final values stand, which is why they are what the
+      server renders.
+    */
+  }
+  <script is:inline>
+    if (document.documentElement.hasAttribute("data-motion")) {
+      document.querySelectorAll("[data-count-to]").forEach(function (el) {
+        el.textContent = "0";
+      });
+    }
+  </script>
+
   <p
     class="text-muted-foreground border-border border-t px-6 py-3 font-mono text-xs sm:px-8"
   >
