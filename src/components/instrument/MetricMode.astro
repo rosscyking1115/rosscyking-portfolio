@@ -1,0 +1,53 @@
+---
+import type { MetricMode } from "../../lib/projects";
+import { cn } from "../../lib/utils";
+
+/**
+ * The evidence note: which of the three metric modes backs a headline number
+ * (design spec §03 R5).
+ *
+ * This is the column that makes /projects a comparison surface rather than a
+ * second showcase — "sort by corrected first" is only a thing a hiring manager
+ * can do if the mode is an axis rather than a sentence in the prose.
+ *
+ * CORRECTED gets the accent pill, and it is the only one that does. §02 is
+ * explicit that a correction is distinguished by the struck pair and the pill,
+ * "never by being the only legible number" — the other two modes are quieter,
+ * not dimmer, and their values sit at full foreground exactly like this one's.
+ *
+ * There is no fourth mode. R5: "Never fabricate a correction to fill the slot."
+ * A project with nothing true to say here has no headline at all, and renders
+ * the designed empty cell in MetricReadout.astro.
+ */
+interface Props {
+  mode: MetricMode;
+  class?: string;
+}
+
+const { mode, class: className } = Astro.props;
+
+const STYLES: Record<MetricMode, string> = {
+  CORRECTED: "border-primary/40 bg-primary/10 text-primary",
+  CONTROLLED: "border-border text-muted-foreground",
+  LIMITS: "border-border text-muted-foreground",
+};
+
+/** Read out for assistive tech, where an eight-letter label is not enough. */
+const DESCRIPTION: Record<MetricMode, string> = {
+  CORRECTED: "Corrected: a published number was withdrawn and replaced",
+  CONTROLLED: "Controlled: a null result, carried by a positive control",
+  LIMITS: "Limits: a result published with its documented limits",
+};
+---
+
+<span
+  class={cn(
+    "inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-xs tracking-wider whitespace-nowrap uppercase",
+    STYLES[mode],
+    className,
+  )}
+  title={DESCRIPTION[mode]}
+>
+  <span class="sr-only">{DESCRIPTION[mode]}</span>
+  <span aria-hidden="true">{mode}</span>
+</span>

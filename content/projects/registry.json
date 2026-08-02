@@ -48,7 +48,11 @@
         "63 data tests",
         "strike-day demand"
       ],
-      "mark": 1
+      "mark": 1,
+      "headline": {
+        "metric": "journeys unified",
+        "mode": "LIMITS"
+      }
     },
     "england-wales-housing-decision-support": {
       "repo": "https://github.com/rosscyking1115/england-wales-housing-decision-support",
@@ -62,7 +66,11 @@
         "open-data sources": "9"
       },
       "banned": [],
-      "mark": 2
+      "mark": 2,
+      "headline": {
+        "metric": "MSOAs scored",
+        "mode": "LIMITS"
+      }
     },
     "neobank-product-analytics": {
       "repo": "https://github.com/rosscyking1115/responsible-neobank-growth",
@@ -74,7 +82,11 @@
         "dbt tests (cloud run)": "217"
       },
       "banned": ["neobank-appuct", "215 tests"],
-      "mark": 8
+      "mark": 8,
+      "headline": {
+        "metric": "dbt tests (cloud run)",
+        "mode": "LIMITS"
+      }
     },
     "community-energy-flex": {
       "repo": "https://github.com/rosscyking1115/community-energy-flex",
@@ -86,7 +98,11 @@
         "tests passing": "206"
       },
       "banned": ["savings realised", "savings were realised", "realised savings"],
-      "mark": 3
+      "mark": 3,
+      "headline": {
+        "metric": "UK grid regions",
+        "mode": "LIMITS"
+      }
     },
     "aerospace-prognostics": {
       "repo": "https://github.com/rosscyking1115/aerospace-prognostics",
@@ -98,7 +114,12 @@
         "tests passing": "462"
       },
       "banned": ["453", "451"],
-      "mark": 4
+      "mark": 4,
+      "headline": {
+        "metric": "event-wise recall (corrected)",
+        "withdrawn": "0.24",
+        "mode": "CORRECTED"
+      }
     },
     "cashflow-risk": {
       "_demo": "RETIRED 2026-07-29 and deliberately not replaced. The free Render Postgres expired 30 days after creation, so the app never bound its port and the edge hung for 75-120s. ADR 0003 in the repo records the options: $6/mo Render Basic (no spend authorised), a SQLite fallback REJECTED on architecture grounds with a do-not-re-propose clause, and — added by the 29 Jul amendment — Neon's free non-expiring Postgres, which would have worked and was declined on portfolio grounds rather than technical ones. Services are suspended, not deleted; the retirement is reversible. Until it is, this MUST stay null: the URL served a 503 'This service has been suspended by its owner' page, and a screenshot re-shoot captured exactly that.",
@@ -111,7 +132,11 @@
         "tests": "167"
       },
       "banned": ["150+", "cashflow-web-sidu"],
-      "mark": 9
+      "mark": 9,
+      "headline": {
+        "metric": "runway forecast",
+        "mode": "LIMITS"
+      }
     },
     "cited-market-brief-agent": {
       "repo": "https://github.com/rosscyking1115/cited-market-brief-agent",
@@ -121,11 +146,17 @@
       "release": "v1.0.0",
       "metrics": {
         "regional editions": "4",
-        "public data sources": "5"
+        "public data sources": "5",
+        "holdout precision (corrected)": "0.400"
       },
       "banned": ["100% claims", "claims cited", "fact-checked", "fact-checking"],
       "_metrics": "The '100% claims cited' pin was RETRACTED by the repo: the CI eval that produced precision 1.000 / recall 1.000 was built from the same rules that produced the output, so it could not fail. Measured against independently labelled ground truth: precision 0.579 dev / 0.400 holdout, recall 1.000. No precision figure is pinned as a metric chip on purpose — the repo's claim ledger requires the unit, positive class and population to be stated BEFORE the number, and a chip cannot carry that. The measured figures live in the write-up instead.",
-      "mark": 7
+      "mark": 7,
+      "headline": {
+        "metric": "holdout precision (corrected)",
+        "withdrawn": "1.000",
+        "mode": "CORRECTED"
+      }
     },
     "redteam-foundry": {
       "repo": "https://github.com/rosscyking1115/redteam-foundry",
@@ -140,7 +171,11 @@
       },
       "banned": [],
       "_metrics": "The '+1.00 cross-judge kappa' pin was WITHDRAWN by the repo: 11 of the 12 cells are degenerate 0/0 filled in by convention, so kappa there is undefined rather than perfect. The agreement claim now rests on the positive control (kappa = +0.935, n=98). A `headline_table.py --check` mode in the repo fails the build if the degenerate cells are reported as agreement — the banned strings below mirror that gate. NOTE: the withdrawn phrasing is deliberately NOT in `banned`. The write-up quotes it in order to retract it, and a string ban cannot tell an assertion from a retraction.",
-      "mark": 6
+      "mark": 6,
+      "headline": {
+        "metric": "attack success",
+        "mode": "CONTROLLED"
+      }
     },
     "agent-release-gates": {
       "repo": "https://github.com/rosscyking1115/agent-release-gates",
@@ -155,7 +190,12 @@
       },
       "banned": ["100% retrieval", "160 TechQA", "80 WixQA"],
       "_metrics": "Pinned on the EXTERNAL result, not the in-corpus one. The repo's own README carries an [!IMPORTANT] block saying the synthetic benchmark is circular by construction and is not retrieval evidence, and the live dashboard leads with the same warning. The previous pins (safety recall 90.91%, side-effect block 100%) are both still numerically true, but the repo now records that the recall figure was measured with case-matching signals live and 'should not be read as a generalization estimate' — and a metric chip has nowhere to carry that caveat.",
-      "mark": 5
+      "mark": 5,
+      "headline": {
+        "metric": "external retrieval hit@3",
+        "withdrawn": "99.31%",
+        "mode": "CORRECTED"
+      }
     },
     "marketing-effectiveness-lab": {
       "_demo": "RETIRED. The Streamlit URL answers 303 into a sign-in redirect loop that never reaches the app, so it is not publicly reachable. The repo agrees: its README calls the hosted surface one that 'may sleep or require access and is not an always-on public demo'. The GitHub Pages report at rosscyking1115.github.io/marketing-effectiveness-lab/ IS live and is the honest link for an archived project.",
@@ -167,8 +207,11 @@
       "note": "Archived — methodology absorbed into responsible-neobank-growth.",
       "metrics": {},
       "banned": [],
-      "mark": 10
+      "mark": 10,
+      "headline": null,
+      "_headline": "NO HEADLINE, deliberately. This project is archived, publishes no metrics at all, and has no \"Honest limits\" section — so there is no number to lead with and no evidence mode that would be true. The designer's mock filled the cell with \"Bayesian / posterior layer\", which is a phrase from the summary rather than a measurement, and put the ARCHIVED state on community-energy-flex instead (that project is shipped with a live demo). Marking the slot is the spec's own instruction where a fact is missing."
     }
   },
-  "_mark": "CANONICAL PROJECT MARK — the number shown in [ 05 ] on every surface. FROZEN, not computed. It used to be derived from a publishedAt-descending sort at render time, which meant the same project wore a different number in different places (home numbered within the lens, the index and the write-up numbered globally) AND that publishing a new project silently renumbered every existing one. IndexMark's own rule is that the mark is always TRUE, so a number that moves is a bug. Ross's call 2026-08-02: freeze at the values that were live, since all ten projects are finished. A new project takes the next free integer. NEVER renumber an existing one — the marks appear in screenshots, write-ups and the design spec."
+  "_mark": "CANONICAL PROJECT MARK — the number shown in [ 05 ] on every surface. FROZEN, not computed. It used to be derived from a publishedAt-descending sort at render time, which meant the same project wore a different number in different places (home numbered within the lens, the index and the write-up numbered globally) AND that publishing a new project silently renumbered every existing one. IndexMark's own rule is that the mark is always TRUE, so a number that moves is a bug. Ross's call 2026-08-02: freeze at the values that were live, since all ten projects are finished. A new project takes the next free integer. NEVER renumber an existing one — the marks appear in screenshots, write-ups and the design spec.",
+  "_headline": "HEADLINE NUMBER AND EVIDENCE MODE — the two authored cells in the /projects log, and the reason the log can be built without inventing anything. `metric` names a label that must exist in that project's MDX `metrics` array; validate-projects.mjs gates it, so the value itself is never duplicated here and cannot drift. `mode` is one of the design spec's three (§03 R5): CORRECTED (a published number was withdrawn and replaced), CONTROLLED (a null or negative result carried by a positive control), LIMITS (a result published with its documented limits). Every mode is grounded in a heading that already exists in the write-up — the spec is explicit that a correction is never fabricated to fill the slot. A null headline is DELIBERATE and must carry a _headline note saying why; it renders as a designed empty cell, not a gap. A CORRECTED headline must also carry `withdrawn` — the number it replaced — because §02 says a correction is shown as a struck pair, and half a correction is just a confident number. The withdrawn value is gated against the write-up body, so it cannot be invented: 0.24 → 0.42 (leakage audit), 99.31% → 79.92% (the benchmark was marking its own homework), 1.000 → 0.400 (the gate that could not fail)."
 }

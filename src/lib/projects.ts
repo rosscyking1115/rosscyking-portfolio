@@ -17,6 +17,38 @@ import registry from "../../content/projects/registry.json";
 
 export type Project = CollectionEntry<"projects">;
 
+/**
+ * The three metric modes (design spec §03 R5), chosen by what is TRUE.
+ *
+ *   CORRECTED   a published number was withdrawn and replaced
+ *   CONTROLLED  a null or negative result, carried by a positive control
+ *   LIMITS      a result published with its documented limits
+ *
+ * Authored per project in registry.json and gated by validate-projects.mjs.
+ * The spec is explicit that a correction is never fabricated to fill the slot,
+ * so each mode is grounded in a heading that already exists in the write-up —
+ * "The leakage audit — and the corrected number", "Making a null result mean
+ * something", "Honest limits".
+ */
+export type MetricMode = "CORRECTED" | "CONTROLLED" | "LIMITS";
+
+/**
+ * The three content states (design spec §03 R6). Every project resolves to
+ * exactly one, and all three are DERIVED rather than authored — a state anyone
+ * can set by hand is a state that can disagree with the project it describes.
+ */
+export type ContentState = "LIVE" | "RUN LOG" | "ARCHIVED";
+
+interface RegistryProject {
+  mark?: number;
+  status?: string;
+  demo?: string | null;
+  headline?: { metric: string; mode: MetricMode; withdrawn?: string } | null;
+}
+
+/** The registry's project table, typed once so every reader below shares it. */
+const REGISTRY = registry.projects as Record<string, RegistryProject>;
+
 /** Reading time, computed the same way and with the same package as the Next app. */
 export function projectReadingTime(entry: Project): string {
   return readingTime(entry.body ?? "").text;
@@ -59,7 +91,7 @@ export async function getAllProjects(): Promise<Project[]> {
  * must never change the mark.
  */
 export function projectMark(slug: string): number {
-  const mark = (registry.projects as Record<string, { mark?: number }>)[slug]?.mark;
+  const mark = REGISTRY[slug]?.mark;
   if (typeof mark !== "number") {
     throw new Error(
       `No canonical mark for "${slug}" in registry.json. Every project needs one — ` +
@@ -72,6 +104,70 @@ export function projectMark(slug: string): number {
 /** The mark as it is displayed: zero-padded to two digits. */
 export function projectMarkLabel(slug: string): string {
   return String(projectMark(slug)).padStart(2, "0");
+}
+
+/** The headline number, its unit, and the evidence mode behind it. */
+export interface Headline {
+  value: string;
+  label: string;
+  mode: MetricMode;
+  /**
+   * The number this one replaced, present only when mode is CORRECTED, and
+   * rendered struck through beside it. Half a correction — the new number with
+   * no sign of the old — is just a confident number, which is what every other
+   * portfolio has. Gated against the write-up body, so a correction has to have
+   * been written about before it can be displayed.
+   */
+  withdrawn?: string;
+}
+
+/**
+ * The one number a project leads with in the index log, or null.
+ *
+ * The VALUE is never stored in the registry — only the label of a metric the
+ * write-up already publishes. That is deliberate: a value repeated in two files
+ * is a value that can drift, and `validate:projects` exists because this repo
+ * has been bitten by exactly that. The registry names which metric leads; the
+ * MDX owns what it says.
+ *
+ * Null is a real answer, not a failure. marketing-effectiveness-lab is archived
+ * and publishes no metrics at all, so there is no number to lead with — its row
+ * renders a designed empty cell. The designer's mock filled that slot with a
+ * phrase lifted from the summary; the spec's own instruction is to mark the slot
+ * rather than invent something plausible.
+ */
+export function projectHeadline(entry: Project): Headline | null {
+  const spec = REGISTRY[entry.id]?.headline;
+  if (!spec) return null;
+
+  const metric = entry.data.metrics?.find((m) => m.label === spec.metric);
+  if (!metric) {
+    throw new Error(
+      `"${entry.id}" pins headline metric "${spec.metric}", which its MDX does not publish. ` +
+        `validate-projects.mjs gates this — run \`npm run validate:projects\`.`,
+    );
+  }
+  return {
+    value: metric.value,
+    label: metric.label,
+    mode: spec.mode,
+    ...(spec.withdrawn ? { withdrawn: spec.withdrawn } : {}),
+  };
+}
+
+/**
+ * Which of the three content states a project is in.
+ *
+ * Derived from facts the registry already gates, in priority order: archived
+ * beats everything (an archived project with a live demo is a contradiction the
+ * validator rejects), then a pinned demo means LIVE, and anything else is a run
+ * log. This is why the home page's "6 live" and the index's state column cannot
+ * disagree — they are the same function.
+ */
+export function projectState(slug: string): ContentState {
+  const spec = REGISTRY[slug];
+  if (spec?.status === "archived") return "ARCHIVED";
+  return spec?.demo ? "LIVE" : "RUN LOG";
 }
 
 /**

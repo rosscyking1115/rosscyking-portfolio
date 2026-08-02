@@ -176,6 +176,105 @@ if (new Set(orders).size !== orders.length) {
   }
 }
 
+// 6c. Headline number and evidence mode.
+//
+// These are the two AUTHORED cells in the /projects log, and the whole reason
+// that page can be built without inventing anything. The designer's mock filled
+// them by inference and got three things wrong: it marked the wrong project
+// ARCHIVED, it published a test count (617) its own footer total (1,681)
+// contradicts, and it counted two corrections where four write-ups carry one.
+//
+// So the rules are: the headline names a metric that ALREADY EXISTS in the
+// MDX — never a value repeated here, which could drift — and the mode is one of
+// exactly three. A null headline is legal but must say why, because "no number"
+// and "nobody filled this in" are indistinguishable otherwise, which is the
+// defect AGENTS.md records three times over.
+{
+  const MODES = new Set(["CORRECTED", "CONTROLLED", "LIMITS"]);
+  for (const [slug, spec] of Object.entries(registry.projects ?? {})) {
+    const entry = mdx.get(slug);
+    if (!entry) continue; // already reported in step 1
+
+    if (!("headline" in spec)) {
+      fail(
+        slug,
+        `has no \`headline\` — set one, or set it to null and say why in _headline`,
+      );
+      continue;
+    }
+    if (spec.headline === null) {
+      if (!spec._headline) {
+        fail(
+          slug,
+          `headline is null with no _headline note — an unexplained blank is indistinguishable from an unfilled one`,
+        );
+      }
+      continue;
+    }
+
+    const { metric: label, mode, withdrawn } = spec.headline;
+    if (!MODES.has(mode)) {
+      fail(slug, `headline.mode "${mode}" is not one of ${[...MODES].join(" / ")}`);
+    }
+    const metric = (entry.data.metrics ?? []).find((m) => m.label === label);
+    if (!metric) {
+      const available = (entry.data.metrics ?? []).map((m) => m.label).join('", "');
+      fail(
+        slug,
+        `headline.metric "${label}" is not a published metric — the MDX has "${available}"`,
+      );
+    }
+
+    // A CORRECTED headline renders as a struck pair (§02), so it needs the
+    // number it replaced. Half a correction is just a confident number — which
+    // is what every other portfolio has, and the opposite of this site's claim.
+    //
+    // AND THE WITHDRAWN VALUE MUST APPEAR IN THE WRITE-UP. This is what makes
+    // "never fabricate a correction to fill the slot" enforceable rather than
+    // advisory: a correction has to have been written about before it can be
+    // displayed. All three trace to a sentence — 0.24 in the leakage audit,
+    // 99.31% in "my own benchmark was marking its own homework", 1.000 in
+    // "the gate that couldn't fail".
+    if (mode === "CORRECTED") {
+      if (!withdrawn) {
+        fail(slug, `headline.mode is CORRECTED but no \`withdrawn\` value is set`);
+      } else if (!entry.content.includes(withdrawn)) {
+        fail(
+          slug,
+          `withdrawn value "${withdrawn}" appears nowhere in the write-up — a correction the reader cannot look up is not a correction`,
+        );
+      }
+    } else if (withdrawn) {
+      fail(slug, `has a \`withdrawn\` value but mode is ${mode}, not CORRECTED`);
+    }
+  }
+
+  // Every project resolves to exactly one content state (spec §03 R6), and the
+  // three are derived, never authored: ARCHIVED from status, LIVE from a demo,
+  // RUN LOG from neither. Asserted here so a status typo or a dropped demo URL
+  // cannot silently move a project between states.
+  const states = { LIVE: [], "RUN LOG": [], ARCHIVED: [] };
+  for (const [slug, spec] of Object.entries(registry.projects ?? {})) {
+    const state =
+      spec.status === "archived" ? "ARCHIVED" : spec.demo ? "LIVE" : "RUN LOG";
+    states[state].push(slug);
+  }
+  const total = Object.values(states).reduce((n, list) => n + list.length, 0);
+  if (total !== Object.keys(registry.projects ?? {}).length) {
+    errors.push(
+      `  ✗ state: ${total} resolved of ${Object.keys(registry.projects).length} projects`,
+    );
+  }
+  if (
+    states.ARCHIVED.length &&
+    states.ARCHIVED.some((slug) => registry.projects[slug].demo)
+  ) {
+    errors.push(
+      `  ✗ state: an ARCHIVED project still pins a demo URL — one of the two is wrong`,
+    );
+  }
+}
+
 // 7. Lens invariants — each lens's featured set must be real, shipped, and
 // non-trivial, so a shared /for/<lens> URL can't surface a missing or
 // unfinished project.

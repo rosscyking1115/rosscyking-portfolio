@@ -1,0 +1,164 @@
+---
+import { ArrowRight } from "@lucide/astro";
+
+import {
+  projectHeadline,
+  projectMarkLabel,
+  projectReadingTime,
+  projectState,
+  type Project,
+} from "../../lib/projects";
+import { cn } from "../../lib/utils";
+import ContentState from "./ContentState.astro";
+import MetricMode from "./MetricMode.astro";
+import MetricReadout from "./MetricReadout.astro";
+
+/**
+ * THE INSTRUMENT — step 03 of the design spec's build order, and the one row
+ * anatomy the whole site is built from (§03 R4): mono label, value, one action
+ * at the end. The spec is blunt about what happens if this is not shared —
+ * "a fifth list pattern is a bug" — so this component is used by the projects
+ * index, the home ledger, the write-up's cross-references and the about page's
+ * record rack rather than each one growing its own row.
+ *
+ * ── ADDRESSING (§02) ─────────────────────────────────────────────────────────
+ * A row is either RECEDED or READING, and the difference is colour, border and
+ * surface. Two things about that are load-bearing:
+ *
+ *   1. NEVER HEIGHT. The spec calls this a hard requirement and names the
+ *      consequence: implement receding as a height change and the page shifts
+ *      under the reader's thumb on every scroll, and CLS eats the Lighthouse
+ *      score the whole system exists to protect. Every state below changes
+ *      `border-color` and `background-color` only. The border is always
+ *      present, at the same width, so even the resting state reserves it.
+ *
+ *   2. A RECEDED ROW IS TWO LEVELS, NOT ONE. The title recedes to
+ *      --muted-foreground; the metric stays at --foreground. §02 spells out
+ *      why: "a plain metric is foreground exactly like a corrected one.
+ *      Corrections are distinguished by the struck pair and the accent pill,
+ *      never by being the only legible number."
+ *
+ * ── WHAT IS NOT HERE YET ─────────────────────────────────────────────────────
+ * §02 names three addressing inputs in priority order: pointer, keyboard focus,
+ * and PROXIMITY TO THE READING LINE. The first two are implemented here. The
+ * third is not, and it is the one that matters on a phone — the spec's own risk
+ * note for this direction says "hover-driven emphasis has no touch equivalent,
+ * and most of your traffic is a phone. Mobile needs a different rule, not a
+ * fallback."
+ *
+ * It is deferred on purpose rather than forgotten. Implementing it means a
+ * `view()` timeline animating colour only, which `tests/unit/motion-contract.test.ts`
+ * currently bans outright — correctly for a reveal, too broadly for addressing.
+ * Narrowing that gate (ban keyframes that touch opacity or transform; allow a
+ * scroll timeline that only changes colour) is worth doing WITH the route that
+ * needs it, in step 04, not speculatively against a component no page renders.
+ *
+ * Nothing ships to a reader in the meantime: this row is exercised by
+ * src/pages/dev-fixtures/instrument.astro and by tests, and is not on a route.
+ */
+interface Props {
+  project: Project;
+  /**
+   * The reading instrument. Exactly one row in a list should carry this, and
+   * §03 R7 is the reason it is a prop rather than a state: only the reading
+   * instrument loads an image, so the list has to decide, not the row.
+   */
+  reading?: boolean;
+  class?: string;
+}
+
+const { project, reading = false, class: className } = Astro.props;
+
+const headline = projectHeadline(project);
+const state = projectState(project.id);
+const mark = projectMarkLabel(project.id);
+
+/** Three stacks, then the reading time — the row's mono meta line. */
+const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].join(" · ");
+---
+
+<article
+  data-instrument
+  data-state={state}
+  data-reading={reading ? "" : undefined}
+  class={cn(
+    // `.instrument` in global.css owns every addressing state — the reading
+    // list marking it, a pointer, and keyboard focus all resolve to one rule
+    // there. Repeating it as Tailwind variants here would put three copies of
+    // the same intent on every consumer, which is how the four entrance
+    // animations this codebase used to carry came about.
+    "instrument linked-card group relative rounded-lg",
+    className,
+  )}
+>
+  {
+    /*
+      44px minimum and the WHOLE ROW is the target, not the arrow (§05 TOUCH).
+      The stretched link over the title gives the row one hit area and one
+      accessible name; `.linked-card` in global.css moves the focus ring onto
+      the row so the indicator and the hit area are the same shape.
+
+      `items-start` rather than centre: the title wraps to two lines at narrow
+      widths and the mark should stay level with its first line.
+    */
+  }
+  <div class="flex min-h-11 flex-col gap-3 p-4 sm:flex-row sm:items-start sm:gap-5">
+    <span
+      class="text-primary shrink-0 font-mono text-xs tabular-nums sm:pt-1"
+      aria-hidden="true">{mark}</span
+    >
+
+    <div class="min-w-0 flex-1">
+      <h3
+        class={cn(
+          "font-display text-base font-semibold tracking-tight",
+          // The one thing that recedes. The metric below never does.
+          reading ? "text-foreground" : "text-muted-foreground",
+          "group-hover:text-foreground group-focus-within:text-foreground",
+          "ease-instrument transition-[color] duration-[var(--motion-address)]",
+        )}
+      >
+        <a
+          href={`/projects/${project.id}`}
+          class="after:absolute after:inset-0 after:rounded-lg"
+        >
+          <span class="sr-only">Project {mark}: </span>{project.data.title}
+        </a>
+      </h3>
+      <p class="text-muted-foreground mt-1 font-mono text-xs">{meta}</p>
+    </div>
+
+    {
+      /*
+        FIXED WIDTHS, because this is a column and not a right-hand margin.
+        The first cut let both cells size to their content, so ten values landed
+        at ten different x positions — 41.4M, 7,264, 0.24 0.42, 0–4% — and the
+        one page built for comparing projects made the eye travel to find each
+        number. A comparison surface needs a ruled column even when there is no
+        <table>. The widths are MEASURED, not guessed. The longest label,
+        "holdout precision (corrected)", renders at 209px in Geist Mono 12px;
+        13rem is 208px, so it wrapped and left two of the ten rows 96px tall
+        against everyone else's 81px. 14rem clears it with 15px to spare, and
+        11rem holds CORRECTED beside RUN LOG.
+
+        Below sm the two stack rather than sharing a wrapped flex line. Wrapped,
+        the chips landed BETWEEN a value and its own label — so "41.4M" and
+        "journeys unified" were split by two pills, which reads as three
+        unrelated facts instead of one measurement.
+      */
+    }
+    <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+      <MetricReadout headline={headline} class="sm:w-56" />
+      <div class="flex flex-wrap items-center gap-2 sm:w-44 sm:pt-0.5">
+        {headline && <MetricMode mode={headline.mode} />}
+        <ContentState state={state} />
+      </div>
+    </div>
+
+    {/* One action at the end (R4). Static — the motion contract bans the nudge. */}
+    <ArrowRight
+      class="text-muted-foreground hidden size-4 shrink-0 self-center sm:block"
+      aria-hidden="true"
+    />
+  </div>
+</article>

@@ -1,0 +1,54 @@
+---
+import type { ContentState } from "../../lib/projects";
+import { cn } from "../../lib/utils";
+
+/**
+ * One of the three content states (design spec §03 R6), as a token.
+ *
+ *   LIVE      a dot, in --state-live
+ *   RUN LOG   a solid border
+ *   ARCHIVED  a dashed border
+ *
+ * The state is never a prop anyone chooses by hand — it comes from
+ * `projectState()`, which derives it from the registry fields the validator
+ * already gates. Finding 06 of the design audit was that this vocabulary did
+ * not exist at all: one archived project rendered identically to nine live
+ * ones, and two projects with no demo swapped in a run log with nothing to say
+ * so. Three real states, one visual treatment.
+ *
+ * WHY A BORDER AND NOT A COLOUR for the other two. Colour is already carrying
+ * the metric modes and the addressing states, and a fourth colour axis on the
+ * same row stops being readable. Border style is free, works in both themes
+ * without a new token, and survives a monochrome print.
+ */
+interface Props {
+  state: ContentState;
+  class?: string;
+}
+
+const { state, class: className } = Astro.props;
+
+const STYLES: Record<ContentState, string> = {
+  LIVE: "border-border",
+  "RUN LOG": "border-border",
+  ARCHIVED: "border-border border-dashed",
+};
+---
+
+<span
+  class={cn(
+    // 12px floor: §05 puts a hard minimum on any mono label carrying meaning,
+    // and this one is the difference between "you can try this" and "you can
+    // read what it did". Below that it would be decoration.
+    "text-muted-foreground inline-flex items-center gap-1.5 rounded border px-1.5 py-0.5 font-mono text-xs tracking-wider whitespace-nowrap uppercase",
+    STYLES[state],
+    className,
+  )}
+>
+  {
+    state === "LIVE" && (
+      <span class="bg-state-live size-1.5 shrink-0 rounded-full" aria-hidden="true" />
+    )
+  }
+  {state}
+</span>

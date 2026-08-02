@@ -301,6 +301,54 @@
  *
  * The site is finished when it arrives. The reader opens what they want. */
 
+/* ---------- The instrument: addressing (design spec §02) ----------
+ * ONE rule for the whole addressing system, rather than a pile of Tailwind
+ * variants repeated on every consumer. A row is RECEDED or READING, and the
+ * three inputs that make it read — the list marking it, a pointer, keyboard
+ * focus — all resolve to the same declaration block, so they cannot drift apart
+ * the way three copies of the same class string would.
+ *
+ * HARD REQUIREMENT: colour, border and surface only. NEVER height. The border
+ * is declared on the resting state at the same width, so both states reserve
+ * identical layout and the page cannot shift under a reader's thumb. Verified
+ * in tests/e2e/instrument.spec.ts by forcing the reading treatment onto a
+ * receded row and asserting the height delta is exactly 0 — and that test was
+ * checked in the other direction too: adding `padding-block: 4px` below fails
+ * it with "rows render at 81/89px — they must be identical".
+ *
+ * THE SHADOW IS LIGHT-ONLY, and the asymmetry is the whole point of the dark
+ * pass. In light a reading row keeps the page surface (#fafafb) and is marked
+ * by a darker border plus a shadow. #151619 has nothing to cast into, so in
+ * dark the surface itself lifts to #212327 and the shadow is dropped — audit
+ * finding 07 was that the card surface EQUALLED the page background, leaving a
+ * hairline as the only separator.
+ *
+ * §01 says addressing transitions "colour and border only", and a shadow is
+ * strictly neither. It is included because §02's own state table lists it, and
+ * because it changes no geometry — the rule that clause exists to protect. */
+.instrument {
+  border: 1px solid var(--border);
+  background-color: transparent;
+  transition:
+    border-color var(--motion-address) var(--motion-ease),
+    background-color var(--motion-address) var(--motion-ease),
+    box-shadow var(--motion-address) var(--motion-ease);
+}
+
+.instrument[data-reading],
+.instrument:hover,
+.instrument:focus-within {
+  border-color: var(--instrument-reading-border);
+  background-color: var(--instrument-reading-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.dark .instrument[data-reading],
+.dark .instrument:hover,
+.dark .instrument:focus-within {
+  box-shadow: none;
+}
+
 /* ---------- Stretched-link cards ----------
  * A card whose title link carries `after:inset-0` is entirely clickable, but
  * the focus ring still lands on the title text — measured at 308x23 inside a
