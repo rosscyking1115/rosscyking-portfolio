@@ -1,0 +1,303 @@
+---
+import Container from "../components/layout/Container.astro";
+import IndexMark from "../components/layout/IndexMark.astro";
+import Base from "../layouts/Base.astro";
+import { siteConfig } from "../lib/site-config";
+
+/**
+ * The privacy notice (design spec §04, 10a): "Flows grouped by trigger → not
+ * collected → rights. Grouping by trigger shows three of four never apply."
+ *
+ * ── WHY GROUPED BY TRIGGER ───────────────────────────────────────────────────
+ * A privacy notice organised by data type ("we may collect your name, email,
+ * IP address…") makes every reader assume all of it applies to them. Grouped by
+ * what they DID, the shape of the site becomes the argument: a visitor who
+ * reads and leaves triggers one row. Everything else needs them to act first.
+ *
+ * That is also the only honest way to present this particular site, because it
+ * is the truth — there is no account, no login, and nothing that follows anyone
+ * around. The grouping is not a rhetorical device; it is what the code does.
+ *
+ * ── EVERY ROW IS VERIFIED, NOT DESCRIBED ─────────────────────────────────────
+ * Open item 03 of the spec: "verify the 'not collected' list against your code.
+ * A 'none' that turns out to be a 'some' is the worst sentence on this site."
+ * So each flow below traces to a specific line:
+ *
+ *   name / email / company / message   src/actions/index.ts → renderContactEmail
+ *   email as reply-to                  actions/index.ts, `replyTo: input.email`
+ *   IP for rate limiting               getClientIp() → Upstash key `ip:<addr>`
+ *   IP for the bot check               verifyTurnstile(token, ipAddress)
+ *   IP in the notification email       email-template.ts prints an `IP` row
+ *   theme cookie                       ThemeScript / ThemeToggle
+ *
+ * THE IP ADDRESS IS IN THE EMAIL. That is the one a "we don't store IPs" notice
+ * would have got wrong, and it is not obvious from the outside: the rate
+ * limiter's use of an IP is expected, the copy of it inside every notification
+ * is not. It is stated below rather than glossed.
+ *
+ * MEASURED ON THE LIVE SITE, 2026-08-02: loading /, /projects, /about and
+ * /contact set ZERO cookies and wrote nothing to localStorage. The only
+ * third-party host contacted on any of them was challenges.cloudflare.com, and
+ * only on /contact. Using the theme toggle then set exactly one cookie, theme,
+ * first-party.
+ *
+ * "FIRST-PARTY" FOR THE ANALYTICS IS LOAD-BEARING and was nearly wrong. Vercel
+ * proxies both scripts through this domain in production —
+ * /_vercel/insights/script.js returns 200 — so no vendor host sees a visitor's
+ * request. Against `astro dev` the package falls back to va.vercel-scripts.com
+ * instead, which is a third party this page does not name. The claim is true
+ * for a real visitor and false for a local one, and it was tests/e2e/privacy.spec.ts
+ * that surfaced the difference rather than review.
+ *
+ * ── WHAT ONLY ROSS CAN FILL ──────────────────────────────────────────────────
+ * The four retention periods. The spec calls the dashed cells "the only thing
+ * that page cannot state for you", and it is right: how long a message stays in
+ * an inbox is a decision, not a fact about the code. They are marked, not
+ * guessed — a retention period invented for a legal notice would be the exact
+ * failure this page exists to avoid.
+ */
+export const prerender = true;
+
+interface Flow {
+  what: string;
+  why: string;
+  who: string;
+  /** Null until Ross states it — rendered as a marked slot, never a guess. */
+  kept: string | null;
+}
+
+interface Trigger {
+  id: string;
+  when: string;
+  /** True for the one trigger that fires without the visitor doing anything. */
+  always?: boolean;
+  flows: Flow[];
+}
+
+const TRIGGERS: Trigger[] = [
+  {
+    id: "visiting",
+    when: "You open a page",
+    always: true,
+    flows: [
+      {
+        what: "The page you asked for, your IP address and your browser's user agent",
+        why: "Serving the page at all, and the host's own security and abuse logs",
+        who: "Vercel, as the host",
+        kept: null,
+      },
+      {
+        what: "A page view and its Core Web Vitals — path, referrer, coarse device and country",
+        why: "Knowing which pages are read, and whether they load quickly",
+        who: "Vercel Web Analytics and Speed Insights, first-party and cookieless",
+        kept: null,
+      },
+    ],
+  },
+  {
+    id: "theme",
+    when: "You switch between light and dark",
+    flows: [
+      {
+        // No backticks: this is prose in a rendered page, not markdown, and
+        // they came through literally as punctuation.
+        what: "One cookie, named theme, holding light, dark or system",
+        why: "So the site opens the way you left it, with no flash of the wrong theme",
+        who: "Nobody. It is first-party and is never sent anywhere",
+        kept: "Until you clear it",
+      },
+    ],
+  },
+  {
+    id: "contact",
+    when: "You send the contact form",
+    flows: [
+      {
+        what: "Your name, email address, message, and company if you gave one",
+        why: "So I can read it and reply",
+        who: "Resend, which delivers the email, and then my inbox",
+        kept: null,
+      },
+      {
+        what: "Your IP address",
+        why: "Rate limiting — five submissions an hour — and it is also printed in the notification email I receive",
+        who: "Upstash, which holds the rate-limit counter, and my inbox",
+        kept: null,
+      },
+    ],
+  },
+  {
+    id: "botcheck",
+    when: "You complete the bot check",
+    flows: [
+      {
+        what: "A Turnstile token and your IP address",
+        why: "Confirming the submission came from a person",
+        who: "Cloudflare",
+        kept: "Cloudflare's own retention — see their privacy policy",
+      },
+    ],
+  },
+];
+
+/**
+ * Counted, not typed (§03 R8). The page's own argument is that most of this
+ * never applies, so the number that says so has to be derived from the table
+ * rather than written under it and left to drift.
+ */
+const onlyIfYouAct = TRIGGERS.filter((trigger) => !trigger.always).length;
+
+/**
+ * Each of these is an absence VERIFIED against the code or measured on the live
+ * site — not a reassurance. The comment on each says which.
+ */
+const NOT_COLLECTED = [
+  "No account, no login, no password — there is nothing to sign into.",
+  "No advertising, no cross-site tracking, and no data sold or shared for marketing.",
+  "No analytics cookie. Loading the site sets no cookie at all; the only one it can ever set is the theme, and only if you use the toggle.",
+  "No third-party fonts. The typefaces are served from this domain, so no font CDN sees your request.",
+  "No newsletter and no mailing list. Sending the form subscribes you to nothing.",
+  "No profiling and no automated decision-making.",
+];
+
+const RIGHTS = [
+  "Ask what I hold about you, and get a copy of it.",
+  "Have it corrected if it is wrong.",
+  "Have it deleted.",
+  "Object to it being held, or ask me to restrict what I do with it.",
+  "Complain to the Information Commissioner's Office if you think I have got this wrong.",
+];
+
+const updated = new Date().toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+---
+
+<Base
+  title="Privacy"
+  description="What this site collects, when, and who receives it — grouped by what you did, with every flow traced to the code that performs it."
+  canonical="/privacy"
+>
+  <Container class="py-12 sm:py-16" size="sm">
+    <IndexMark mark="Privacy" label={`Updated ${updated}`} />
+    <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+      Privacy
+    </h1>
+    <p class="text-muted-foreground mt-4 text-lg leading-relaxed text-pretty">
+      Grouped by what you did, rather than by what I could collect. Opening a page is the
+      only row that applies to everyone — the other {onlyIfYouAct} need you to act first. I
+      am the data controller: {siteConfig.name}, Sheffield, United Kingdom, at <a
+        href={`mailto:${siteConfig.email}`}
+        class="text-primary underline-offset-2 hover:underline">{siteConfig.email}</a
+      >.
+    </p>
+
+    <div class="mt-12 flex flex-col gap-10">
+      {
+        TRIGGERS.map((trigger, index) => (
+          <section data-flow-trigger={trigger.id}>
+            <IndexMark
+              mark={String(index + 1).padStart(2, "0")}
+              label={trigger.always ? `${trigger.when} · always` : trigger.when}
+            />
+            <div class="border-border divide-border mt-4 flex flex-col divide-y border-y">
+              {trigger.flows.map((flow) => (
+                <div class="grid gap-2 py-4 sm:grid-cols-[1.4fr_1fr] sm:gap-6">
+                  <div>
+                    <p class="text-sm leading-relaxed font-medium">{flow.what}</p>
+                    <p class="text-muted-foreground mt-1 text-sm leading-relaxed">
+                      {flow.why}
+                    </p>
+                  </div>
+                  <dl class="flex flex-col gap-2 sm:items-end sm:text-right">
+                    <div>
+                      <dt class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
+                        Who receives it
+                      </dt>
+                      <dd class="mt-0.5 font-mono text-xs">{flow.who}</dd>
+                    </div>
+                    <div>
+                      <dt class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
+                        Kept for
+                      </dt>
+                      {flow.kept ? (
+                        <dd class="mt-0.5 font-mono text-xs">{flow.kept}</dd>
+                      ) : (
+                        /*
+                          A MARKED SLOT, not a guess. How long a message stays
+                          in an inbox is Ross's decision, and a retention period
+                          invented for a legal notice would be the exact failure
+                          this page exists to avoid.
+                        */
+                        <dd
+                          class="border-border text-muted-foreground mt-0.5 w-fit border border-dashed px-2 py-0.5 font-mono text-xs sm:ml-auto"
+                          data-open-slot
+                        >
+                          not stated yet
+                        </dd>
+                      )}
+                    </div>
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </section>
+        ))
+      }
+    </div>
+
+    <section class="mt-14" data-not-collected>
+      <IndexMark mark="05" label="Not collected" />
+      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+        Each of these was checked against the code that would have to do it, and against
+        the live site on 2&nbsp;August&nbsp;2026 — not assumed.
+      </p>
+      <ul class="mt-4 flex flex-col gap-2.5">
+        {
+          NOT_COLLECTED.map((item) => (
+            <li class="flex gap-3 text-sm leading-relaxed">
+              <span
+                class="text-primary mt-2 h-px w-3 shrink-0 bg-current"
+                aria-hidden="true"
+              />
+              <span>{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mt-14">
+      <IndexMark mark="06" label="Your rights" />
+      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+        Under the UK GDPR you can, at any time:
+      </p>
+      <ul class="mt-4 flex flex-col gap-2.5">
+        {
+          RIGHTS.map((item) => (
+            <li class="flex gap-3 text-sm leading-relaxed">
+              <span
+                class="text-primary mt-2 h-px w-3 shrink-0 bg-current"
+                aria-hidden="true"
+              />
+              <span>{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="text-muted-foreground mt-5 text-sm leading-relaxed">
+        Email <a
+          href={`mailto:${siteConfig.email}`}
+          class="text-primary underline-offset-2 hover:underline">{siteConfig.email}</a
+        > and I will do it. The ICO's own guidance is at <a
+          href="https://ico.org.uk/make-a-complaint/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-primary underline-offset-2 hover:underline">ico.org.uk</a
+        >.
+      </p>
+    </section>
+  </Container>
+</Base>
