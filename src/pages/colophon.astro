@@ -1,0 +1,240 @@
+---
+import Container from "../components/layout/Container.astro";
+import IndexMark from "../components/layout/IndexMark.astro";
+import Base from "../layouts/Base.astro";
+import { colophonStats, stack } from "../lib/colophon-stats";
+import { proofStats } from "../lib/registry-stats";
+
+/**
+ * The colophon (design spec §04, 11a): "Numbers band → failing run log → stack
+ * table → limits. A project write-up pointed at the site; ships last."
+ *
+ * ── OPEN ITEM 04, ANSWERED FROM THE REPO RATHER THAN ASKED FOR ───────────────
+ * The spec blocks this page on Ross supplying "real honest limits", and warns
+ * that "mine are inferred and marked — without true ones that page is a brag".
+ * That warning is about INFERRED limits. Every limit below is instead read off
+ * something the repository already records and gates:
+ *
+ *   the dev-server suite      AGENTS.md, and playwright.config.ts's own note
+ *   one Playwright worker     playwright.config.ts §6j, with its history
+ *   the Shiki contrast        tests/e2e/a11y.spec.ts KNOWN map, 4.02:1
+ *   the reading line          global.css, scoped to (hover: none) + @supports
+ *   four retention periods    src/pages/privacy.astro, marked slots
+ *   no writing section        there are no posts
+ *
+ * So this is selection from the record, not invention — the same standard the
+ * metric modes are held to. If Ross disagrees with any of them the fix is to
+ * change the record, which is the point.
+ *
+ * ── THE RUN LOG THAT FAILS ───────────────────────────────────────────────────
+ * "A project write-up pointed at the site." A write-up on this site leads with
+ * its correction, so this one does too. Every entry is a real finding with a
+ * real cost, already written down in AGENTS.md or in a pull request — nothing
+ * here was composed for the page.
+ *
+ * ── WHY THERE IS NO TEST COUNT ───────────────────────────────────────────────
+ * The obvious number for this page is "211 end-to-end tests". It is not here,
+ * and the reason is the page's own subject. `test(` appears 130 times in
+ * tests/e2e; the runner reports 211, because many cases are generated in loops.
+ * Counting the calls undercounts by 38%; printing the runner's number types it.
+ * Neither is allowed by §03 R8, so the page counts spec FILES and lists the
+ * problem under limits. See src/lib/colophon-stats.ts.
+ */
+export const prerender = true;
+
+/** Real findings, from AGENTS.md and this pass's pull requests. */
+const RUN_LOG = [
+  {
+    found: "The index mark contradicted itself",
+    detail:
+      "The same project was 01 on the home page and 05 everywhere else, because each surface numbered from its own list. It survived a design pass, a content reconciliation and two audits.",
+    cost: "Every existing assertion checked that a mark rendered. None checked that the same mark rendered twice.",
+  },
+  {
+    found: "Three things were never ported, and nothing went red",
+    detail:
+      "The contact page shipped with no design system, the Now-building strip was missing, and analytics were dropped. All three were caught by diffing the old implementation against the new one.",
+    cost: "129 passing end-to-end tests, and a suite that says nothing about what should exist and does not.",
+  },
+  {
+    found: "A deploy depended on a setting invisible from the repository",
+    detail:
+      'vercel.json lost its "framework" key, and the build failed with "No Next.js version detected" against a repository containing no Next at all — a dashboard preset set by hand years earlier decided how it built.',
+    cost: "A failed cutover, and the same defect appearing independently on a second site from the same reasoning.",
+  },
+  {
+    found: "An LCP improvement that was not one",
+    detail:
+      "Removing the entrance animation was argued to improve Largest Contentful Paint, because an element at opacity 0 is not painted. Measured against production, LCP equalled FCP with and without it — a 0ms gap on every run of both.",
+    cost: "The reasoning was sound and the conclusion was wrong. It is corrected in the source rather than deleted.",
+  },
+  {
+    found: "A privacy sentence that was true in production and false locally",
+    detail:
+      "The notice calls the analytics first-party. Vercel proxies them through this domain in production; against the dev server the package falls back to a vendor CDN, which the page does not name.",
+    cost: "The test caught it. Review had already passed it, and I had already written the sentence.",
+  },
+];
+
+/**
+ * Read off the record, each one traceable. Open item 04, answered rather than
+ * marked — see the note at the top of this file.
+ */
+const LIMITS = [
+  "The end-to-end suite runs against the dev server, not a production build, because the Vercel adapter has no preview command. The serverless wrapper around /contact is never exercised locally.",
+  "Playwright runs on a single worker. The dev server saturates as the suite grows, and the count has been lowered three times; a flaky gate is not a gate.",
+  "One accessibility violation is known and shipped: Shiki's comment token measures 4.02:1 against a 4.5:1 threshold in light mode. It is asserted by value in the a11y gate rather than excluded, so it cannot go quiet.",
+  "The reading line — the only way a phone addresses a row — needs CSS scroll-driven animation. Where it is unsupported there is no scroll addressing at all, by design rather than by fallback.",
+  "Four retention periods on /privacy are unstated. The page is honest and visibly incomplete, which is better than the alternative but is still incomplete.",
+  "There is no writing section. The design for one exists; the posts do not.",
+  "This page cannot count the site's end-to-end tests or measure its own JavaScript. Both are explained above, and both are the reason it reports spec files instead.",
+];
+
+const built = new Date().toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+const numbers = [
+  { value: String(proofStats.shipped), label: "projects shipped" },
+  { value: String(colophonStats.e2eSpecFiles), label: "end-to-end spec files" },
+  { value: String(colophonStats.unitTests), label: "unit tests" },
+];
+---
+
+<Base
+  title="Colophon"
+  description="How this site is built, what it got wrong along the way, and what it still cannot do — counted from the repository rather than described."
+  canonical="/colophon"
+>
+  <Container class="pt-12 pb-10 sm:pt-16" size="sm">
+    <IndexMark mark="Colophon" label={`Built ${built}`} />
+    <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+      Colophon
+    </h1>
+    <p class="text-muted-foreground mt-4 text-lg leading-relaxed text-pretty">
+      A project write-up pointed at the site itself. It leads with what went wrong, for
+      the same reason every other write-up here does.
+    </p>
+  </Container>
+
+  {
+    /*
+      A full-bleed RULE with contained content — not the home page's full-bleed
+      band, and the difference is deliberate.
+
+      On home the numbers ignore the container entirely, because that page's
+      problem was one measure from top to bottom and the band is what breaks it.
+      This page is a reading column at max-w-2xl, centred. Letting the figures
+      run edge to edge there put a 72px "9" three hundred pixels to the left of
+      the heading it belongs to, aligned with nothing on the page. The rules
+      still cross the viewport, so the section still reads as an instrument; the
+      figures sit on the same left edge as every other line.
+    */
+  }
+  <section aria-label="Site numbers" class="border-border border-y">
+    <Container size="sm" class="px-0">
+      <dl
+        class="divide-border grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0"
+        data-colophon-numbers
+      >
+        {
+          numbers.map((item) => (
+            <div class="px-6 py-8 sm:px-8 sm:py-10">
+              <dt class="sr-only">{item.label}</dt>
+              <dd>
+                <span class="font-mono text-5xl leading-none font-medium tracking-tight tabular-nums sm:text-6xl">
+                  {item.value}
+                </span>{" "}
+                <span class="text-muted-foreground mt-4 block font-mono text-xs tracking-wider uppercase">
+                  {item.label}
+                </span>
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+      <p
+        class="text-muted-foreground border-border border-t px-6 py-3 font-mono text-xs sm:px-8"
+      >
+        Counted from the repository at build time &middot; {colophonStats.dependencies} runtime
+        dependencies, {colophonStats.devDependencies} for development
+      </p>
+    </Container>
+  </section>
+
+  <Container class="py-14" size="sm">
+    <section data-run-log>
+      <IndexMark mark="01" label="The run log that fails" />
+      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+        Findings against my own work on this site, in the order they were made. Each one
+        was caught by diffing, measuring or testing — none by looking at the page.
+      </p>
+      <div class="border-border divide-border mt-5 flex flex-col divide-y border-y">
+        {
+          RUN_LOG.map((entry, index) => (
+            <div class="grid gap-2 py-5 sm:grid-cols-[auto_1fr] sm:gap-6">
+              <span class="text-primary font-mono text-xs tabular-nums sm:pt-1">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <h2 class="font-display text-base font-semibold tracking-tight">
+                  {entry.found}
+                </h2>
+                <p class="text-muted-foreground mt-1.5 text-sm leading-relaxed">
+                  {entry.detail}
+                </p>
+                <p class="text-muted-foreground mt-2 border-l-2 border-current/20 pl-3 font-mono text-xs leading-relaxed">
+                  {entry.cost}
+                </p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="mt-14" data-stack-table>
+      <IndexMark mark="02" label="Stack" />
+      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+        The pieces that decide how the site behaves. Versions are read from package.json
+        at build time, so a bump cannot leave this page claiming the old one.
+      </p>
+      <div class="border-border divide-border mt-5 flex flex-col divide-y border-y">
+        {
+          stack.map((item) => (
+            <div class="grid gap-1 py-4 sm:grid-cols-[12rem_1fr] sm:gap-6">
+              <p class="font-mono text-sm">
+                {item.name} <span class="text-muted-foreground">{item.version}</span>
+              </p>
+              <p class="text-muted-foreground text-sm leading-relaxed">{item.role}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="mt-14" data-limits>
+      <IndexMark mark="03" label="Honest limits" />
+      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+        Every one of these is read off something the repository already records — a config
+        note, a gate, a marked slot — rather than inferred. If one is wrong, the record is
+        wrong.
+      </p>
+      <ul class="mt-5 flex flex-col gap-3">
+        {
+          LIMITS.map((item) => (
+            <li class="flex gap-3 text-sm leading-relaxed">
+              <span
+                class="text-primary mt-2.5 h-px w-3 shrink-0 bg-current"
+                aria-hidden="true"
+              />
+              <span>{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </Container>
+</Base>
