@@ -43,6 +43,34 @@ export function ContactForm() {
   const [isPending, startTransition] = useTransition();
 
   /**
+   * The receipt (design spec §04, 7a): "success returns a receipt with a
+   * reference, in place".
+   *
+   * A toast said the same words and then took them away. This route is the only
+   * place on the site where something can be in progress, be wrong, or succeed,
+   * and the one outcome the visitor most needs to keep is the one that
+   * disappeared after four seconds — so the receipt REPLACES the form card and
+   * stays on screen. It does not navigate, which is what keeps it readable and
+   * what keeps the browser Back button meaning what it meant before.
+   *
+   * TWO THINGS THE SPEC'S MOCK SHOWS THAT ARE NOT TRUE HERE, and are therefore
+   * not written:
+   *
+   *   "A copy has gone to your address." It has not. src/actions/index.ts sends
+   *   exactly one email, to RESEND_TO_EMAIL, with `replyTo` set to the sender.
+   *   Saying otherwise would be the site's first false statement.
+   *
+   *   A reference code. The action returns no id, and Resend's internal message
+   *   id is not a thing a visitor can quote at anyone. The mock labels its own
+   *   as "illustrative"; an illustrative reference on a real receipt is worse
+   *   than none.
+   *
+   * What is left is true: the time it was received, and Ross's own existing
+   * sentence about when he replies — selected from the page above, not written.
+   */
+  const [receipt, setReceipt] = useState<string | null>(null);
+
+  /**
    * Turnstile's widget size, chosen by how much room the form actually has.
    *
    * `flexible` fills its container but floors at a 300px min-width, and at a
@@ -100,7 +128,24 @@ export function ContactForm() {
       const { error } = await actions.contact(formData);
 
       if (!error) {
-        toast.success("Thanks — I'll be in touch within a couple of days.");
+        // Stamped when the send SUCCEEDED, not when the page loaded, so the
+        // receipt records the event rather than the visit.
+        // EXPLICIT COMPONENTS, not dateStyle/timeStyle. Intl rejects mixing
+        // the two shorthand styles with an individual option such as
+        // timeZoneName — it throws `TypeError: Invalid option : option`, which
+        // surfaced as the whole island unmounting into React's error boundary
+        // and the receipt never appearing. Caught by running the submission,
+        // not by types: both spellings type-check.
+        setReceipt(
+          new Intl.DateTimeFormat("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZoneName: "short",
+          }).format(new Date()),
+        );
         reset();
         return;
       }
@@ -117,6 +162,35 @@ export function ContactForm() {
       toast.error(error.message || "Something went wrong. Please try again.");
     });
   };
+
+  if (receipt) {
+    return (
+      <section
+        aria-live="polite"
+        data-receipt
+        className="border-border bg-background rounded-lg border p-6 shadow-xs sm:p-8"
+      >
+        <p className="text-muted-foreground font-mono text-xs tracking-wider uppercase">
+          <span className="bg-state-live mr-2 inline-block size-1.5 rounded-full" />
+          Received
+        </p>
+        <p className="mt-3 font-mono text-sm" data-receipt-time>
+          {receipt}
+        </p>
+        <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
+          Your message is with me. I reply within a day or two — if it is urgent, email is
+          still the fastest route.
+        </p>
+        <button
+          type="button"
+          onClick={() => setReceipt(null)}
+          className="text-primary ease-instrument mt-5 cursor-pointer text-sm font-medium underline-offset-2 transition-colors duration-[var(--motion-state)] hover:underline"
+        >
+          Send another
+        </button>
+      </section>
+    );
+  }
 
   return (
     <form
@@ -224,7 +298,15 @@ export function ContactForm() {
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <button type="submit" disabled={isPending} className={buttonVariants()}>
           {isPending ? (
-            "Sending…"
+            /*
+              Mono, because that is the site's signal for a machine reading
+              (§7c). The spec also draws a 1px indeterminate rule running
+              beneath at 2s linear — NOT built, because §01's own NEVER list
+              bans continuous motion outright and the system sheet wins over a
+              route sketch. A disabled button whose label has switched voice
+              says the same thing and says it under reduced motion too.
+            */
+            <span className="font-mono text-xs tracking-wider uppercase">Sending…</span>
           ) : (
             <>
               Send message
@@ -261,7 +343,19 @@ function Field({ id, label, error, hint, required, wide, children }: FieldProps)
       </div>
       {children}
       {error && (
+        /*
+          "The message always leads with the word INVALID, so the state never
+          depends on hue alone" (§7c, and §05 ERRORS). Before this the only
+          signal that a field was wrong was that its message was red — which
+          fails for anyone who cannot separate it from the label beside it, and
+          fails completely in a monochrome print.
+
+          The colour is still --destructive. The spec proposes #8f4f48/#c9938c
+          as a seventh token and calls it "the only colour I am adding"; that is
+          open item 01 and Ross's approval, so the fallback stands until then.
+        */
         <p role="alert" className="text-destructive text-xs">
+          <span className="font-mono tracking-wider uppercase">Invalid&nbsp;&mdash;</span>{" "}
           {error}
         </p>
       )}
