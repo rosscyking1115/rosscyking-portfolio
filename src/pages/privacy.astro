@@ -190,7 +190,7 @@ const updated = new Date().toLocaleDateString("en-GB", {
       only row that applies to everyone — the other {onlyIfYouAct} need you to act first. I
       am the data controller: {siteConfig.name}, Sheffield, United Kingdom, at <a
         href={`mailto:${siteConfig.email}`}
-        class="text-primary underline-offset-2 hover:underline">{siteConfig.email}</a
+        class="prose-link">{siteConfig.email}</a
       >.
     </p>
 
@@ -288,14 +288,13 @@ const updated = new Date().toLocaleDateString("en-GB", {
         }
       </ul>
       <p class="text-muted-foreground mt-5 text-sm leading-relaxed">
-        Email <a
-          href={`mailto:${siteConfig.email}`}
-          class="text-primary underline-offset-2 hover:underline">{siteConfig.email}</a
+        Email <a href={`mailto:${siteConfig.email}`} class="prose-link"
+          >{siteConfig.email}</a
         > and I will do it. The ICO's own guidance is at <a
           href="https://ico.org.uk/make-a-complaint/"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-primary underline-offset-2 hover:underline">ico.org.uk</a
+          class="prose-link">ico.org.uk</a
         >.
       </p>
     </section>

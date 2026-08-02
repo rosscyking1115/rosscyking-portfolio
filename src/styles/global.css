@@ -431,6 +431,26 @@
   }
 }
 
+/* ---------- Inline prose links ----------
+ * A link inside a paragraph must be distinguishable WITHOUT colour (WCAG 1.4.1),
+ * which in practice means a resting underline rather than one on hover.
+ *
+ * `.doc a` has always done this, which is why every project write-up passed the
+ * accessibility gate. The pages written by hand did not — they used
+ * `text-primary … hover:underline`, so an inline link was blue and nothing else
+ * until you pointed at it. Nobody noticed because axe's `link-in-text-block`
+ * rule only fires for links inside a block of text, and the routes that had any
+ * were the routes the gate was not scanning.
+ *
+ * Found the moment tests/e2e/routes.ts put /privacy in front of axe: three
+ * nodes, on a page that had been live for an hour. */
+.prose-link {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
 /* ---------- Stretched-link cards ----------
  * A card whose title link carries `after:inset-0` is entirely clickable, but
  * the focus ring still lands on the title text — measured at 308x23 inside a

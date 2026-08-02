@@ -1,5 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { ROUTES as ALL_ROUTES } from "./routes";
+
 /**
  * The motion contract, enforced against the rendered page.
  *
@@ -27,14 +29,12 @@ import { expect, test, type Page } from "@playwright/test";
  * dependency, a base style or a computed default.
  */
 
-/** Every route a visitor can reach, /contact included — it has an island. */
-const ROUTES = [
-  "/",
-  "/projects",
-  "/projects/agent-release-gates",
-  "/about",
-  "/contact",
-] as const;
+/**
+ * Every route a visitor can reach, DERIVED — see tests/e2e/routes.ts. This file
+ * shipped with its own hardcoded list too, which is how /privacy and /colophon
+ * were swept for banned motion on exactly zero pages.
+ */
+const ROUTES = ALL_ROUTES;
 
 /** The three motion tokens and the one easing, as getComputedStyle reports them. */
 const VOCABULARY = {

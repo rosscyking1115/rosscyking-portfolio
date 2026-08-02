@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { ROUTES as ALL_ROUTES } from "./routes";
+
 /**
  * Responsive gate.
  *
@@ -25,14 +27,12 @@ import { expect, test } from "@playwright/test";
  * layout regression rather than one card.
  */
 
-const ROUTES = [
-  "/",
-  "/projects",
-  "/projects/agent-release-gates",
-  "/about",
-  "/contact",
-  "/no-such-page-exists",
-];
+/**
+ * DERIVED, not listed — see tests/e2e/routes.ts. /privacy and /colophon shipped
+ * without ever being checked at 320px, because this list was written by hand
+ * and nobody remembered to add them.
+ */
+const ROUTES = ALL_ROUTES;
 
 /** 320 is the narrowest viewport worth supporting; 414 is a large phone. */
 const WIDTHS = [320, 390, 414];
