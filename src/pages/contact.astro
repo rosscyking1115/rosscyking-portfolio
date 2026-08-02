@@ -88,12 +88,8 @@ const links = [
         <span
           class="border-border bg-background mt-8 inline-flex w-fit items-center gap-2 rounded-full border py-1 pr-3 pl-2.5 text-sm font-medium"
         >
-          <span class="relative flex size-2">
-            <span
-              class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60"
-            ></span>
-            <span class="relative inline-flex size-2 rounded-full bg-emerald-500"></span>
-          </span>
+          <span class="bg-state-live inline-flex size-2 rounded-full" aria-hidden="true"
+          ></span>
           {siteConfig.availability}
         </span>
 
@@ -106,7 +102,7 @@ const links = [
                   ? { target: "_blank", rel: "noopener noreferrer" }
                   : {})}
                 {...(link.download ? { download: link.download } : {})}
-                class="group flex items-center gap-3 py-3.5 transition-[padding] duration-150 hover:px-1"
+                class="group hover:text-primary ease-instrument flex items-center gap-3 py-3.5 transition-[color] duration-[var(--motion-state)]"
               >
                 <span class="border-border text-muted-foreground flex size-9 items-center justify-center rounded border">
                   {link.brand ? (
@@ -123,10 +119,7 @@ const links = [
                     {link.value}
                   </span>
                 </span>
-                <ArrowUpRight
-                  class="text-muted-foreground size-4 transition-transform group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                />
+                <ArrowUpRight class="text-muted-foreground size-4" aria-hidden="true" />
               </a>
             ))
           }

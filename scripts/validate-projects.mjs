@@ -134,6 +134,48 @@ if (new Set(orders).size !== orders.length) {
   );
 }
 
+// 6b. Canonical mark invariants.
+//
+// The mark is the number rendered as `[ 05 ]` on home, on /projects and on the
+// write-up. Before this it was a positional index computed separately on each
+// surface, so the same project wore different numbers in different places and
+// publishing a new project renumbered every existing one. IndexMark's contract
+// is that the mark is always TRUE, so these three checks are the contract:
+// every project has one, no two share one, and the set has no holes or
+// duplicates that would make "10 projects" and "marks 1..10" disagree.
+//
+// A NEW PROJECT TAKES THE NEXT FREE INTEGER. Never renumber an existing one —
+// the marks appear in screenshots, in write-up prose and in the design spec.
+{
+  const marks = [];
+  for (const [slug, spec] of Object.entries(registry.projects ?? {})) {
+    if (typeof spec.mark !== "number" || !Number.isInteger(spec.mark) || spec.mark < 1) {
+      errors.push(
+        `  ✗ mark: "${slug}" has no positive integer \`mark\` in registry.json`,
+      );
+      continue;
+    }
+    marks.push([slug, spec.mark]);
+  }
+
+  const seen = new Map();
+  for (const [slug, mark] of marks) {
+    if (seen.has(mark)) {
+      errors.push(`  ✗ mark: ${mark} is used by both "${seen.get(mark)}" and "${slug}"`);
+    }
+    seen.set(mark, slug);
+  }
+
+  const sorted = marks.map(([, m]) => m).sort((a, b) => a - b);
+  const expected = sorted.map((_, i) => i + 1);
+  if (sorted.join(",") !== expected.join(",")) {
+    errors.push(
+      `  ✗ mark: marks are not 1..${marks.length} — got [${sorted.join(", ")}]. ` +
+        `A gap means a retired project left a hole; close it deliberately or renumber deliberately.`,
+    );
+  }
+}
+
 // 7. Lens invariants — each lens's featured set must be real, shipped, and
 // non-trivial, so a shared /for/<lens> URL can't surface a missing or
 // unfinished project.

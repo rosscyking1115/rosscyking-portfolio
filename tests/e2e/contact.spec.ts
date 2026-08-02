@@ -190,8 +190,15 @@ test.describe("contact page — chrome and styling", () => {
     const main = page.locator("main");
 
     await expect(main.getByText("[ Contact ]")).toBeVisible();
-    // The pulsing dot is part of the availability signal, not decoration.
-    await expect(main.locator(".animate-ping")).toBeVisible();
+
+    // The dot is part of the availability signal, not decoration — so it is
+    // still asserted, but by the thing that makes it a signal rather than by
+    // how it used to move. This read `.animate-ping` until the design spec
+    // banned continuous motion, which is a test pinned to a MECHANISM: the
+    // signal is the LIVE state token, and the pulse was one rendering of it.
+    // The class it now looks for is the same token /projects and the home page
+    // use, so all three surfaces fail together if the token is renamed.
+    await expect(main.locator(".bg-state-live")).toBeVisible();
     await expect(main.getByText(/Available for full-time roles/)).toBeVisible();
 
     for (const label of ["Email", "GitHub", "LinkedIn", "Download CV"]) {

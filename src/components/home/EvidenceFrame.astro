@@ -85,7 +85,7 @@ const image = key ? screenshots[key]!.default : undefined;
     {
       live ? (
         <span class="text-muted-foreground flex shrink-0 items-center gap-1.5 font-mono text-[10px] tracking-wider uppercase">
-          <span class="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+          <span class="bg-state-live size-1.5 rounded-full" aria-hidden="true" />
           Live
         </span>
       ) : (
@@ -106,7 +106,7 @@ const image = key ? screenshots[key]!.default : undefined;
             widths={[400, 800, 1200]}
             sizes={sizes ?? "100vw"}
             loading={eager ? "eager" : "lazy"}
-            class="absolute inset-0 size-full object-cover object-top transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            class="absolute inset-0 size-full object-cover object-top"
           />
         ) : (
           <img

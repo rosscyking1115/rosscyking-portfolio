@@ -42,7 +42,7 @@ const social = [
     <div class="flex h-16 items-center justify-between">
       <a
         href="/"
-        class="font-display inline-block py-1 text-base font-bold tracking-tight transition-opacity hover:opacity-80"
+        class="font-display hover:text-primary ease-instrument inline-block py-1 text-base font-bold tracking-tight transition-[color] duration-[var(--motion-state)]"
       >
         {siteConfig.shortName}
       </a>
@@ -54,7 +54,7 @@ const social = [
               href={item.href}
               aria-current={isActive(item.href) ? "page" : undefined}
               class={cn(
-                "rounded-md px-3 py-2 text-sm transition-colors",
+                "ease-instrument rounded-md px-3 py-2 text-sm transition-colors duration-[var(--motion-state)]",
                 isActive(item.href)
                   ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground",
@@ -97,7 +97,7 @@ const social = [
               href={item.href}
               aria-current={isActive(item.href) ? "page" : undefined}
               class={cn(
-                "rounded-md px-3 py-3 text-base transition-colors",
+                "ease-instrument rounded-md px-3 py-3 text-base transition-colors duration-[var(--motion-state)]",
                 isActive(item.href)
                   ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -115,7 +115,7 @@ const social = [
                 aria-label={label}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex size-10 items-center justify-center rounded-md transition-colors"
+                class="text-muted-foreground hover:bg-muted hover:text-foreground ease-instrument inline-flex size-10 items-center justify-center rounded-md transition-colors duration-[var(--motion-state)]"
               >
                 <BrandIcon name={icon} class="size-5" />
               </a>

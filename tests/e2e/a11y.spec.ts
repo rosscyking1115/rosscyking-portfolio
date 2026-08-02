@@ -18,14 +18,23 @@ import { expect, test } from "@playwright/test";
  * Both themes, because the palette is the most likely thing to regress and the
  * dark tokens are a separate set of values.
  *
- * REDUCED MOTION IS SET ON PURPOSE, and it is not a way of dodging anything.
- * Cards below the fold sit at opacity 0 until their scroll-driven reveal runs,
- * and axe blends opacity into the foreground colour before measuring — so an
- * un-scrolled card reports its body text at 1.13:1 against the page. That is a
- * measurement of a transient animation frame, not of the design. With reduced
- * motion the reveal does not apply at all (see global.css), so every element is
- * scanned at the state it actually settles in — which is also exactly the state
- * a reduced-motion visitor sees for the whole visit.
+ * THE SCAN NOW RUNS ON THE PAGE AS LOADED, and that is a real tightening.
+ *
+ * It used to set `reducedMotion: "reduce"`, for a defensible reason: cards
+ * below the fold sat at opacity 0 until their scroll-driven reveal ran, axe
+ * blends opacity into the foreground colour before measuring, and an
+ * un-scrolled card reported its body text at 1.13:1 against the page — a
+ * measurement of a transient animation frame rather than of the design. Under
+ * reduced motion the reveal did not apply at all, so every element was scanned
+ * at the state it settles in.
+ *
+ * It was still a workaround, and it left a gap the design spec names directly:
+ * contrast is "graded on the page AS LOADED — a state that only becomes
+ * legible under reduced motion still fails". The reveal is gone (see the MOTION
+ * CONTRACT in src/styles/global.css), nothing on this site is transparent at
+ * any point, and so the flag is no longer needed. Removing it means the default
+ * visitor's experience is the one being graded. Do not put it back to make a
+ * violation go away: a violation that only appears without it is a real one.
  */
 
 /**
@@ -71,10 +80,7 @@ for (const theme of ["light", "dark"] as const) {
     test(`${route.name} has no unexpected axe violations (${theme})`, async ({
       browser,
     }) => {
-      const context = await browser.newContext({
-        colorScheme: theme,
-        reducedMotion: "reduce",
-      });
+      const context = await browser.newContext({ colorScheme: theme });
       // The site's own toggle wins over the OS, and it reads a cookie — so set
       // the cookie too, or a `system` visitor is the only case ever scanned.
       await context.addCookies([

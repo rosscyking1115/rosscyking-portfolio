@@ -26,16 +26,16 @@ const { entries = nowBuilding } = Astro.props;
   entries.length > 0 && (
     <aside
       aria-label="Now building"
-      class="reveal-on-scroll border-border mt-10 border-t border-dashed pt-6"
+      class="border-border mt-10 border-t border-dashed pt-6"
     >
       <IndexMark mark="//" label="Now building" />
       <ul class="mt-4 flex flex-col gap-2.5">
         {entries.map((entry) => (
           <li class="flex items-baseline gap-3 text-sm">
-            <span class="relative flex size-2 shrink-0 self-center">
-              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60 motion-reduce:animate-none" />
-              <span class="relative inline-flex size-2 rounded-full bg-emerald-500" />
-            </span>
+            <span
+              class="bg-state-live inline-flex size-2 shrink-0 self-center rounded-full"
+              aria-hidden="true"
+            />
             <span class="font-mono text-[13px]">{entry.name}</span>
             <span class="text-muted-foreground leading-relaxed">{entry.blurb}</span>
           </li>
@@ -50,9 +50,9 @@ const { entries = nowBuilding } = Astro.props;
 
 {
   /*
-    The reveal lives in src/styles/global.css. This component used to declare a
-    fourth copy of the keyframe, with no stagger and its own duration, on the
-    reasoning that scoped styles do not cross component boundaries — true, and
-    the reason a global class is the right home for it.
+    No entrance, and no pinging dot. Both are banned by the MOTION CONTRACT in
+    src/styles/global.css — the first as motion on arrival, the second as
+    continuous motion. The LIVE state is the --state-live token, held still,
+    which is also the token the instrument uses in spec §03 R6.
   */
 }

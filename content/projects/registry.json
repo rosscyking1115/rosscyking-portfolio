@@ -47,7 +47,8 @@
         "63 dbt",
         "63 data tests",
         "strike-day demand"
-      ]
+      ],
+      "mark": 1
     },
     "england-wales-housing-decision-support": {
       "repo": "https://github.com/rosscyking1115/england-wales-housing-decision-support",
@@ -60,7 +61,8 @@
         "dbt data tests": "228",
         "open-data sources": "9"
       },
-      "banned": []
+      "banned": [],
+      "mark": 2
     },
     "neobank-product-analytics": {
       "repo": "https://github.com/rosscyking1115/responsible-neobank-growth",
@@ -71,7 +73,8 @@
       "metrics": {
         "dbt tests (cloud run)": "217"
       },
-      "banned": ["neobank-appuct", "215 tests"]
+      "banned": ["neobank-appuct", "215 tests"],
+      "mark": 8
     },
     "community-energy-flex": {
       "repo": "https://github.com/rosscyking1115/community-energy-flex",
@@ -82,7 +85,8 @@
       "metrics": {
         "tests passing": "206"
       },
-      "banned": ["savings realised", "savings were realised", "realised savings"]
+      "banned": ["savings realised", "savings were realised", "realised savings"],
+      "mark": 3
     },
     "aerospace-prognostics": {
       "repo": "https://github.com/rosscyking1115/aerospace-prognostics",
@@ -93,7 +97,8 @@
       "metrics": {
         "tests passing": "462"
       },
-      "banned": ["453", "451"]
+      "banned": ["453", "451"],
+      "mark": 4
     },
     "cashflow-risk": {
       "_demo": "RETIRED 2026-07-29 and deliberately not replaced. The free Render Postgres expired 30 days after creation, so the app never bound its port and the edge hung for 75-120s. ADR 0003 in the repo records the options: $6/mo Render Basic (no spend authorised), a SQLite fallback REJECTED on architecture grounds with a do-not-re-propose clause, and — added by the 29 Jul amendment — Neon's free non-expiring Postgres, which would have worked and was declined on portfolio grounds rather than technical ones. Services are suspended, not deleted; the retirement is reversible. Until it is, this MUST stay null: the URL served a 503 'This service has been suspended by its owner' page, and a screenshot re-shoot captured exactly that.",
@@ -105,7 +110,8 @@
       "metrics": {
         "tests": "167"
       },
-      "banned": ["150+", "cashflow-web-sidu"]
+      "banned": ["150+", "cashflow-web-sidu"],
+      "mark": 9
     },
     "cited-market-brief-agent": {
       "repo": "https://github.com/rosscyking1115/cited-market-brief-agent",
@@ -118,7 +124,8 @@
         "public data sources": "5"
       },
       "banned": ["100% claims", "claims cited", "fact-checked", "fact-checking"],
-      "_metrics": "The '100% claims cited' pin was RETRACTED by the repo: the CI eval that produced precision 1.000 / recall 1.000 was built from the same rules that produced the output, so it could not fail. Measured against independently labelled ground truth: precision 0.579 dev / 0.400 holdout, recall 1.000. No precision figure is pinned as a metric chip on purpose — the repo's claim ledger requires the unit, positive class and population to be stated BEFORE the number, and a chip cannot carry that. The measured figures live in the write-up instead."
+      "_metrics": "The '100% claims cited' pin was RETRACTED by the repo: the CI eval that produced precision 1.000 / recall 1.000 was built from the same rules that produced the output, so it could not fail. Measured against independently labelled ground truth: precision 0.579 dev / 0.400 holdout, recall 1.000. No precision figure is pinned as a metric chip on purpose — the repo's claim ledger requires the unit, positive class and population to be stated BEFORE the number, and a chip cannot carry that. The measured figures live in the write-up instead.",
+      "mark": 7
     },
     "redteam-foundry": {
       "repo": "https://github.com/rosscyking1115/redteam-foundry",
@@ -132,7 +139,8 @@
         "positive-control ASR": "80%"
       },
       "banned": [],
-      "_metrics": "The '+1.00 cross-judge kappa' pin was WITHDRAWN by the repo: 11 of the 12 cells are degenerate 0/0 filled in by convention, so kappa there is undefined rather than perfect. The agreement claim now rests on the positive control (kappa = +0.935, n=98). A `headline_table.py --check` mode in the repo fails the build if the degenerate cells are reported as agreement — the banned strings below mirror that gate. NOTE: the withdrawn phrasing is deliberately NOT in `banned`. The write-up quotes it in order to retract it, and a string ban cannot tell an assertion from a retraction."
+      "_metrics": "The '+1.00 cross-judge kappa' pin was WITHDRAWN by the repo: 11 of the 12 cells are degenerate 0/0 filled in by convention, so kappa there is undefined rather than perfect. The agreement claim now rests on the positive control (kappa = +0.935, n=98). A `headline_table.py --check` mode in the repo fails the build if the degenerate cells are reported as agreement — the banned strings below mirror that gate. NOTE: the withdrawn phrasing is deliberately NOT in `banned`. The write-up quotes it in order to retract it, and a string ban cannot tell an assertion from a retraction.",
+      "mark": 6
     },
     "agent-release-gates": {
       "repo": "https://github.com/rosscyking1115/agent-release-gates",
@@ -146,7 +154,8 @@
         "tests": "309"
       },
       "banned": ["100% retrieval", "160 TechQA", "80 WixQA"],
-      "_metrics": "Pinned on the EXTERNAL result, not the in-corpus one. The repo's own README carries an [!IMPORTANT] block saying the synthetic benchmark is circular by construction and is not retrieval evidence, and the live dashboard leads with the same warning. The previous pins (safety recall 90.91%, side-effect block 100%) are both still numerically true, but the repo now records that the recall figure was measured with case-matching signals live and 'should not be read as a generalization estimate' — and a metric chip has nowhere to carry that caveat."
+      "_metrics": "Pinned on the EXTERNAL result, not the in-corpus one. The repo's own README carries an [!IMPORTANT] block saying the synthetic benchmark is circular by construction and is not retrieval evidence, and the live dashboard leads with the same warning. The previous pins (safety recall 90.91%, side-effect block 100%) are both still numerically true, but the repo now records that the recall figure was measured with case-matching signals live and 'should not be read as a generalization estimate' — and a metric chip has nowhere to carry that caveat.",
+      "mark": 5
     },
     "marketing-effectiveness-lab": {
       "_demo": "RETIRED. The Streamlit URL answers 303 into a sign-in redirect loop that never reaches the app, so it is not publicly reachable. The repo agrees: its README calls the hosted surface one that 'may sleep or require access and is not an always-on public demo'. The GitHub Pages report at rosscyking1115.github.io/marketing-effectiveness-lab/ IS live and is the honest link for an archived project.",
@@ -157,7 +166,9 @@
       "release": null,
       "note": "Archived — methodology absorbed into responsible-neobank-growth.",
       "metrics": {},
-      "banned": []
+      "banned": [],
+      "mark": 10
     }
-  }
+  },
+  "_mark": "CANONICAL PROJECT MARK — the number shown in [ 05 ] on every surface. FROZEN, not computed. It used to be derived from a publishedAt-descending sort at render time, which meant the same project wore a different number in different places (home numbered within the lens, the index and the write-up numbered globally) AND that publishing a new project silently renumbered every existing one. IndexMark's own rule is that the mark is always TRUE, so a number that moves is a bug. Ross's call 2026-08-02: freeze at the values that were live, since all ten projects are finished. A new project takes the next free integer. NEVER renumber an existing one — the marks appear in screenshots, write-ups and the design spec."
 }
