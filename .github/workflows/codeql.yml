@@ -33,6 +33,10 @@ jobs:
         with:
           languages: javascript-typescript
           queries: security-and-quality
+          # Scopes the scan away from vendored artefacts under docs/. The file
+          # says why, and why the alternative — resolving the thread — was not
+          # taken.
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
