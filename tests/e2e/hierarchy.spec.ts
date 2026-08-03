@@ -39,7 +39,6 @@ const PENDING: Record<string, string> = {
   // until then, which is off the ladder, which is why this stays here.
   "/projects/agent-release-gates":
     "the .doc heading scale — MAJOR is an authored h2 and needs registry data to name it",
-  "/contact": "build-order step 5 — needs the same grid and the receipt state",
 };
 
 /** The R9 rung sizes, in the px getComputedStyle reports. */

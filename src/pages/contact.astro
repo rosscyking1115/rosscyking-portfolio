@@ -5,6 +5,7 @@ import { ContactForm } from "../components/ContactForm";
 import BrandIcon from "../components/icons/BrandIcon.astro";
 import Container from "../components/layout/Container.astro";
 import IndexMark from "../components/layout/IndexMark.astro";
+import SectionHead from "../components/layout/SectionHead.astro";
 import Base from "../layouts/Base.astro";
 import { siteConfig } from "../lib/site-config";
 
@@ -56,141 +57,138 @@ const links = [
   description="Get in touch about applied AI, GenAI evaluation, data science, and AI safety roles in the UK. Replies usually within a couple of days."
   canonical="/contact"
 >
-  <Container class="py-12 sm:py-16">
-    {
-      /*
-        `min-w-0` on both columns. Grid items default to `min-width: auto`, so
-        the column cannot shrink below its widest child's min-content — and one
-        child, the Turnstile widget, carries a hard 300px floor. Stacked on a
-        phone both items share one column, so that floor set the width of the
-        intro copy as well and the whole page scrolled sideways.
+  {
+    /*
+      THREE WIDTHS, NO OTHERS (execution audit, finding 04). The header sits at
+      the reading measure inside the 1152 container, so the rules align to the
+      content rather than to the frame.
+    */
+  }
+  <Container class="pt-12 sm:pt-16" size="lg">
+    <div class="max-w-[680px]">
+      <IndexMark mark="Contact" label="Sheffield, UK · GMT" />
+      <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
+        Let&rsquo;s talk.
+      </h1>
+      <p class="text-body mt-4 text-lg leading-relaxed text-pretty">
+        I&rsquo;m looking for 2026 roles in AI safety, GenAI evaluation, and applied data
+        science. If that&rsquo;s what you&rsquo;re hiring for, the fastest route is email
+        &mdash; I reply within a day or two.
+      </p>
+    </div>
+  </Container>
 
-        The same defect as the home page's evidence frames, from the same
-        default, on the one page where the offending child only exists in
-        production. The widget also picks its own size now — see ContactForm —
-        but this is the structural half: no single child should be able to
-        decide the page's width.
-      */
-    }
-    <div class="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
-      {/* Intro + links */}
-      <div class="max-w-prose min-w-0">
-        <IndexMark mark="Contact" label="Sheffield, UK · GMT" />
-        <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
-          Let&rsquo;s talk.
-        </h1>
-        <p class="text-body mt-4 text-lg leading-relaxed text-pretty">
-          I&rsquo;m looking for 2026 roles in AI safety, GenAI evaluation, and applied
-          data science. If that&rsquo;s what you&rsquo;re hiring for, the fastest route is
-          email — I reply within a day or two.
+  {
+    /*
+      THE ROUTE'S ONE BAND (R9, screen 16a): "one ruled line, a 6px #3f9a5f dot,
+      'Available for full-time roles from October 2026', and the visa fact
+      right-aligned as a 12px mono label. The three-cell availability block is
+      gone."
+
+      AND ITS GOING CLOSES OPEN ITEM 06 BY DELETION, which is worth saying out
+      loud rather than letting it disappear. That item asked Ross for two facts
+      — what he is seeking, and his typical reply time — to fill two dashed
+      cells in the three-cell block. There is no three-cell block now. "Seeking"
+      is answered by the standfirst directly above, in his own words. The reply
+      time is not gone: it moves to the receipt, where "by when" is what the
+      person who just wrote to him actually needs, and it is still dashed there.
+    */
+  }
+  <section
+    aria-label="Availability"
+    class="bg-muted border-border border-y"
+    data-availability-band
+  >
+    <Container size="lg" class="py-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
+        <p class="text-base font-medium">
+          <span
+            class="bg-state-live mr-2.5 inline-block size-1.5 rounded-full align-middle"
+            aria-hidden="true"></span>{siteConfig.availability}
         </p>
+        <p class="text-muted-foreground text-label font-mono tracking-wide">
+          {siteConfig.visa}
+        </p>
+      </div>
+    </Container>
+  </section>
 
-        {
-          /*
-            THE AVAILABILITY BAND (design spec §04, 7a). A pill said one thing;
-            a band says three, in the readout voice the rest of the site uses
-            for facts.
+  {
+    /*
+      THE SAME GRID AS THE WRITE-UP — 680 + 120 + 352 inside 1152 — and the same
+      reason for the literals: they add up exactly, and a fractional rewrite
+      would look identical in review while moving the primary column off the
+      measure every other one on the site uses.
 
-            TWO CELLS ARE MARKED, NOT FILLED. Open item 06 asks Ross for what he
-            is seeking and his typical reply time, and the spec is explicit
-            about the second: "say it only if it is true". A plausible
-            placeholder on the one page whose whole job is to be contactable is
-            the worst place on the site to invent something, so the slots are
-            dashed and say what is missing — the same treatment the projects log
-            gives a project with no metric.
-          */
-        }
-        <dl
-          class="border-border divide-border mt-8 grid grid-cols-1 divide-y border-y sm:grid-cols-3 sm:divide-x sm:divide-y-0"
-          data-availability-band
-        >
-          <div class="px-4 py-4 first:pl-0">
-            <dt
-              class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase"
-            >
-              Status
-            </dt>
-            {
-              /*
-              The dot is INLINE, not a flex sibling. As a flex item with
-              `items-center` it sat vertically centred against a three-line
-              value in the narrow first column — level with the second line, so
-              it read as a bullet for the wrong row.
-            */
-            }
-            <dd class="mt-1.5 text-sm font-medium">
-              <span
-                class="bg-state-live mr-2 inline-block size-1.5 rounded-full align-middle"
-                aria-hidden="true"></span>{siteConfig.availability}
-            </dd>
-          </div>
-          <div class="px-4 py-4">
-            <dt
-              class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase"
-            >
-              Seeking
-            </dt>
-            <dd
-              class="border-border text-muted-foreground mt-1.5 w-fit border border-dashed px-2 py-0.5 font-mono text-xs"
-              data-open-slot
-            >
-              not stated yet
-            </dd>
-          </div>
-          <div class="px-4 py-4">
-            <dt
-              class="text-muted-foreground font-mono text-[11px] tracking-wider uppercase"
-            >
-              Typical reply
-            </dt>
-            <dd
-              class="border-border text-muted-foreground mt-1.5 w-fit border border-dashed px-2 py-0.5 font-mono text-xs"
-              data-open-slot
-            >
-              not stated yet
-            </dd>
-          </div>
-        </dl>
-
-        <IndexMark mark="01" label="Direct" class="mt-10" />
-
-        <div class="border-border divide-border mt-4 flex flex-col divide-y border-y">
-          {
-            links.map((link) => (
-              <a
-                href={link.href}
-                {...(link.external
-                  ? { target: "_blank", rel: "noopener noreferrer" }
-                  : {})}
-                {...(link.download ? { download: link.download } : {})}
-                class="group hover:text-primary ease-instrument flex items-center gap-3 py-3.5 transition-[color] duration-[var(--motion-state)]"
-              >
-                <span class="border-border text-muted-foreground flex size-9 items-center justify-center rounded border">
-                  {link.brand ? (
-                    <BrandIcon name={link.brand} class="size-4" />
-                  ) : link.label === "Email" ? (
-                    <Mail class="size-4" aria-hidden="true" />
-                  ) : (
-                    <Download class="size-4" aria-hidden="true" />
-                  )}
-                </span>
-                <span class="flex-1">
-                  <span class="block text-sm font-medium">{link.label}</span>
-                  <span class="text-muted-foreground block font-mono text-xs">
-                    {link.value}
-                  </span>
-                </span>
-                <ArrowUpRight class="text-muted-foreground size-4" aria-hidden="true" />
-              </a>
-            ))
-          }
+      THE FORM IS THE PRIMARY COLUMN (16a), which is a swap: it used to sit in
+      the right-hand column behind the intro and the link list, so the page led
+      with three ways not to use the thing it is for. Direct routes move to the
+      rail and take no heading rung at all — the allocation table is explicit
+      that they get none.
+    */
+  }
+  <Container class="pb-16 sm:pb-20" size="lg">
+    <div class="mt-10 xl:grid xl:grid-cols-[680px_352px] xl:gap-x-[120px]">
+      {
+        /*
+          `min-w-0`. Grid items default to `min-width: auto`, so a column cannot
+          shrink below its widest child's min-content — and one child, the
+          Turnstile widget, carries a hard 300px floor. Stacked on a phone that
+          floor used to set the width of the whole page and /contact scrolled
+          sideways. The widget picks its own size now (see ContactForm), but
+          this is the structural half: no single child decides the page's width.
+        */
+      }
+      <div class="max-w-[680px] min-w-0">
+        <SectionHead rung="major" mark="01" label="Send a message" class="mt-0" />
+        <div class="mt-6">
+          <ContactForm client:load />
         </div>
       </div>
 
-      {/* Form */}
-      <div class="min-w-0">
-        <ContactForm client:load />
-      </div>
+      <aside aria-label="Direct routes" class="mt-12 min-w-0 xl:mt-0">
+        <div class="xl:sticky xl:top-24">
+          <p
+            class="text-muted-foreground text-label font-mono tracking-[0.12em] uppercase"
+          >
+            Direct
+          </p>
+          <div class="border-border divide-border mt-3 flex flex-col divide-y border-y">
+            {
+              links.map((link) => (
+                <a
+                  href={link.href}
+                  {...(link.external
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                  {...(link.download ? { download: link.download } : {})}
+                  class="group hover:text-primary ease-instrument flex items-center gap-3 py-3.5 transition-[color] duration-[var(--motion-state)]"
+                >
+                  <span class="border-border text-muted-foreground flex size-9 items-center justify-center rounded border">
+                    {link.brand ? (
+                      <BrandIcon name={link.brand} class="size-4" />
+                    ) : link.label === "Email" ? (
+                      <Mail class="size-4" aria-hidden="true" />
+                    ) : (
+                      <Download class="size-4" aria-hidden="true" />
+                    )}
+                  </span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-medium">{link.label}</span>
+                    <span class="text-muted-foreground block truncate font-mono text-xs">
+                      {link.value}
+                    </span>
+                  </span>
+                  <ArrowUpRight
+                    class="text-muted-foreground size-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                </a>
+              ))
+            }
+          </div>
+        </div>
+      </aside>
     </div>
   </Container>
 </Base>

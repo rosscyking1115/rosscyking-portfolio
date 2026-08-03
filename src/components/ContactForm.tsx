@@ -81,7 +81,17 @@ export function ContactForm() {
    * What is left is true: the time it was received, and Ross's own existing
    * sentence about when he replies — selected from the page above, not written.
    */
-  const [receipt, setReceipt] = useState<{ at: string; reference: string } | null>(null);
+  const [receipt, setReceipt] = useState<{
+    at: string;
+    reference: string;
+    /**
+     * WHAT WAS ACTUALLY SENT (design pass, screen 16b). Captured from the
+     * values the action was given, not re-read from the form — `reset()` runs
+     * immediately after, so reading the inputs would echo an empty form back
+     * at the person who just filled it in.
+     */
+    sent: { name: string; email: string; company?: string; message: string };
+  } | null>(null);
 
   /**
    * Turnstile's widget size, chosen by how much room the form actually has.
@@ -175,6 +185,12 @@ export function ContactForm() {
           reference: `RK-${pad(sentAt.getFullYear() % 100)}${pad(
             sentAt.getMonth() + 1,
           )}${pad(sentAt.getDate())}-${pad(sentAt.getHours())}${pad(sentAt.getMinutes())}`,
+          sent: {
+            name: values.name,
+            email: values.email,
+            company: values.company,
+            message: values.message,
+          },
         });
         reset();
         return;
@@ -194,6 +210,24 @@ export function ContactForm() {
   };
 
   if (receipt) {
+    /**
+     * THE RECEIPT (design pass, screen 16b): "after submit the form is replaced
+     * in place by what was actually sent, what happens next, and by when — no
+     * toast, no redirect, no layout shift."
+     *
+     * All four clauses are load-bearing and the first version had only two of
+     * them. It said WHEN it arrived and gave a reference; it did not say what
+     * had been sent, which is the one thing a person cannot check for
+     * themselves after a form clears itself. A confirmation that confirms the
+     * transaction and not the content is a receipt for an unknown amount.
+     *
+     * BY WHEN IS A MARKED SLOT, not a guess. Open item 06 asks Ross for his
+     * typical reply time and the spec is explicit — "state it only if true". It
+     * used to be one of three cells on an availability block that screen 16a
+     * deletes; this is where it belongs instead, because "by when" is what the
+     * person who has just written to him is actually asking. Dashed, and saying
+     * what is missing, exactly as /privacy marks its four retention periods.
+     */
     return (
       <section
         aria-live="polite"
@@ -204,7 +238,8 @@ export function ContactForm() {
           <span className="bg-state-live mr-2 inline-block size-1.5 rounded-full" />
           Received
         </p>
-        <dl className="mt-3 flex flex-col gap-1.5">
+
+        <dl className="mt-4 flex flex-col gap-1.5">
           <div className="flex gap-3">
             <dt className="text-muted-foreground text-label w-24 shrink-0 font-mono tracking-wider uppercase">
               Reference
@@ -221,11 +256,56 @@ export function ContactForm() {
               {receipt.at}
             </dd>
           </div>
+          <div className="flex gap-3">
+            <dt className="text-muted-foreground text-label w-24 shrink-0 font-mono tracking-wider uppercase">
+              Reply by
+            </dt>
+            <dd
+              className="border-border text-muted-foreground w-fit border border-dashed px-2 py-0.5 font-mono text-xs"
+              data-open-slot
+            >
+              not stated yet
+            </dd>
+          </div>
         </dl>
-        <p className="text-body mt-4 text-sm leading-relaxed">
-          Your message is with me. I reply within a day or two — if it is urgent, email is
-          still the fastest route. The reference is the time you sent it; quote it back if
-          you need to.
+
+        <div className="border-border mt-5 border-t pt-5" data-receipt-sent>
+          <p className="text-muted-foreground text-label font-mono tracking-[0.12em] uppercase">
+            What you sent
+          </p>
+          <dl className="mt-3 flex flex-col gap-2.5">
+            <div className="flex gap-3">
+              <dt className="text-muted-foreground text-label w-24 shrink-0 font-mono tracking-wider uppercase">
+                From
+              </dt>
+              <dd className="min-w-0 text-sm">
+                {receipt.sent.name}
+                {receipt.sent.company ? ` · ${receipt.sent.company}` : ""}
+                <span className="text-muted-foreground block font-mono text-xs break-all">
+                  {receipt.sent.email}
+                </span>
+              </dd>
+            </div>
+            <div className="flex gap-3">
+              <dt className="text-muted-foreground text-label w-24 shrink-0 font-mono tracking-wider uppercase">
+                Message
+              </dt>
+              {/*
+                `whitespace-pre-line`, so the paragraph breaks the sender typed
+                are the paragraph breaks they are shown. Not truncated: the
+                point of echoing it is that they can check it, and a receipt
+                that elides the middle of what you wrote is not a check.
+              */}
+              <dd className="text-body min-w-0 text-sm leading-relaxed whitespace-pre-line">
+                {receipt.sent.message}
+              </dd>
+            </div>
+          </dl>
+        </div>
+
+        <p className="text-body mt-5 text-sm leading-relaxed">
+          Your message is with me, and it goes to one inbox — nothing is copied to a list.
+          The reference is the time you sent it; quote it back if you need to.
         </p>
         <button
           type="button"
@@ -237,7 +317,6 @@ export function ContactForm() {
       </section>
     );
   }
-
   return (
     <form
       noValidate
@@ -255,12 +334,19 @@ export function ContactForm() {
         https://docs.astro.build/en/recipes/sharing-state-islands/
       */}
       <Toaster richColors closeButton />
-      <h2 className="font-display text-xl font-semibold tracking-tight">
-        Send a message
-      </h2>
-      <p className="text-muted-foreground mt-1 text-sm">
-        Or just email me directly — whatever&rsquo;s easier.
-      </p>
+      {/*
+        NO HEADING HERE. The form used to carry its own <h2>Send a message</h2>
+        at 20px; R9 makes the form this route's MAJOR, so the heading is now the
+        section head above the island — and leaving both put two headings with
+        identical text on the page, one of them off the ladder. Found by the R9
+        gate rather than by looking, because two identical headings 60px apart
+        read as one heading and a subtitle.
+
+        The subtitle went with it. "Or just email me directly" pointed at the
+        link list that used to sit beside the form and is now in the rail with
+        its own label; the standfirst above already says email is the fastest
+        route, in Ross's words.
+      */}
 
       {/* Honeypot — invisible to humans, irresistible to dumb bots */}
       <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
