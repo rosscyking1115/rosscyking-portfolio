@@ -24,15 +24,31 @@ import { cn } from "../../lib/utils";
  */
 interface Props {
   headline: Headline | null;
-  /** Larger treatment for a reading instrument or a detail page. */
-  size?: "row" | "lead";
+  /**
+   * `row` in a list, `lead` on a reading instrument, `band` in a full-bleed
+   * BAND.
+   *
+   * BAND IS 68px, NOT R9's 92px, and the spec contradicts itself: the rung
+   * table gives BAND figures at 92px, and screen 15a gives this one at 68px.
+   * The specific screen wins over the generic rung — 92px is drawn for the
+   * home page's three short counts (9, 1,372, 6), and a corrected pair reads
+   * "99.31% 79.92%" at eleven characters, which is 500px of type at 92 and
+   * wraps inside a 680 measure.
+   */
+  size?: "row" | "lead" | "band";
   class?: string;
 }
 
 const { headline, size = "row", class: className } = Astro.props;
 
-const VALUE_SIZE = size === "lead" ? "text-3xl sm:text-4xl" : "text-lg";
-const WITHDRAWN_SIZE = size === "lead" ? "text-lg" : "text-sm";
+const VALUE_SIZE =
+  size === "band"
+    ? "text-4xl sm:text-[68px] sm:leading-none"
+    : size === "lead"
+      ? "text-3xl sm:text-4xl"
+      : "text-lg";
+const WITHDRAWN_SIZE =
+  size === "band" ? "text-xl sm:text-3xl" : size === "lead" ? "text-lg" : "text-sm";
 ---
 
 {
