@@ -12,6 +12,15 @@ package-lock.json
 # Google Search Console verification file — must remain byte-identical.
 public/google*.html
 
-# The mock runtime. Vendored so the .dc.html files render; not part of the design,
-# not linted, not formatted, and explicitly not to be ported.
-docs/design-bundle/support.js
+# THE WHOLE VENDORED DESIGN BUNDLE, not just its runtime.
+#
+# The first version of this ignored `support.js` alone, on the reasoning that
+# the runtime is third-party and the mocks are "just HTML". CI disagreed:
+# `prettier --check .` flagged all three .dc.html files, and it is the only
+# thing that would — locally I had only ever run `prettier --write` against
+# specific globs, so `npm run format:check` never ran until GitHub ran it.
+#
+# Reformatting a 400KB design artefact to satisfy a style rule would also make
+# the next bundle a diff instead of a replacement. None of it is ours, none of
+# it is ported, and all of it is read rather than edited.
+docs/design-bundle/
