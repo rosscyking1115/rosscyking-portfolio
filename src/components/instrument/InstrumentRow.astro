@@ -66,10 +66,21 @@ interface Props {
    * out moves into the panel.
    */
   mode?: "link" | "disclosure";
+  /**
+   * `narrow` drops the meta line and the trailing glyph. See the note on the
+   * prop in InstrumentRowBody.astro — it exists because of a shipped defect.
+   */
+  density?: "full" | "narrow";
   class?: string;
 }
 
-const { project, reading = false, mode = "link", class: className } = Astro.props;
+const {
+  project,
+  reading = false,
+  mode = "link",
+  density = "full",
+  class: className,
+} = Astro.props;
 const state = projectState(project.id);
 ---
 
@@ -83,7 +94,19 @@ const state = projectState(project.id);
     // there. Repeating it as Tailwind variants here would put three copies of
     // the same intent on every consumer, which is how the four entrance
     // animations this codebase used to carry came about.
-    "instrument group relative rounded-lg",
+    // `@container`, AND THIS IS THE FIX FOR A SHIPPED DEFECT rather than a
+    // refactor. The row's ruled columns are 224px and 208px, and they used to
+    // be switched on by a VIEWPORT media query — so at the foot of a write-up,
+    // where the row sits in a 608px reading measure on a 1440px screen, `lg`
+    // was true, the two columns took 432px, and the title was left with
+    // THIRTY-SIX PIXELS. "redteam-foundry" broke to one character per line and
+    // "0–4% vs 80%" printed straight through it.
+    //
+    // A media query cannot see its container, so no breakpoint could have
+    // fixed this: the same row is correct at 1088px and broken at 608px on the
+    // same screen. Moving the switch to `@4xl` (56rem) makes it a property of
+    // the space the row is given, which is what it was always describing.
+    "instrument group relative rounded-lg @container",
     mode === "link" && "linked-card",
     className,
   )}
@@ -103,12 +126,12 @@ const state = projectState(project.id);
           the second time you use it.
         */}
         <summary class="reticle-cursor block rounded-lg">
-          <InstrumentRowBody project={project} mode="disclosure" />
+          <InstrumentRowBody project={project} mode="disclosure" density={density} />
         </summary>
         <InstrumentPreview project={project} />
       </details>
     ) : (
-      <InstrumentRowBody project={project} mode="link" />
+      <InstrumentRowBody project={project} mode="link" density={density} />
     )
   }
 </article>
