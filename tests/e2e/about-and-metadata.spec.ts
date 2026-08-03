@@ -23,23 +23,47 @@ test.describe("about page", () => {
       "I build software for evaluating AI honestly.",
     );
 
-    // The registration marks are the page's structure. Losing one means a
-    // section silently vanished.
+    // The page's structure, section by section, in order. What that structure
+    // IS has now changed twice, and both changes are recorded because the
+    // finding underneath has survived both: "losing one means a section
+    // silently vanished."
+    //
+    //   v1  six marks — education, certifications and virtual training were
+    //       three sections separated by ruler dividers
+    //   v2  four marks — those three became one Record rack
+    //   v3  the marks stop being the structure at all
+    //
+    // R9 reserves the bracketed mark for a route's ONE major section, because
+    // opening every section with `[ 01 ] —— Label` is what made the site's one
+    // signature into wallpaper. So the structure is now read off the heading
+    // ladder, which is what a reader and a screen reader both navigate by.
+    const heads = await page
+      .locator("main h2, main h3")
+      .filter({ hasNot: page.locator("article") })
+      .evaluateAll((els) =>
+        els
+          .filter((el) => !el.closest("li, article"))
+          .map((el) => ({
+            text: (el.textContent ?? "").trim(),
+            rung: Math.round(Number.parseFloat(getComputedStyle(el).fontSize)),
+          })),
+      );
+
+    expect(heads).toEqual([
+      { text: "Record", rung: 22 },
+      { text: "Every tool is counted, and every count is a link", rung: 32 },
+    ]);
+
+    // Languages is QUIET — no heading at all, by design — so it is asserted as
+    // present rather than as a rung. A section that vanishes still fails.
+    await expect(page.locator("[data-languages]")).toBeVisible();
+
+    // And exactly one bracketed mark survives: the MAJOR's.
     const marks = await page
       .locator("main .text-primary")
       .filter({ hasText: /^\[/ })
       .allTextContents();
-    // SIX MARKS BECAME FOUR, and the reduction is the change rather than a
-    // loss: education, certifications and virtual training were three sections
-    // separated by ruler dividers and are now one Record rack, so [ 01 ] to
-    // [ 03 ] collapsed into one. The finding this test was written for — "losing
-    // one means a section silently vanished" — is unchanged.
-    expect(marks.map((m) => m.trim())).toEqual([
-      "[ Ross King ]",
-      "[ 01 ]",
-      "[ 02 ]",
-      "[ 03 ]",
-    ]);
+    expect(marks.map((m) => m.trim())).toEqual(["[ Ross King ]", "[ 02 ]"]);
   });
 
   test("the bio renders from content/about.mdx", async ({ page }) => {
