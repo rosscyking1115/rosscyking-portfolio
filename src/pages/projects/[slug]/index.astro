@@ -5,7 +5,7 @@ import { render } from "astro:content";
 import EvidenceFrame from "../../../components/home/EvidenceFrame.astro";
 import BrandIcon from "../../../components/icons/BrandIcon.astro";
 import FindingBand from "../../../components/instrument/FindingBand.astro";
-import InstrumentRow from "../../../components/instrument/InstrumentRow.astro";
+import ReadingRail from "../../../components/instrument/ReadingRail.astro";
 import Container from "../../../components/layout/Container.astro";
 import Button from "../../../components/ui/Button.astro";
 import Base from "../../../layouts/Base.astro";
@@ -147,147 +147,153 @@ const stackLine =
   ogImageAlt={PROJECT_OG_ALT}
 >
   <article>
-    <Container class="py-12 sm:py-16" size="sm">
-      <a
-        href="/projects"
-        class="text-muted-foreground hover:text-foreground ease-instrument inline-flex items-center gap-1.5 text-sm transition-colors duration-[var(--motion-state)]"
-      >
-        <ArrowLeft class="size-4" aria-hidden="true" />
-        All projects
-      </a>
-
-      <header class="mt-6">
-        <div
-          class="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs"
+    {
+      /*
+        THREE WIDTHS, NO OTHERS (execution audit, finding 04): 680 for prose,
+        900 for tables, 1152 for full-bleed bands. The container is the 1152
+        measure and the header is capped at the reading width inside it, so the
+        page's rules align to the content they separate rather than to the frame
+        around it.
+      */
+    }
+    <Container class="pt-12 sm:pt-16" size="lg">
+      <div class="max-w-[680px]">
+        <a
+          href="/projects"
+          class="text-muted-foreground hover:text-foreground ease-instrument inline-flex items-center gap-1.5 text-sm transition-colors duration-[var(--motion-state)]"
         >
-          <span class="text-primary">[ {number} ]</span>
-          <span>{period}</span>
+          <ArrowLeft class="size-4" aria-hidden="true" />
+          All projects
+        </a>
+
+        <header class="mt-6">
+          <div
+            class="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs"
+          >
+            <span class="text-primary">[ {number} ]</span>
+            <span>{period}</span>
+            {
+              role && (
+                <>
+                  <span class="bg-border h-3 w-px" aria-hidden="true" />
+                  <span>{role}</span>
+                </>
+              )
+            }
+            <span class="bg-border h-3 w-px" aria-hidden="true"></span>
+            <span>{projectReadingTime(project)}</span>
+          </div>
+
+          <h1
+            class="font-display mt-4 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl"
+          >
+            {title}
+          </h1>
+          <p class="text-body mt-4 text-lg leading-relaxed text-pretty">
+            {summary}
+          </p>
+
           {
-            role && (
-              <>
-                <span class="bg-border h-3 w-px" aria-hidden="true" />
-                <span>{role}</span>
-              </>
-            )
-          }
-          <span class="bg-border h-3 w-px" aria-hidden="true"></span>
-          <span>{projectReadingTime(project)}</span>
-        </div>
-
-        <h1
-          class="font-display mt-4 text-3xl leading-tight font-bold tracking-tight text-balance sm:text-4xl"
-        >
-          {title}
-        </h1>
-        <p class="text-body mt-4 text-lg leading-relaxed text-pretty">
-          {summary}
-        </p>
-
-        {
-          /*
+            /*
             One row, not two blocks. The stack line sits with the actions
             because it is the same kind of thing — metadata about the artefact,
             not a claim about it — and because every block between the title and
             the evidence is a block the reader crosses before seeing the number.
           */
-        }
-        <div class="mt-6 flex flex-col gap-4">
-          {
-            externalLinks.length > 0 && (
-              <div class="flex flex-wrap gap-2.5">
-                {externalLinks.map((link) => (
-                  <Button
-                    href={link.href}
-                    variant={link.variant}
-                    size="sm"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {link.icon ? (
-                      <BrandIcon name={link.icon} class="size-4" />
-                    ) : (
-                      link.Icon && <link.Icon aria-hidden="true" />
-                    )}
-                    {link.label}
-                  </Button>
-                ))}
-              </div>
-            )
           }
-          <p class="text-muted-foreground font-mono text-xs" data-stack-line>
-            {stackLine}
-          </p>
-        </div>
-      </header>
+          <div class="mt-6 flex flex-col gap-4">
+            {
+              externalLinks.length > 0 && (
+                <div class="flex flex-wrap gap-2.5">
+                  {externalLinks.map((link) => (
+                    <Button
+                      href={link.href}
+                      variant={link.variant}
+                      size="sm"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {link.icon ? (
+                        <BrandIcon name={link.icon} class="size-4" />
+                      ) : (
+                        link.Icon && <link.Icon aria-hidden="true" />
+                      )}
+                      {link.label}
+                    </Button>
+                  ))}
+                </div>
+              )
+            }
+            <p class="text-muted-foreground font-mono text-xs" data-stack-line>
+              {stackLine}
+            </p>
+          </div>
+        </header>
+      </div>
+    </Container>
 
-      <FindingBand
-        headline={headline}
-        limitsHref={limits ? `#${limits.slug}` : undefined}
-        limitsLabel={limits?.text}
-        class="mt-10"
-      />
+    {/* Full-bleed, so it sits outside the container entirely. */}
+    <FindingBand
+      headline={headline}
+      limitsHref={limits ? `#${limits.slug}` : undefined}
+      limitsLabel={limits?.text}
+      class="mt-10"
+    />
 
-      {
-        /*
+    {
+      /*
+        680 + 352 WITH A 120px GUTTER, INSIDE 1152 — the numbers add up exactly,
+        which is why they are literals rather than fractions. `xl` (1280) is the
+        first breakpoint where 1152 plus the container's own 64px of padding
+        fits, and the audit asks for the rail "from 1200 up".
+
+        Below xl the grid collapses and the rail's contents fall to the foot in
+        source order, which is where the cross-references already were. The
+        track hides itself there — a contents list at the END of an article is a
+        list of places the reader has been.
+      */
+    }
+    <Container class="pb-16 sm:pb-20" size="lg">
+      <div class="mt-10 xl:grid xl:grid-cols-[680px_352px] xl:gap-x-[120px]">
+        <div class="max-w-[680px] min-w-0">
+          {
+            /*
           EVIDENCE BEFORE PROSE. Lazy, unlike the home page's flagship: on this
           route the largest-contentful element is the h1, and the frame is a
           screen and a half down.
         */
-        (screenshot || (terminal && terminal.length > 0)) && (
-          <EvidenceFrame
-            caption={frameCaption}
-            live={Boolean(links?.demo)}
-            screenshot={screenshot}
-            alt={`Screenshot of the ${title} live demo`}
-            lines={terminal}
-            sizes="(min-width: 768px) 42rem, 100vw"
-            class="mt-4"
-          />
-        )
-      }
-
-      <div class="doc mt-10">
-        <Content />
-      </div>
-
-      {
-        /*
-          "Prev / next are instruments too — receded rows carrying their
-          headline number, identical to the rack. You always leave a write-up
-          knowing the next one's result."
-
-          They were two bordered boxes carrying a title and a direction, which
-          told the reader nothing about whether the next thing was worth
-          opening. Full width and stacked rather than side by side: an
-          InstrumentRow is a row, and squeezing two into a half-width column
-          reflows the metric under the title and breaks the one row anatomy the
-          rest of the site keeps.
-        */
-      }
-      <nav aria-label="Project navigation" class="border-border mt-14 border-t pt-8">
-        <div class="flex flex-col gap-2">
-          {
-            prev && (
-              <div>
-                <span class="text-muted-foreground mb-1.5 block font-mono text-[11px] tracking-wider uppercase">
-                  &larr; Previous
-                </span>
-                <InstrumentRow project={prev} density="narrow" />
-              </div>
+            (screenshot || (terminal && terminal.length > 0)) && (
+              <EvidenceFrame
+                caption={frameCaption}
+                live={Boolean(links?.demo)}
+                screenshot={screenshot}
+                alt={`Screenshot of the ${title} live demo`}
+                lines={terminal}
+                sizes="(min-width: 768px) 42rem, 100vw"
+                class="mt-4"
+              />
             )
           }
-          {
-            next && (
-              <div>
-                <span class="text-muted-foreground mt-3 mb-1.5 block font-mono text-[11px] tracking-wider uppercase">
-                  Next &rarr;
-                </span>
-                <InstrumentRow project={next} density="narrow" />
-              </div>
-            )
-          }
+
+          <div class="doc mt-10">
+            <Content />
+          </div>
         </div>
-      </nav>
+
+        {
+          /*
+            "Prev / next are instruments too — receded rows carrying their
+            headline number, identical to the rack. You always leave a write-up
+            knowing the next one's result."
+
+            They MOVED into the rail rather than being copied there: one set of
+            links in the document, wherever it renders. At the foot they were
+            the last thing on the site's most important page and, until today,
+            the most broken — see the container-query note in InstrumentRow.
+          */
+        }
+        <ReadingRail headings={headings} project={project} prev={prev} next={next} />
+      </div>
     </Container>
   </article>
 </Base>

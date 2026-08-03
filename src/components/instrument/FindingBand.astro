@@ -3,6 +3,7 @@ import { ArrowDown } from "@lucide/astro";
 
 import type { Headline } from "../../lib/projects";
 import { cn } from "../../lib/utils";
+import Container from "../layout/Container.astro";
 import MetricMode from "./MetricMode.astro";
 import MetricReadout from "./MetricReadout.astro";
 
@@ -52,34 +53,52 @@ const { headline, limitsHref, limitsLabel, class: className } = Astro.props;
 <section
   aria-label="Headline finding"
   data-finding-band
-  class={cn(
-    "border-border bg-muted/40 flex flex-col gap-6 rounded-lg border p-6 sm:flex-row sm:items-start sm:justify-between sm:gap-10 sm:p-8",
-    className,
-  )}
+  class={cn("bg-muted border-border border-y", className)}
 >
-  <div class="min-w-0">
-    <MetricReadout headline={headline} size="lead" />
-  </div>
+  {
+    /*
+      THE ROUTE'S ONE BAND (R9), and it is full-bleed, so it sits OUTSIDE the
+      page's container and brings its own. It was a rounded, bordered card at
+      40% muted inside the reading column — which is a callout, and a callout is
+      a rung the ladder does not have. The band is the only place on this page
+      where the measure changes, and that change is what stops the write-up
+      being one column from top to bottom.
 
-  <div class="flex shrink-0 flex-col items-start gap-3 sm:items-end">
-    {headline && <MetricMode mode={headline.mode} />}
-    {
-      limitsHref && (
-        /*
+      `py-10` is R9's 40px of vertical padding.
+    */
+  }
+  <Container size="lg" class="py-10">
+    <p class="text-muted-foreground text-label font-mono tracking-[0.12em] uppercase">
+      Key finding
+    </p>
+    <div
+      class="mt-4 flex max-w-[680px] flex-col gap-6 sm:flex-row sm:items-end sm:justify-between sm:gap-10"
+    >
+      <div class="min-w-0">
+        <MetricReadout headline={headline} size="band" />
+      </div>
+
+      <div class="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+        {headline && <MetricMode mode={headline.mode} />}
+        {
+          limitsHref && (
+            /*
           "The limits sit next to it, not 2,000 words below." A jump link rather
           than the limits themselves: the section is prose of a different length
           in every write-up, and lifting a summary of it here would be writing
           new copy about published work — which is the one thing this page is
           not allowed to do.
         */
-        <a
-          href={limitsHref}
-          class="text-muted-foreground hover:text-foreground ease-instrument inline-flex items-center gap-1.5 font-mono text-xs whitespace-nowrap transition-colors duration-[var(--motion-state)]"
-        >
-          {limitsLabel ?? "Honest limits"}
-          <ArrowDown class="size-3.5" aria-hidden="true" />
-        </a>
-      )
-    }
-  </div>
+            <a
+              href={limitsHref}
+              class="text-muted-foreground hover:text-foreground ease-instrument inline-flex items-center gap-1.5 font-mono text-xs whitespace-nowrap transition-colors duration-[var(--motion-state)]"
+            >
+              {limitsLabel ?? "Honest limits"}
+              <ArrowDown class="size-3.5" aria-hidden="true" />
+            </a>
+          )
+        }
+      </div>
+    </div>
+  </Container>
 </section>

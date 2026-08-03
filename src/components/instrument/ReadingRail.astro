@@ -1,0 +1,227 @@
+---
+import type { MarkdownHeading } from "astro";
+
+import { projectMarkLabel, type Project } from "../../lib/projects";
+import InstrumentRow from "./InstrumentRow.astro";
+
+/**
+ * The write-up's right rail (execution audit, finding 03).
+ *
+ * ── THE FINDING ──────────────────────────────────────────────────────────────
+ *   "The write-up is 5,852px at 1440 and 7,643px at 390. The viewport narrows
+ *    by 73% and the page grows 31%. Every other route pays between 45% and 87%
+ *    for the same narrowing. The write-up pays almost nothing because at 1440
+ *    it uses none of the width it has — one column of about 680px, and
+ *    everything that could have lived beside it stacked into it instead."
+ *
+ * So the desktop layout was the mobile layout with margins, on the one route
+ * that earns a margin apparatus. The rail is 352px of the 1152 measure, with
+ * 120px of gutter, and it holds four things in the order the spec gives them:
+ * the track, the metrics, the limits, and the cross-references.
+ *
+ * ── IT DUPLICATES NOTHING, AND THAT IS A CONSTRAINT NOT A BOAST ──────────────
+ * Everything here either MOVES from the body or is derived from it:
+ *
+ *   the track    the rendered <h2> list, from `render(project)`. Not authored,
+ *                not guessed — if a write-up renames a section the track
+ *                renames with it, because it is the same data the heading is.
+ *   the metrics  the project's own pinned figures, which validate-projects.mjs
+ *                already gates against the registry.
+ *   the limits   a JUMP LINK, never the prose. The limits section is a
+ *                different length in every write-up and summarising it here
+ *                would be writing new copy about published work.
+ *   prev / next  moved out of the foot entirely at xl, not copied. One set of
+ *                links in the document, wherever it renders.
+ *
+ * ── WHY THE TRACK IS ONLY A TRACK ────────────────────────────────────────────
+ * This file's page used to carry a note saying the reading track was blocked on
+ * authored data — "a per-project list of which sections belong to the summary".
+ * That was true of the SUMMARY / FULL toggle and was never true of the track:
+ * the toggle needs an editorial selection over the headings, and the track needs
+ * the headings. `render()` has always returned them. The blocker was recorded
+ * against the wrong feature, and the toggle is still blocked.
+ *
+ * ── THE CURRENT SECTION IS MARKED BY SCRIPT, AND FAILS OPEN ──────────────────
+ * There is no CSS way to say "the heading you have most recently passed".
+ * `:target` only fires on a click, and a scroll-driven animation cannot set an
+ * attribute. So it is an inline IntersectionObserver — the same shape as the
+ * arrival script, and the same failure rule: without it, every link still
+ * works and the track is an ordinary contents list. Nothing is hidden and
+ * nothing is waiting to be revealed.
+ */
+interface Props {
+  headings: MarkdownHeading[];
+  project: Project;
+  /** `null` at the ends of the log — getAdjacentProjects does not wrap. */
+  prev?: Project | null;
+  next?: Project | null;
+}
+
+const { headings, project, prev, next } = Astro.props;
+
+/** Depth 2 only — the track is the section list, not the whole outline. */
+const track = headings.filter((heading) => heading.depth === 2);
+
+/** The project's pinned figures, gated against the registry by the validator. */
+const metrics = project.data.metrics ?? [];
+---
+
+<aside aria-label="Write-up navigation" class="min-w-0">
+  {
+    /*
+      `top-24` is 96px, which is the spec's number and is also the header's
+      height plus its air — the rail stops exactly where the sticky header
+      stops. `max-h` plus `overflow-y-auto` so a write-up with fifteen sections
+      cannot push the cross-references off the bottom of a short screen; the
+      spec's "never scrolls independently" is about the rail not being its own
+      scroll region ALONGSIDE a scrolling page, which it is not — this only
+      engages when the rail is taller than the viewport.
+    */
+  }
+  <div class="xl:sticky xl:top-24 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto">
+    {
+      track.length > 1 && (
+        /*
+          Hidden below xl. A contents list at the FOOT of an article, which is
+          where this would land in the single-column stack, is a list of places
+          the reader has already been.
+        */
+        <nav aria-label="Sections" class="hidden xl:block" data-reading-track>
+          <p class="text-muted-foreground text-label font-mono tracking-[0.12em] uppercase">
+            Track
+          </p>
+          <ol class="border-border mt-3 flex flex-col border-l">
+            {track.map((heading, index) => (
+              <li>
+                <a
+                  href={`#${heading.slug}`}
+                  data-track-link={heading.slug}
+                  class="text-muted-foreground hover:text-foreground ease-instrument text-secondary-sm aria-[current=true]:border-primary aria-[current=true]:text-foreground -ml-px flex gap-2.5 border-l border-transparent py-1.5 pl-3 leading-snug transition-colors duration-[var(--motion-state)]"
+                >
+                  <span class="text-primary text-label shrink-0 font-mono tabular-nums">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span class="min-w-0">{heading.text}</span>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
+    {
+      metrics.length > 0 && (
+        /*
+          xl ONLY, like the track. These figures are not new information — they
+          are the project's frontmatter, which below xl is represented by the
+          headline in the band, exactly as it was before the rail existed.
+          Rendering the full list at the foot on a phone is 200px of additive
+          content on the route the audit already measured at 7,643px, which
+          would be answering "the desktop layout is the mobile layout with
+          margins" by making the mobile layout longer.
+        */
+        <div class="mt-10 hidden xl:block" data-rail-metrics>
+          <p class="text-muted-foreground text-label font-mono tracking-[0.12em] uppercase">
+            Measured
+          </p>
+          <dl class="border-border divide-border mt-3 flex flex-col divide-y border-y">
+            {metrics.map((metric) => (
+              <div class="flex flex-col gap-0.5 py-2.5">
+                <dt class="text-muted-foreground text-label font-mono">{metric.label}</dt>
+                <dd class="font-mono text-base font-semibold tabular-nums">
+                  {metric.value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )
+    }
+
+    {
+      /*
+        NO LIMITS LINK HERE, though the spec's rail list names one. §04 is
+        explicit that "the limits sit next to it, not 2,000 words below" — next
+        to the NUMBER — and the finding band already carries that link, at every
+        width. A second one in the rail is the same jump twice on the same
+        screen.
+      */
+    }
+
+    {
+      (prev || next) && (
+        <nav aria-label="Project navigation" class="mt-10" data-cross-references>
+          <p class="text-muted-foreground text-label font-mono tracking-[0.12em] uppercase">
+            {projectMarkLabel(project.id)} of the log
+          </p>
+          <div class="mt-3 flex flex-col gap-2">
+            {prev && (
+              <div>
+                <span class="text-muted-foreground text-mono-min mb-1.5 block font-mono tracking-wider uppercase">
+                  &larr; Previous
+                </span>
+                <InstrumentRow project={prev} density="narrow" />
+              </div>
+            )}
+            {next && (
+              <div>
+                <span class="text-muted-foreground text-mono-min mb-1.5 block font-mono tracking-wider uppercase">
+                  Next &rarr;
+                </span>
+                <InstrumentRow project={next} density="narrow" />
+              </div>
+            )}
+          </div>
+        </nav>
+      )
+    }
+  </div>
+</aside>
+
+<script is:inline>
+  (() => {
+    try {
+      const links = document.querySelectorAll("[data-track-link]");
+      if (!links.length || !("IntersectionObserver" in window)) return;
+
+      /**
+       * The section whose heading is highest above the reading line wins.
+       *
+       * `rootMargin` puts the observation band in the TOP THIRD of the
+       * viewport: a heading is "current" from the moment it reaches that band
+       * until the next one does. Observing the whole viewport instead marks
+       * two or three sections at once on a tall screen, which is worse than
+       * marking none — the track stops answering "where am I" and starts
+       * answering "what can I see".
+       */
+      const seen = new Map();
+      const mark = () => {
+        let current = null;
+        for (const [slug, visible] of seen) if (visible) current = current ?? slug;
+        for (const link of links) {
+          if (current && link.getAttribute("data-track-link") === current) {
+            link.setAttribute("aria-current", "true");
+          } else {
+            link.removeAttribute("aria-current");
+          }
+        }
+      };
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) seen.set(entry.target.id, entry.isIntersecting);
+          mark();
+        },
+        { rootMargin: "0px 0px -66% 0px" },
+      );
+
+      for (const link of links) {
+        const heading = document.getElementById(link.getAttribute("data-track-link"));
+        if (heading) observer.observe(heading);
+      }
+    } catch {
+      // The track is a contents list either way. Nothing to undo.
+    }
+  })();
+</script>

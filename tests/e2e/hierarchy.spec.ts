@@ -32,8 +32,13 @@ import { ROUTES } from "./routes";
  */
 const PENDING: Record<string, string> = {
   "/": "blocked on open item 10 — Ross has not chosen 18a, 18b or 18c",
+  // The rail and the BAND landed with build-order step 4; what is left is the
+  // .doc heading scale. R9 gives this route MAJOR = "Method", and marking ONE
+  // authored <h2> as the major rung needs authored data — the same argument
+  // recorded for the summary/full toggle. `.doc h2` is 25.6px on every write-up
+  // until then, which is off the ladder, which is why this stays here.
   "/projects/agent-release-gates":
-    "build-order step 4 — needs the 680 + 352 sticky rail first",
+    "the .doc heading scale — MAJOR is an authored h2 and needs registry data to name it",
   "/contact": "build-order step 5 — needs the same grid and the receipt state",
 };
 
