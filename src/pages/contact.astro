@@ -81,9 +81,15 @@ const links = [
   {
     /*
       THE ROUTE'S ONE BAND (R9, screen 16a): "one ruled line, a 6px #3f9a5f dot,
-      'Available for full-time roles from October 2026', and the visa fact
-      right-aligned as a 12px mono label. The three-cell availability block is
-      gone."
+      'Available for full-time roles from October 2026'. The three-cell
+      availability block is gone."
+
+      THE VISA FACT IS NOT HERE, AND THAT OVERRULES THE SPEC. 16a asks for it
+      right-aligned as a 12px mono label; Ross's call on 3 Aug 2026 is to remove
+      every mention of visas and sponsorship from the site, and that the
+      availability line alone is enough. It is his fact about his own right to
+      work, so it is his to publish or not — the spec cannot want it more than
+      he does. The line is the whole band now.
 
       AND ITS GOING CLOSES OPEN ITEM 06 BY DELETION, which is worth saying out
       loud rather than letting it disappear. That item asked Ross for two facts
@@ -100,16 +106,11 @@ const links = [
     data-availability-band
   >
     <Container size="lg" class="py-6">
-      <div class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
-        <p class="text-base font-medium">
-          <span
-            class="bg-state-live mr-2.5 inline-block size-1.5 rounded-full align-middle"
-            aria-hidden="true"></span>{siteConfig.availability}
-        </p>
-        <p class="text-muted-foreground text-label font-mono tracking-wide">
-          {siteConfig.visa}
-        </p>
-      </div>
+      <p class="text-base font-medium">
+        <span
+          class="bg-state-live mr-2.5 inline-block size-1.5 rounded-full align-middle"
+          aria-hidden="true"></span>{siteConfig.availability}
+      </p>
     </Container>
   </section>
 

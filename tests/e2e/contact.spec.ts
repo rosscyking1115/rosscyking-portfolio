@@ -244,15 +244,21 @@ test.describe("contact page — chrome and styling", () => {
     await expect(main.getByText(/Available for full-time roles/)).toBeVisible();
 
     // IT IS THE ROUTE'S BAND NOW (R9, screen 16a): "one ruled line, a 6px
-    // #3f9a5f dot, the availability sentence, and the visa fact right-aligned
-    // as a 12px mono label. The three-cell availability block is gone."
+    // #3f9a5f dot, the availability sentence. The three-cell availability block
+    // is gone."
+    //
+    // WITHOUT THE VISA FACT the spec asks for, which is Ross's call on
+    // 3 Aug 2026 and is asserted rather than merely done: the site no longer
+    // mentions visas or sponsorship anywhere, so a label creeping back into the
+    // band — from the spec, from a future design pass, or from someone reading
+    // 16a literally — fails here.
     const band = main.locator("[data-availability-band]");
     await expect(band).toHaveCount(1);
     const fullBleed = await band.evaluate(
       (el) => Math.round(el.getBoundingClientRect().width) >= window.innerWidth - 1,
     );
     expect(fullBleed, "the availability band is not full-bleed").toBe(true);
-    await expect(band).toContainText("UK Graduate Visa");
+    await expect(band).not.toContainText(/visa|sponsor/i);
 
     // The two dashed cells went WITH the block. Open item 06 is closed by
     // deletion on this surface — "seeking" is the standfirst's job and the
