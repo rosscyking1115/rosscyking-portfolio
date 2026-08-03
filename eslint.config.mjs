@@ -28,6 +28,11 @@ export default defineConfig([
     "test-results/**",
     // Dev tooling (Node scripts), not application code.
     "scripts/**",
+    // The vendored design mocks and their runtime. Third-party, bundled, and
+    // explicitly not to be ported — the spec says so and docs/design-bundle's
+    // own README repeats it. Linting someone else's minified runtime reports
+    // seven findings about code nobody may change.
+    "docs/design-bundle/**",
   ]),
   tseslint.configs.recommended,
   astro.configs.recommended,

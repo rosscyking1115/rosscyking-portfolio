@@ -11,3 +11,7 @@ package-lock.json
 
 # Google Search Console verification file — must remain byte-identical.
 public/google*.html
+
+# The mock runtime. Vendored so the .dc.html files render; not part of the design,
+# not linted, not formatted, and explicitly not to be ported.
+docs/design-bundle/support.js

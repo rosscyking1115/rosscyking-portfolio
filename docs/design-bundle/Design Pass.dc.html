@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#e8eaee; -webkit-font-smoothing:antialiased; }
+  a { color:#3d5a73; }
+  a:hover { color:#324b60; }
+</style>
+</helmet>
+
+<section style="display:flex;flex-direction:row;align-items:flex-start;gap:56px;padding:56px 56px 0;flex-wrap:wrap">
+
+<div id="18a">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 'Geist Mono',monospace;letter-spacing:.1em">18a</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;text-transform:uppercase">Home &#183; index first &#183; interactive</span>
+</div>
+
+<div style="width:1440px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden;margin-bottom:20px">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 144px;height:64px;border-bottom:1px solid #e2e3e7">
+<span style="font:700 17px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<div style="display:flex;align-items:center;gap:28px">
+<span style="font:500 14px/1 Geist,sans-serif;color:#1c1e22">Home</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Projects</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">About</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Contact</span>
+<span style="padding:7px 13px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 Geist,sans-serif">Get in touch</span>
+</div>
+</div>
+
+<div style="padding:64px 144px 0">
+<div style="max-width:820px">
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ ROSS KING ]</span>
+<span style="width:36px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">SHEFFIELD, UK</span>
+</div>
+<h1 style="margin:0 0 18px;font:700 46px/1.08 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">AI evaluation and reliability, on a data engineering backbone.</h1>
+<p style="margin:0;max-width:62ch;font:400 17px/1.6 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Four projects below. Each one publishes the number it is judged on and the limit that number sits behind.</p>
+</div>
+</div>
+
+<div style="padding:52px 144px 0">
+<div style="height:8px;background-image:repeating-linear-gradient(to right,#d6d8dd 0 1px,transparent 1px 14px);margin-bottom:26px"></div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:22px">
+<div>
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ 01 ]</span>
+<span style="width:28px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">SELECTED WORK</span>
+</div>
+<h2 style="margin:0;font:600 32px/1.18 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#1c1e22">Four projects, each with its number.</h2>
+</div>
+<span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068;white-space:nowrap">{{ countA }}</span>
+</div>
+
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.14em;color:#5c6068;margin-right:4px">VIEWING &#8594;</span>
+<sc-for list="{{ chipsA }}" as="c" hint-placeholder-count="3">
+<sc-if value="{{ c.active }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ c.on }}" style="border:1px solid #3d5a73;background:#3d5a73;color:#fafafb;border-radius:99px;padding:7px 15px;font:400 12px/1 'Geist Mono',monospace;cursor:pointer;transition:background 140ms cubic-bezier(.2,0,0,1)" style-focus="outline:2px solid #3d5a73;outline-offset:2px">{{ c.label }}</button>
+</sc-if>
+<sc-if value="{{ c.idle }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ c.on }}" style="border:1px solid #cdd0d6;background:transparent;color:#3f434a;border-radius:99px;padding:7px 15px;font:400 12px/1 'Geist Mono',monospace;cursor:pointer;transition:border-color 140ms cubic-bezier(.2,0,0,1),color 140ms cubic-bezier(.2,0,0,1)" style-hover="border-color:#3d5a73;color:#1c1e22" style-focus="outline:2px solid #3d5a73;outline-offset:2px">{{ c.label }}</button>
+</sc-if>
+</sc-for>
+</div>
+
+<div style="border-top:1px solid #cdd0d6">
+<sc-for list="{{ rowsA }}" as="r" hint-placeholder-count="4">
+<div style="border-bottom:1px solid #e2e3e7">
+<button type="button" onClick="{{ r.toggle }}" style="width:100%;display:grid;grid-template-columns:56px 1fr 210px 150px 104px;gap:20px;align-items:center;padding:18px 12px;background:transparent;border:0;border-left:2px solid transparent;text-align:left;cursor:pointer;transition:background 140ms cubic-bezier(.2,0,0,1),border-left-color 140ms cubic-bezier(.2,0,0,1)" style-hover="background:#f0f1f3;border-left-color:#3d5a73" style-focus="outline:2px solid #3d5a73;outline-offset:-2px">
+<span style="font:500 12px/1 'Geist Mono',monospace;color:#5c6068">[ {{ r.idx }} ]</span>
+<span>
+<span style="display:block;font:600 16px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.015em;color:#1c1e22">{{ r.name }}</span>
+<span style="font:400 11.5px/1.5 'Geist Mono',monospace;color:#5c6068">{{ r.stack }}</span>
+</span>
+<span style="display:flex;align-items:baseline;gap:8px">
+<sc-if value="{{ r.hasStruck }}" hint-placeholder-val="{{ false }}">
+<span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068;text-decoration:line-through">{{ r.struck }}</span>
+</sc-if>
+<span style="font:700 19px/1 'Space Grotesk',sans-serif;color:#1c1e22">{{ r.fig }}</span>
+</span>
+<span style="font:400 11.5px/1 'Geist Mono',monospace;color:#5c6068">{{ r.unit }}</span>
+<span style="justify-self:end;font:400 11px/1 'Geist Mono',monospace;letter-spacing:.08em;color:#5c6068;border:1px solid #e2e3e7;border-radius:99px;padding:5px 11px">{{ r.st }}</span>
+</button>
+<sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 12px 20px 76px;max-width:76ch;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">{{ r.showed }}</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="margin:60px 0 0;background:#f0f1f3;border-top:1px solid #cdd0d6;border-bottom:1px solid #cdd0d6;padding:40px 144px">
+<div style="display:flex;align-items:flex-end;gap:80px">
+<sc-for list="{{ figsA }}" as="f" hint-placeholder-count="3">
+<div tabIndex="0" onMouseEnter="{{ f.on }}" onFocus="{{ f.on }}" style="cursor:default;border-radius:4px" style-focus="outline:2px solid #3d5a73;outline-offset:6px">
+<div style="font:600 92px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">{{ f.big }}</div>
+<div style="margin-top:10px;font:400 13px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">{{ f.cap }}</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:26px;padding-top:14px;border-top:1px solid #cdd0d6;min-height:20px;font:400 13px/1.5 'Geist Mono',monospace;color:#5c6068">{{ provA }}</div>
+</div>
+
+<div style="padding:44px 144px 0">
+<div style="max-width:680px">
+<h3 style="margin:0 0 12px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">What I reach for</h3>
+<p style="margin:0;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Python, PySpark, dbt, DuckDB and Postgres for the pipeline half; Inspect AI, pytest and the Anthropic API for the evaluation half. The full list is on <span style="color:#3d5a73">About</span>.</p>
+</div>
+</div>
+
+<div style="padding:32px 144px 48px">
+<div style="max-width:680px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">CURRENTLY</div>
+<p style="margin:0;font:400 14px/1.6 Geist,sans-serif;color:#5c6068;text-wrap:pretty">MSc Artificial Intelligence at Sheffield, submitting September 2026. Available for full-time roles from October 2026.</p>
+</div>
+</div>
+
+<div style="border-top:1px solid #e2e3e7;background:#f0f1f3;padding:32px 144px;display:flex;align-items:baseline;gap:30px">
+<span style="font:700 14px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<span style="font:400 12.5px/1 Geist,sans-serif;color:#5c6068">AI evaluation and reliability, on a data engineering backbone. Sheffield, United Kingdom.</span>
+<span style="margin-left:auto;display:flex;gap:20px;font:400 12.5px/1 Geist,sans-serif;color:#5c6068"><span>Projects</span><span>About</span><span>Contact</span><span>Colophon</span></span>
+</div>
+
+</div>
+
+<div style="display:flex;align-items:flex-start;gap:24px">
+<div style="width:390px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden;flex:none">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;border-bottom:1px solid #e2e3e7">
+<span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">MENU</span>
+</div>
+<div style="padding:28px 20px 0">
+<h1 style="margin:0 0 12px;font:700 27px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">AI evaluation and reliability, on a data engineering backbone.</h1>
+<p style="margin:0;font:400 14.5px/1.58 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Four projects below. Each publishes the number it is judged on.</p>
+</div>
+<div style="padding:26px 20px 0">
+<div style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:12px">SELECTED WORK</div>
+<div style="border-top:1px solid #cdd0d6">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">01</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">London Cycle-Hire Analytics</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">41.4M</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">03</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">Community Energy Flex</span><span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">stopped</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">05</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">Agent Release Safety Gates</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">79.92%</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">06</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">redteam-foundry</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">0&#8211;4%</span></div>
+</div>
+</div>
+<div style="margin:26px 0 0;background:#f0f1f3;border-top:1px solid #cdd0d6;border-bottom:1px solid #cdd0d6;padding:20px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">41.4M</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">rows</div></div>
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">61</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">facts checked</div></div>
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">4</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">with limits</div></div>
+</div>
+</div>
+<div style="padding:22px 20px 26px">
+<div style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:7px">CURRENTLY</div>
+<p style="margin:0;font:400 13px/1.55 Geist,sans-serif;color:#5c6068;text-wrap:pretty">MSc AI at Sheffield, submitting September 2026. Available from October 2026.</p>
+</div>
+</div>
+<div style="flex:1;background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">THE BET</div>
+<p style="margin:0 0 12px;font:400 14px/1.55 Geist,sans-serif;color:#3f434a;text-wrap:pretty">A hiring reader wants the list, not the numbers. The index takes MAJOR and sits directly under a compact hero; the proof band comes after it as evidence for what they have just read.</p>
+<p style="margin:0;font:400 14px/1.55 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Cost: the figures are below the fold at 1440. Mobile fixes the audit finding &#8212; three figures in one row at 40px instead of 430px of stack.</p>
+</div>
+</div>
+</div>
+
+<div id="18b">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 'Geist Mono',monospace;letter-spacing:.1em">18b</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;text-transform:uppercase">Home &#183; proof first &#183; interactive</span>
+</div>
+
+<div style="width:1440px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden;margin-bottom:20px">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 144px;height:64px;border-bottom:1px solid #e2e3e7">
+<span style="font:700 17px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<div style="display:flex;align-items:center;gap:28px">
+<span style="font:500 14px/1 Geist,sans-serif;color:#1c1e22">Home</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Projects</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">About</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Contact</span>
+<span style="padding:7px 13px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 Geist,sans-serif">Get in touch</span>
+</div>
+</div>
+
+<div style="padding:64px 144px 44px">
+<div style="max-width:820px">
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ ROSS KING ]</span>
+<span style="width:36px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">SHEFFIELD, UK</span>
+</div>
+<h1 style="margin:0 0 18px;font:700 46px/1.08 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">AI evaluation and reliability, on a data engineering backbone.</h1>
+<p style="margin:0;max-width:62ch;font:400 17px/1.6 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Every number below is counted at build time from the thing it describes. If one drifts, the site does not deploy.</p>
+</div>
+</div>
+
+<div style="background:#f0f1f3;border-top:1px solid #cdd0d6;border-bottom:1px solid #cdd0d6;padding:40px 144px">
+<div style="display:flex;align-items:flex-end;gap:80px">
+<sc-for list="{{ figsB }}" as="f" hint-placeholder-count="3">
+<div tabIndex="0" onMouseEnter="{{ f.on }}" onFocus="{{ f.on }}" style="cursor:default;border-radius:4px" style-focus="outline:2px solid #3d5a73;outline-offset:6px">
+<div style="font:600 92px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">{{ f.big }}</div>
+<div style="margin-top:10px;font:400 13px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">{{ f.cap }}</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:26px;padding-top:14px;border-top:1px solid #cdd0d6;min-height:20px;font:400 13px/1.5 'Geist Mono',monospace;color:#5c6068">{{ provB }}</div>
+</div>
+
+<div style="padding:56px 144px 0">
+<div style="height:8px;background-image:repeating-linear-gradient(to right,#d6d8dd 0 1px,transparent 1px 14px);margin-bottom:26px"></div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:22px">
+<div>
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ 01 ]</span>
+<span style="width:28px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">SELECTED WORK</span>
+</div>
+<h2 style="margin:0;font:600 32px/1.18 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#1c1e22">Where those numbers come from.</h2>
+</div>
+<span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068;white-space:nowrap">{{ countB }}</span>
+</div>
+
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.14em;color:#5c6068;margin-right:4px">VIEWING &#8594;</span>
+<sc-for list="{{ chipsB }}" as="c" hint-placeholder-count="3">
+<sc-if value="{{ c.active }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ c.on }}" style="border:1px solid #3d5a73;background:#3d5a73;color:#fafafb;border-radius:99px;padding:7px 15px;font:400 12px/1 'Geist Mono',monospace;cursor:pointer;transition:background 140ms cubic-bezier(.2,0,0,1)" style-focus="outline:2px solid #3d5a73;outline-offset:2px">{{ c.label }}</button>
+</sc-if>
+<sc-if value="{{ c.idle }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ c.on }}" style="border:1px solid #cdd0d6;background:transparent;color:#3f434a;border-radius:99px;padding:7px 15px;font:400 12px/1 'Geist Mono',monospace;cursor:pointer;transition:border-color 140ms cubic-bezier(.2,0,0,1),color 140ms cubic-bezier(.2,0,0,1)" style-hover="border-color:#3d5a73;color:#1c1e22" style-focus="outline:2px solid #3d5a73;outline-offset:2px">{{ c.label }}</button>
+</sc-if>
+</sc-for>
+</div>
+
+<div style="border-top:1px solid #cdd0d6">
+<sc-for list="{{ rowsB }}" as="r" hint-placeholder-count="4">
+<div style="border-bottom:1px solid #e2e3e7">
+<button type="button" onClick="{{ r.toggle }}" style="width:100%;display:grid;grid-template-columns:56px 1fr 210px 150px 104px;gap:20px;align-items:center;padding:18px 12px;background:transparent;border:0;border-left:2px solid transparent;text-align:left;cursor:pointer;transition:background 140ms cubic-bezier(.2,0,0,1),border-left-color 140ms cubic-bezier(.2,0,0,1)" style-hover="background:#f0f1f3;border-left-color:#3d5a73" style-focus="outline:2px solid #3d5a73;outline-offset:-2px">
+<span style="font:500 12px/1 'Geist Mono',monospace;color:#5c6068">[ {{ r.idx }} ]</span>
+<span>
+<span style="display:block;font:600 16px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.015em;color:#1c1e22">{{ r.name }}</span>
+<span style="font:400 11.5px/1.5 'Geist Mono',monospace;color:#5c6068">{{ r.stack }}</span>
+</span>
+<span style="display:flex;align-items:baseline;gap:8px">
+<sc-if value="{{ r.hasStruck }}" hint-placeholder-val="{{ false }}">
+<span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068;text-decoration:line-through">{{ r.struck }}</span>
+</sc-if>
+<span style="font:700 19px/1 'Space Grotesk',sans-serif;color:#1c1e22">{{ r.fig }}</span>
+</span>
+<span style="font:400 11.5px/1 'Geist Mono',monospace;color:#5c6068">{{ r.unit }}</span>
+<span style="justify-self:end;font:400 11px/1 'Geist Mono',monospace;letter-spacing:.08em;color:#5c6068;border:1px solid #e2e3e7;border-radius:99px;padding:5px 11px">{{ r.st }}</span>
+</button>
+<sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 12px 20px 76px;max-width:76ch;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">{{ r.showed }}</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="padding:44px 144px 0">
+<div style="max-width:680px">
+<h3 style="margin:0 0 12px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">What I reach for</h3>
+<p style="margin:0;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Python, PySpark, dbt, DuckDB and Postgres for the pipeline half; Inspect AI, pytest and the Anthropic API for the evaluation half. The full list is on <span style="color:#3d5a73">About</span>.</p>
+</div>
+</div>
+
+<div style="padding:32px 144px 48px">
+<div style="max-width:680px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">CURRENTLY</div>
+<p style="margin:0;font:400 14px/1.6 Geist,sans-serif;color:#5c6068;text-wrap:pretty">MSc Artificial Intelligence at Sheffield, submitting September 2026. Available for full-time roles from October 2026.</p>
+</div>
+</div>
+
+<div style="border-top:1px solid #e2e3e7;background:#f0f1f3;padding:32px 144px;display:flex;align-items:baseline;gap:30px">
+<span style="font:700 14px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<span style="font:400 12.5px/1 Geist,sans-serif;color:#5c6068">AI evaluation and reliability, on a data engineering backbone. Sheffield, United Kingdom.</span>
+<span style="margin-left:auto;display:flex;gap:20px;font:400 12.5px/1 Geist,sans-serif;color:#5c6068"><span>Projects</span><span>About</span><span>Contact</span><span>Colophon</span></span>
+</div>
+
+</div>
+
+<div style="display:flex;align-items:flex-start;gap:24px">
+<div style="width:390px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden;flex:none">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;border-bottom:1px solid #e2e3e7">
+<span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">MENU</span>
+</div>
+<div style="padding:28px 20px 24px">
+<h1 style="margin:0 0 12px;font:700 27px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">AI evaluation and reliability, on a data engineering backbone.</h1>
+<p style="margin:0;font:400 14.5px/1.58 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Every number is counted at build. If one drifts, the site does not deploy.</p>
+</div>
+<div style="background:#f0f1f3;border-top:1px solid #cdd0d6;border-bottom:1px solid #cdd0d6;padding:20px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">41.4M</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">rows</div></div>
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">61</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">facts checked</div></div>
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">4</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">with limits</div></div>
+</div>
+</div>
+<div style="padding:24px 20px 0">
+<div style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:12px">SELECTED WORK</div>
+<div style="border-top:1px solid #cdd0d6">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">01</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">London Cycle-Hire Analytics</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">41.4M</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">03</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">Community Energy Flex</span><span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">stopped</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">05</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">Agent Release Safety Gates</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">79.92%</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">06</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">redteam-foundry</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">0&#8211;4%</span></div>
+</div>
+</div>
+<div style="padding:22px 20px 26px">
+<div style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:7px">CURRENTLY</div>
+<p style="margin:0;font:400 13px/1.55 Geist,sans-serif;color:#5c6068;text-wrap:pretty">MSc AI at Sheffield, submitting September 2026. Available from October 2026.</p>
+</div>
+</div>
+<div style="flex:1;background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">THE BET</div>
+<p style="margin:0 0 12px;font:400 14px/1.55 Geist,sans-serif;color:#3f434a;text-wrap:pretty">The numbers are the differentiator, so the reader meets them before the list. Closest to the current site &#8212; the same order, corrected under R9: one band instead of three stacked figure blocks, and the index below it takes the only MAJOR.</p>
+<p style="margin:0;font:400 14px/1.55 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Cost: hero and band are two loud things in a row, which is the closest of the three to the flatness the audit found.</p>
+</div>
+</div>
+</div>
+
+<div id="18c">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 'Geist Mono',monospace;letter-spacing:.1em">18c</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;text-transform:uppercase">Home &#183; the hero is the band &#183; interactive</span>
+</div>
+
+<div style="width:1440px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden;margin-bottom:20px">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 144px;height:64px;border-bottom:1px solid #e2e3e7">
+<span style="font:700 17px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<div style="display:flex;align-items:center;gap:28px">
+<span style="font:500 14px/1 Geist,sans-serif;color:#1c1e22">Home</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Projects</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">About</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Contact</span>
+<span style="padding:7px 13px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 Geist,sans-serif">Get in touch</span>
+</div>
+</div>
+
+<div style="background:#f0f1f3;border-bottom:1px solid #cdd0d6;padding:56px 144px 44px">
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:22px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ ROSS KING ]</span>
+<span style="width:36px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">SHEFFIELD, UK &#183; AVAILABLE OCTOBER 2026</span>
+</div>
+<h1 style="margin:0 0 40px;max-width:900px;font:700 46px/1.08 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">AI evaluation and reliability, on a data engineering backbone.</h1>
+<div style="display:flex;align-items:flex-end;gap:80px">
+<sc-for list="{{ figsC }}" as="f" hint-placeholder-count="3">
+<div tabIndex="0" onMouseEnter="{{ f.on }}" onFocus="{{ f.on }}" style="cursor:default;border-radius:4px" style-focus="outline:2px solid #3d5a73;outline-offset:6px">
+<div style="font:600 92px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">{{ f.big }}</div>
+<div style="margin-top:10px;font:400 13px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">{{ f.cap }}</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:26px;padding-top:14px;border-top:1px solid #cdd0d6;min-height:20px;font:400 13px/1.5 'Geist Mono',monospace;color:#5c6068">{{ provC }}</div>
+</div>
+
+<div style="padding:56px 144px 0">
+<div style="height:8px;background-image:repeating-linear-gradient(to right,#d6d8dd 0 1px,transparent 1px 14px);margin-bottom:26px"></div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;margin-bottom:22px">
+<div>
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ 01 ]</span>
+<span style="width:28px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">SELECTED WORK</span>
+</div>
+<h2 style="margin:0;font:600 32px/1.18 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#1c1e22">Four projects, each with its number.</h2>
+</div>
+<span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068;white-space:nowrap">{{ countC }}</span>
+</div>
+
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.14em;color:#5c6068;margin-right:4px">VIEWING &#8594;</span>
+<sc-for list="{{ chipsC }}" as="c" hint-placeholder-count="3">
+<sc-if value="{{ c.active }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ c.on }}" style="border:1px solid #3d5a73;background:#3d5a73;color:#fafafb;border-radius:99px;padding:7px 15px;font:400 12px/1 'Geist Mono',monospace;cursor:pointer;transition:background 140ms cubic-bezier(.2,0,0,1)" style-focus="outline:2px solid #3d5a73;outline-offset:2px">{{ c.label }}</button>
+</sc-if>
+<sc-if value="{{ c.idle }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ c.on }}" style="border:1px solid #cdd0d6;background:transparent;color:#3f434a;border-radius:99px;padding:7px 15px;font:400 12px/1 'Geist Mono',monospace;cursor:pointer;transition:border-color 140ms cubic-bezier(.2,0,0,1),color 140ms cubic-bezier(.2,0,0,1)" style-hover="border-color:#3d5a73;color:#1c1e22" style-focus="outline:2px solid #3d5a73;outline-offset:2px">{{ c.label }}</button>
+</sc-if>
+</sc-for>
+</div>
+
+<div style="border-top:1px solid #cdd0d6">
+<sc-for list="{{ rowsC }}" as="r" hint-placeholder-count="4">
+<div style="border-bottom:1px solid #e2e3e7">
+<button type="button" onClick="{{ r.toggle }}" style="width:100%;display:grid;grid-template-columns:56px 1fr 210px 150px 104px;gap:20px;align-items:center;padding:18px 12px;background:transparent;border:0;border-left:2px solid transparent;text-align:left;cursor:pointer;transition:background 140ms cubic-bezier(.2,0,0,1),border-left-color 140ms cubic-bezier(.2,0,0,1)" style-hover="background:#f0f1f3;border-left-color:#3d5a73" style-focus="outline:2px solid #3d5a73;outline-offset:-2px">
+<span style="font:500 12px/1 'Geist Mono',monospace;color:#5c6068">[ {{ r.idx }} ]</span>
+<span>
+<span style="display:block;font:600 16px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.015em;color:#1c1e22">{{ r.name }}</span>
+<span style="font:400 11.5px/1.5 'Geist Mono',monospace;color:#5c6068">{{ r.stack }}</span>
+</span>
+<span style="display:flex;align-items:baseline;gap:8px">
+<sc-if value="{{ r.hasStruck }}" hint-placeholder-val="{{ false }}">
+<span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068;text-decoration:line-through">{{ r.struck }}</span>
+</sc-if>
+<span style="font:700 19px/1 'Space Grotesk',sans-serif;color:#1c1e22">{{ r.fig }}</span>
+</span>
+<span style="font:400 11.5px/1 'Geist Mono',monospace;color:#5c6068">{{ r.unit }}</span>
+<span style="justify-self:end;font:400 11px/1 'Geist Mono',monospace;letter-spacing:.08em;color:#5c6068;border:1px solid #e2e3e7;border-radius:99px;padding:5px 11px">{{ r.st }}</span>
+</button>
+<sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+<div style="padding:0 12px 20px 76px;max-width:76ch;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">{{ r.showed }}</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="padding:44px 144px 0">
+<div style="max-width:680px">
+<h3 style="margin:0 0 12px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">What I reach for</h3>
+<p style="margin:0;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Python, PySpark, dbt, DuckDB and Postgres for the pipeline half; Inspect AI, pytest and the Anthropic API for the evaluation half. The full list is on <span style="color:#3d5a73">About</span>.</p>
+</div>
+</div>
+
+<div style="padding:32px 144px 48px">
+<div style="max-width:680px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">CURRENTLY</div>
+<p style="margin:0;font:400 14px/1.6 Geist,sans-serif;color:#5c6068;text-wrap:pretty">MSc Artificial Intelligence at Sheffield, submitting September 2026.</p>
+</div>
+</div>
+
+<div style="border-top:1px solid #e2e3e7;background:#f0f1f3;padding:32px 144px;display:flex;align-items:baseline;gap:30px">
+<span style="font:700 14px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<span style="font:400 12.5px/1 Geist,sans-serif;color:#5c6068">AI evaluation and reliability, on a data engineering backbone. Sheffield, United Kingdom.</span>
+<span style="margin-left:auto;display:flex;gap:20px;font:400 12.5px/1 Geist,sans-serif;color:#5c6068"><span>Projects</span><span>About</span><span>Contact</span><span>Colophon</span></span>
+</div>
+
+</div>
+
+<div style="display:flex;align-items:flex-start;gap:24px">
+<div style="width:390px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden;flex:none">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;border-bottom:1px solid #e2e3e7">
+<span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">MENU</span>
+</div>
+<div style="background:#f0f1f3;border-bottom:1px solid #cdd0d6;padding:26px 20px 22px">
+<h1 style="margin:0 0 24px;font:700 27px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">AI evaluation and reliability, on a data engineering backbone.</h1>
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">41.4M</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">rows</div></div>
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">61</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">facts checked</div></div>
+<div><div style="font:600 40px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">4</div><div style="margin-top:6px;font:400 10px/1.3 'Geist Mono',monospace;color:#5c6068">with limits</div></div>
+</div>
+</div>
+<div style="padding:24px 20px 0">
+<div style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:12px">SELECTED WORK</div>
+<div style="border-top:1px solid #cdd0d6">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">01</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">London Cycle-Hire Analytics</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">41.4M</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">03</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">Community Energy Flex</span><span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">stopped</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">05</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">Agent Release Safety Gates</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">79.92%</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #e2e3e7"><span style="font:500 11px/1 'Geist Mono',monospace;color:#5c6068">06</span><span style="flex:1;font:600 14px/1.3 'Space Grotesk',sans-serif;color:#1c1e22">redteam-foundry</span><span style="font:700 15px/1 'Space Grotesk',sans-serif;color:#1c1e22">0&#8211;4%</span></div>
+</div>
+</div>
+<div style="padding:22px 20px 26px">
+<div style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:7px">CURRENTLY</div>
+<p style="margin:0;font:400 13px/1.55 Geist,sans-serif;color:#5c6068;text-wrap:pretty">MSc AI at Sheffield, submitting September 2026.</p>
+</div>
+</div>
+<div style="flex:1;background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">THE BET</div>
+<p style="margin:0 0 12px;font:400 14px/1.55 Geist,sans-serif;color:#3f434a;text-wrap:pretty">One screen holds everything that matters. There is no separate hero &#8212; the claim and the three figures are one full-bleed block, so the BAND and the page opening are the same object and the availability fact rides in the eyebrow.</p>
+<p style="margin:0;font:400 14px/1.55 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Cost: the most confident and the least conventional. It only works if the three figures are genuinely the strongest thing you have.</p>
+</div>
+</div>
+</div>
+
+</section>
+
+<section style="display:flex;flex-direction:row;align-items:flex-start;gap:48px;padding:56px 56px 0;flex-wrap:wrap">
+
+<div id="17a">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 'Geist Mono',monospace;letter-spacing:.1em">17a</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;text-transform:uppercase">R9 reference &#183; the scale, then the allocation across eight routes</span>
+</div>
+
+<div style="width:1152px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden">
+
+<div style="padding:44px 56px 0">
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ R9 ]</span>
+<span style="width:36px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">ONE BAND, ONE MAJOR, PER ROUTE</span>
+</div>
+<h2 style="margin:0 0 16px;font:700 34px/1.15 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#1c1e22">The four rungs, at the size they actually print.</h2>
+<p style="margin:0;max-width:70ch;font:400 15.5px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">The audit described the scale in a table. A table cannot show a scale break. Below is each rung rendered at its real weight, in the order a reader meets them, so the drop from one to the next is visible rather than asserted.</p>
+</div>
+
+<div style="margin:36px 0 0;background:#f0f1f3;border-top:1px solid #cdd0d6;border-bottom:1px solid #cdd0d6;padding:36px 56px">
+<div style="display:flex;align-items:baseline;gap:20px;margin-bottom:20px">
+<span style="font:500 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#1c1e22">BAND</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">full-bleed &#183; #f0f1f3 &#183; rules top and bottom &#183; once per route</span>
+</div>
+<div style="display:flex;align-items:flex-end;gap:64px">
+<div>
+<div style="font:600 92px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">14.2&#8202;pt</div>
+<div style="margin-top:10px;font:400 13px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">mean absolute error</div>
+</div>
+<div>
+<div style="font:600 92px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">41k</div>
+<div style="margin-top:10px;font:400 13px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">graded responses</div>
+</div>
+<div>
+<div style="font:600 92px/.9 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">7</div>
+<div style="margin-top:10px;font:400 13px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">models compared</div>
+</div>
+</div>
+</div>
+
+<div style="padding:44px 56px 0">
+<div style="max-width:900px">
+<div style="display:flex;align-items:baseline;gap:20px;margin-bottom:14px">
+<span style="font:500 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#1c1e22">MAJOR</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">900 or 1152 wide &#183; 48px of air above &#183; tick rule &#183; once per route</span>
+</div>
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ 02 ]</span>
+<span style="width:28px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">METHOD</span>
+</div>
+<h3 style="margin:0 0 12px;font:600 32px/1.2 'Space Grotesk',sans-serif;letter-spacing:-.015em;color:#1c1e22">How the grader was calibrated.</h3>
+<p style="margin:0;font:400 15.5px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">The one section the reader came for. It gets the widest measure on the page and the only tick rule below the band.</p>
+</div>
+</div>
+
+<div style="padding:38px 56px 0">
+<div style="max-width:680px">
+<div style="display:flex;align-items:baseline;gap:20px;margin-bottom:14px">
+<span style="font:500 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#1c1e22">MINOR</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">680 wide &#183; 32px above &#183; no tick rule &#183; unlimited</span>
+</div>
+<h4 style="margin:0 0 10px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">What it runs on</h4>
+<p style="margin:0;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Supporting sections keep a heading but lose the mark, the rule, and half the air. They read as subordinate at a glance, before a word is read.</p>
+</div>
+</div>
+
+<div style="padding:32px 56px 48px">
+<div style="max-width:680px">
+<div style="display:flex;align-items:baseline;gap:20px;margin-bottom:14px">
+<span style="font:500 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#1c1e22">QUIET</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">680 wide &#183; no heading at all &#183; unlimited</span>
+</div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">COUNTED FROM</div>
+<p style="margin:0;font:400 14px/1.6 Geist,sans-serif;color:#5c6068;text-wrap:pretty">Runs logged 4 Feb &#8211; 19 Jun 2026. Figures recomputed on each deploy from the eval store, not transcribed.</p>
+</div>
+</div>
+
+<div style="border-top:1px solid #cdd0d6;padding:44px 56px 0">
+<h3 style="margin:0 0 12px;font:600 26px/1.25 'Space Grotesk',sans-serif;letter-spacing:-.015em;color:#1c1e22">The allocation.</h3>
+<p style="margin:0 0 28px;max-width:70ch;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">One row per route. The BAND and MAJOR columns are the decision; the last column is what gets demoted to reach it. Nothing else on the route may take either rung.</p>
+
+<div style="display:grid;gap:1px;background:#e2e3e7;border:1px solid #e2e3e7;border-radius:6px;overflow:hidden">
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#f0f1f3;padding:12px 22px">
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">ROUTE</span>
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">BAND &#215;1</span>
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">MAJOR &#215;1</span>
+<span style="font:400 11px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">DEMOTED TO REACH IT</span>
+</div>
+
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#fafafb;padding:18px 22px;align-items:baseline">
+<span style="font:500 13px/1.4 'Geist Mono',monospace;color:#1c1e22">/</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">The three proof figures</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">Selected work &#8212; the index</span>
+<span style="font:400 13.5px/1.55 Geist,sans-serif;color:#5c6068">Currently &#8594; QUIET. Toolbox &#8594; MINOR.</span>
+</div>
+
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#fafafb;padding:18px 22px;align-items:baseline">
+<span style="font:500 13px/1.4 'Geist Mono',monospace;color:#1c1e22">/projects</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#5c6068">&#8212; none</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">The index table itself</span>
+<span style="font:400 13.5px/1.55 Geist,sans-serif;color:#5c6068">Filter row loses its heading entirely.</span>
+</div>
+
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#fafafb;padding:18px 22px;align-items:baseline">
+<span style="font:500 13px/1.4 'Geist Mono',monospace;color:#1c1e22">/projects/&#8230;</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">The finding, above the demo</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">Method</span>
+<span style="font:400 13.5px/1.55 Geist,sans-serif;color:#5c6068">Result, Limits, Stack &#8594; MINOR. Provenance &#8594; QUIET.</span>
+</div>
+
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#fafafb;padding:18px 22px;align-items:baseline">
+<span style="font:500 13px/1.4 'Geist Mono',monospace;color:#1c1e22">/about</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#5c6068">&#8212; none</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">The bench &#8212; what I do</span>
+<span style="font:400 13.5px/1.55 Geist,sans-serif;color:#5c6068">Two of the three current MAJORs step down; languages &#8594; QUIET.</span>
+</div>
+
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#fafafb;padding:18px 22px;align-items:baseline">
+<span style="font:500 13px/1.4 'Geist Mono',monospace;color:#1c1e22">/contact</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">The availability line</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">The form</span>
+<span style="font:400 13.5px/1.55 Geist,sans-serif;color:#5c6068">Direct routes sit in the rail, no heading rung at all.</span>
+</div>
+
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#fafafb;padding:18px 22px;align-items:baseline">
+<span style="font:500 13px/1.4 'Geist Mono',monospace;color:#1c1e22">/colophon</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">The build numbers</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">How it is built</span>
+<span style="font:400 13.5px/1.55 Geist,sans-serif;color:#5c6068">Two of three MAJORs step down; rights &#8594; QUIET.</span>
+</div>
+
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#fafafb;padding:18px 22px;align-items:baseline">
+<span style="font:500 13px/1.4 'Geist Mono',monospace;color:#1c1e22">/privacy</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#5c6068">&#8212; none</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">What is collected &#8212; the table</span>
+<span style="font:400 13.5px/1.55 Geist,sans-serif;color:#5c6068">Five of six MAJORs &#8594; MINOR. Contact-the-ICO &#8594; QUIET.</span>
+</div>
+
+<div style="display:grid;grid-template-columns:132px 1fr 1fr 1fr;gap:24px;background:#fafafb;padding:18px 22px;align-items:baseline">
+<span style="font:500 13px/1.4 'Geist Mono',monospace;color:#1c1e22">/404</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#5c6068">&#8212; none</span>
+<span style="font:400 14px/1.55 Geist,sans-serif;color:#1c1e22">Where to go instead</span>
+<span style="font:400 13.5px/1.55 Geist,sans-serif;color:#5c6068">The apology line is body copy, not a heading.</span>
+</div>
+</div>
+
+<div style="display:flex;gap:14px;margin:28px 0 0;padding:16px 0 0;border-top:1px solid #e2e3e7">
+<span style="font:500 14px/1.6 'Geist Mono',monospace;color:#3d5a73">&#8594;</span>
+<span style="max-width:78ch;font:400 14.5px/1.6 Geist,sans-serif;color:#1c1e22;text-wrap:pretty">Three routes take no band. That is the point &#8212; a band on every route is the flatness the audit found, restated one rung louder. If <span style="font-family:'Geist Mono',monospace;font-size:13.5px">/writing</span> ships, it takes MAJOR on the post list and no band.</span>
+</div>
+</div>
+
+<div style="margin:40px 0 0;background:#f0f1f3;border-top:1px solid #e2e3e7;padding:20px 56px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">CHECK BEFORE MERGE</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Count on each route: exactly one <span style="font-family:'Geist Mono',monospace;font-size:13px">#f0f1f3</span> full-bleed block or zero, exactly one 32px heading, no 28px headings anywhere. Any route failing that count has not been converted.</div>
+</div>
+
+</div>
+</div>
+
+<div id="16a">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 'Geist Mono',monospace;letter-spacing:.1em">16a</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;text-transform:uppercase">Contact · 1440 · fixes finding 09, 08, 13</span>
+</div>
+
+<div style="width:1440px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 144px;height:64px;border-bottom:1px solid #e2e3e7">
+<span style="font:700 17px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<div style="display:flex;align-items:center;gap:28px">
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Home</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Projects</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">About</span>
+<span style="font:500 14px/1 Geist,sans-serif;color:#1c1e22">Contact</span>
+<span style="padding:7px 13px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 Geist,sans-serif">Get in touch</span>
+</div>
+</div>
+
+<div style="padding:56px 144px 0">
+<div style="max-width:680px">
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ CONTACT ]</span>
+<span style="width:36px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">SHEFFIELD, UK &#183; GMT</span>
+</div>
+<h1 style="margin:0 0 20px;font:700 44px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#1c1e22">Let&#8217;s talk.</h1>
+<p style="margin:0;font:400 16.5px/1.6 Geist,sans-serif;color:#3f434a;text-wrap:pretty">I&#8217;m looking for 2026 roles in AI safety, GenAI evaluation, and applied data science. If that&#8217;s what you&#8217;re hiring for, the fastest route is email.</p>
+</div>
+</div>
+
+<div style="margin:40px 144px 0;display:flex;align-items:center;gap:14px;padding:16px 0;border-top:1px solid #cdd0d6;border-bottom:1px solid #cdd0d6">
+<span style="width:6px;height:6px;border-radius:99px;background:#3f9a5f"></span>
+<span style="font:500 16px/1.4 Geist,sans-serif;color:#1c1e22">Available for full-time roles from October 2026</span>
+<span style="margin-left:auto;font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">UK GRADUATE VISA &#183; NO SPONSORSHIP NEEDED UNTIL 2028</span>
+</div>
+
+<div style="padding:48px 144px 72px">
+<div style="display:grid;grid-template-columns:680px 352px;gap:120px;align-items:start">
+
+<div style="background:#fafafb;border:1px solid #cdd0d6;border-radius:7px;box-shadow:0 6px 20px -8px rgb(0 0 0 / .12);overflow:hidden">
+<div style="padding:22px 28px;border-bottom:1px solid #e2e3e7;background:#f0f1f3">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">SEND A MESSAGE</div>
+</div>
+<div style="padding:28px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+<div style="display:flex;flex-direction:column;gap:7px">
+<label style="font:500 13px/1 Geist,sans-serif;color:#1c1e22">Name</label>
+<div style="height:42px;display:flex;align-items:center;padding:0 13px;border:1px solid #cdd0d6;border-radius:5px;font:400 14.5px/1 Geist,sans-serif;color:#5c6068">Jane Recruiter</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<label style="font:500 13px/1 Geist,sans-serif;color:#1c1e22">Email</label>
+<div style="height:42px;display:flex;align-items:center;padding:0 13px;border:1px solid #cdd0d6;border-radius:5px;font:400 14.5px/1 Geist,sans-serif;color:#5c6068">jane@company.com</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px;margin-bottom:20px">
+<div style="display:flex;align-items:baseline;justify-content:space-between">
+<label style="font:500 13px/1 Geist,sans-serif;color:#1c1e22">Company</label>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">OPTIONAL</span>
+</div>
+<div style="height:42px;display:flex;align-items:center;padding:0 13px;border:1px solid #cdd0d6;border-radius:5px;font:400 14.5px/1 Geist,sans-serif;color:#5c6068">Acme AI</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px">
+<label style="font:500 13px/1 Geist,sans-serif;color:#1c1e22">Message</label>
+<div style="height:132px;padding:12px 13px;border:1px solid #cdd0d6;border-radius:5px;font:400 14.5px/1.5 Geist,sans-serif;color:#5c6068">A line about the role and team&#8230;</div>
+<span style="font:400 12.5px/1.5 Geist,sans-serif;color:#5c6068">Checked when you leave each field, not as you type.</span>
+</div>
+<div style="display:flex;align-items:center;gap:16px;margin-top:22px;padding-top:22px;border-top:1px solid #e2e3e7">
+<span style="padding:9px 16px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 13px/1 Geist,sans-serif">Send message</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">No newsletter. No follow-up spam.</span>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:32px">
+<div>
+<div style="display:flex;align-items:center;gap:14px;padding-bottom:12px;border-bottom:1px solid #cdd0d6">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ 01 ]</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">DIRECT</span>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;border-bottom:1px solid #e2e3e7">
+<div><div style="font:500 14.5px/1.3 Geist,sans-serif;color:#1c1e22">Email</div><div style="margin-top:4px;font:400 12.5px/1.3 'Geist Mono',monospace;color:#5c6068">rosscyking@gmail.com</div></div>
+<span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068">&#8599;</span>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;border-bottom:1px solid #e2e3e7">
+<div><div style="font:500 14.5px/1.3 Geist,sans-serif;color:#1c1e22">GitHub</div><div style="margin-top:4px;font:400 12.5px/1.3 'Geist Mono',monospace;color:#5c6068">github.com/rosscyking1115</div></div>
+<span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068">&#8599;</span>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;border-bottom:1px solid #e2e3e7">
+<div><div style="font:500 14.5px/1.3 Geist,sans-serif;color:#1c1e22">LinkedIn</div><div style="margin-top:4px;font:400 12.5px/1.3 'Geist Mono',monospace;color:#5c6068">linkedin.com/in/rosscyking</div></div>
+<span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068">&#8599;</span>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0">
+<div><div style="font:500 14.5px/1.3 Geist,sans-serif;color:#1c1e22">Curriculum vitae</div><div style="margin-top:4px;font:400 12.5px/1.3 'Geist Mono',monospace;color:#5c6068">PDF &#183; 2 pages</div></div>
+<span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068">&#8599;</span>
+</div>
+</div>
+</div>
+<div style="font:400 12px/1.7 'Geist Mono',monospace;color:#5c6068">Written to my inbox by Resend.<br>Five submissions an hour, per IP.<br>What is kept, and for how long: <span style="color:#3d5a73">privacy &#8594;</span></div>
+</div>
+
+</div>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:26px 144px;border-top:1px solid #e2e3e7">
+<span style="font:600 14px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<div style="display:flex;gap:24px">
+<span style="font:400 13px/1 Geist,sans-serif;color:#3f434a">Projects</span>
+<span style="font:400 13px/1 Geist,sans-serif;color:#3f434a">About</span>
+<span style="font:400 13px/1 Geist,sans-serif;color:#3f434a">Colophon</span>
+<span style="font:400 13px/1 Geist,sans-serif;color:#3f434a">Privacy</span>
+<span style="font:400 13px/1 Geist,sans-serif;color:#3f434a">GitHub</span>
+</div>
+<span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">&#169; 2026 Cheng-Yuan King</span>
+</div>
+
+</div>
+
+<div style="margin-top:16px;max-width:1440px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+<div style="background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">FIXES 09</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a">The three-cell band is gone. One ruled line states the one thing that is true, with the visa fact — which you already state on About — carrying the right-hand end. Seeking and reply time return as cells the day you can fill them; until then the page does not announce that it does not know.</div>
+</div>
+<div style="background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">SAME GRID AS 15a</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a">680 + 352, gap 120. The form is the primary column; direct routes become the rail, using the same narrow row as the write-up's cross-references. Two routes, one grid, one row anatomy — which is the point of R4.</div>
+</div>
+<div style="background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">FIXES 08 &amp; 13</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a">The icon tiles go — they were the site's only icon set, on its least-designed page. The footer is the compact density: brand, five links, copyright. The page ends at roughly 980px instead of 1,149.</div>
+</div>
+</div>
+</div>
+
+<div id="16b">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 'Geist Mono',monospace;letter-spacing:.1em">16b</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;text-transform:uppercase">The three states the form actually has</span>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:22px;width:620px">
+
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">01 &#183; INVALID, ON BLUR</div>
+<div style="background:#fafafb;border:1px solid #cdd0d6;border-radius:7px;padding:24px 28px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+<div style="display:flex;flex-direction:column;gap:7px">
+<label style="font:500 13px/1 Geist,sans-serif;color:#1c1e22">Name</label>
+<div style="height:42px;display:flex;align-items:center;padding:0 13px;border:1px solid #cdd0d6;border-radius:5px;font:400 14.5px/1 Geist,sans-serif;color:#1c1e22">Jane Recruiter</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<label style="font:500 13px/1 Geist,sans-serif;color:#1c1e22">Email</label>
+<div style="height:42px;display:flex;align-items:center;padding:0 13px;border:1px solid #8f4f48;border-radius:5px;font:400 14.5px/1 Geist,sans-serif;color:#1c1e22">jane@company</div>
+<div style="display:flex;gap:8px;align-items:baseline">
+<span style="font:500 12px/1.4 'Geist Mono',monospace;letter-spacing:.1em;color:#8f4f48">INVALID</span>
+<span style="font:400 12.5px/1.4 Geist,sans-serif;color:#3f434a">needs a domain, like company.com</span>
+</div>
+</div>
+</div>
+</div>
+<div style="margin-top:8px;font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">Never hue alone &#183; the word leads &#183; error token pending your approval (open item 01)</div>
+</div>
+
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">02 &#183; SENT &#8212; A RECEIPT, IN PLACE</div>
+<div style="background:#fafafb;border:1px solid #cdd0d6;border-radius:7px;box-shadow:0 6px 20px -8px rgb(0 0 0 / .12);overflow:hidden">
+<div style="padding:18px 28px;border-bottom:1px solid #e2e3e7;background:#f0f1f3;display:flex;align-items:center;justify-content:space-between">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">RECEIPT</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">RK-2026-0802-4471</span>
+</div>
+<div style="padding:26px 28px">
+<div style="font:600 20px/1.3 'Space Grotesk',sans-serif;color:#1c1e22;margin-bottom:14px">Sent, and it reached my inbox.</div>
+<div style="display:grid;grid-template-columns:130px 1fr;gap:10px 20px;font:400 13.5px/1.5 Geist,sans-serif;color:#3f434a">
+<span style="font:400 12px/1.5 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">AT</span><span>2 August 2026, 14:07 GMT</span>
+<span style="font:400 12px/1.5 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">TO</span><span>rosscyking@gmail.com, delivered by Resend</span>
+<span style="font:400 12px/1.5 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">COPY</span><span>Not sent to you &#8212; quote the reference above if you need to follow up</span>
+</div>
+</div>
+</div>
+<div style="margin-top:8px;font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">No redirect, no toast &#183; the form is replaced where it stood</div>
+</div>
+
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">03 &#183; DARK &#8212; ELEVATION IS SURFACE, NOT BORDER</div>
+<div style="background:#151619;border-radius:7px;padding:26px">
+<div style="background:#212327;border:1px solid #3a3d43;border-radius:7px;overflow:hidden">
+<div style="padding:16px 24px;background:#1a1c20;border-bottom:1px solid #2e3035;font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#9ca0a8">SEND A MESSAGE</div>
+<div style="padding:24px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+<div style="display:flex;flex-direction:column;gap:7px">
+<label style="font:500 13px/1 Geist,sans-serif;color:#e7e8ea">Name</label>
+<div style="height:42px;display:flex;align-items:center;padding:0 13px;border:1px solid #3a3d43;border-radius:5px;font:400 14.5px/1 Geist,sans-serif;color:#9ca0a8">Jane Recruiter</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:7px">
+<label style="font:500 13px/1 Geist,sans-serif;color:#e7e8ea">Email</label>
+<div style="height:42px;display:flex;align-items:center;padding:0 13px;border:1px solid #3a3d43;border-radius:5px;font:400 14.5px/1 Geist,sans-serif;color:#9ca0a8">jane@company.com</div>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:14px;margin-top:22px">
+<span style="padding:9px 16px;border-radius:5px;background:#8fa9c2;color:#151619;font:500 13px/1 Geist,sans-serif">Send message</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;color:#9ca0a8">No newsletter. No follow-up spam.</span>
+</div>
+</div>
+</div>
+</div>
+<div style="margin-top:8px;font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">Card #212327 on page #151619, chrome steps down to #1a1c20, no shadow &#183; the shipped card is page-coloured with a border</div>
+</div>
+
+<div style="background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">ON SHADCN</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a">All three states map to Field / FieldGroup / FieldLabel / FieldDescription / FieldError as-is; nothing here needs a primitive that does not exist. The palette does not come from the registry &#8212; the tokens above are yours, applied over it, which is the arrangement the global.css note already describes.</div>
+</div>
+
+</div>
+</div>
+
+</section>
+
+<section style="display:flex;flex-direction:row;align-items:flex-start;gap:48px;padding:56px;flex-wrap:wrap">
+
+<div id="15a">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 'Geist Mono',monospace;letter-spacing:.1em">15a</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;text-transform:uppercase">Write-up · 1440 · fixes findings 01, 03, 10</span>
+</div>
+
+<div style="width:1440px;background:#fafafb;border:1px solid #cdd0d6;border-radius:8px;overflow:hidden">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 144px;height:64px;border-bottom:1px solid #e2e3e7">
+<span style="font:700 17px/1 'Space Grotesk',sans-serif;color:#1c1e22">Ross King</span>
+<div style="display:flex;align-items:center;gap:28px">
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Home</span>
+<span style="font:500 14px/1 Geist,sans-serif;color:#1c1e22">Projects</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">About</span>
+<span style="font:400 14px/1 Geist,sans-serif;color:#3f434a">Contact</span>
+<span style="padding:7px 13px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 Geist,sans-serif">Get in touch</span>
+</div>
+</div>
+<div style="height:1px;background:linear-gradient(to right,#3d5a73 32%,#e2e3e7 32%)"></div>
+
+<div style="padding:56px 144px 40px">
+<div style="max-width:680px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:26px">&#8592; ALL PROJECTS</div>
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:18px">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73">[ 05 ]</span>
+<span style="width:36px;height:1px;background:#cdd0d6"></span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">2026 · 5 MIN READ</span>
+</div>
+<h1 style="margin:0 0 20px;font:700 44px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#1c1e22;text-wrap:pretty">Agent Release Safety Gates</h1>
+<p style="margin:0 0 24px;font:400 16.5px/1.6 Geist,sans-serif;color:#3f434a;text-wrap:pretty">An installable release-gate for AI agents: replay known incidents, apply policy-as-code gates, and produce ship / warn / block evidence &#8212; as a CLI that fails CI, a UK AISI Inspect eval, or a runner pointed at your own agent's traces.</p>
+<div style="display:flex;gap:10px;align-items:center">
+<span style="padding:7px 13px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 Geist,sans-serif">Source</span>
+<span style="padding:7px 13px;border-radius:5px;border:1px solid #cdd0d6;color:#1c1e22;font:500 12px/1 Geist,sans-serif">Live demo</span>
+<span style="padding:7px 13px;border-radius:5px;border:1px solid #cdd0d6;color:#1c1e22;font:500 12px/1 Geist,sans-serif">Report</span>
+<span style="margin-left:8px;font:400 12px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">Python &#183; uv &#183; Inspect AI &#183; Pydantic</span>
+</div>
+</div>
+</div>
+
+<div style="border-top:1px solid #cdd0d6;border-bottom:1px solid #cdd0d6;background:#f0f1f3;padding:44px 144px">
+<div style="display:grid;grid-template-columns:520px 1fr;gap:96px;align-items:start">
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:20px">THE FINDING &#183; EXTERNAL RETRIEVAL HIT@3</div>
+<div style="display:flex;align-items:baseline;gap:20px">
+<span style="font:500 34px/1 'Geist Mono',monospace;color:#5c6068;text-decoration:line-through">99.31%</span>
+<span style="font:700 68px/1 'Space Grotesk',sans-serif;letter-spacing:-.03em;color:#1c1e22">79.92%</span>
+</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:20px">
+<span style="padding:5px 11px;border-radius:99px;background:#3d5a73;color:#fafafb;font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em">CORRECTED</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.06em;color:#5c6068">640 external public cases</span>
+</div>
+</div>
+<div style="padding-top:34px">
+<p style="margin:0 0 12px;font:400 17px/1.55 Geist,sans-serif;color:#1c1e22;text-wrap:pretty">My own benchmark was marking its own homework.</p>
+<p style="margin:0;font:400 15px/1.62 Geist,sans-serif;color:#3f434a;text-wrap:pretty">The synthetic fixture was circular by construction &#8212; the generator wrote both the query and the gold answer, so it measured the generator, not the retriever. Run against 640 external public cases, the same retriever scores twenty points lower. That is the number reported everywhere on this site.</p>
+</div>
+</div>
+</div>
+
+<div style="padding:44px 144px 0">
+<figure style="margin:0;max-width:1152px">
+<div style="border:1px solid #cdd0d6;border-radius:7px;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;height:34px;padding:0 14px;background:#f0f1f3;border-bottom:1px solid #e2e3e7">
+<span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">agent-release-gates.streamlit.app</span>
+<span style="display:inline-flex;align-items:center;gap:6px;font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068"><span style="width:5px;height:5px;border-radius:99px;background:#3f9a5f"></span>LIVE</span>
+</div>
+<img src="scraps/demo-dash-v2.png" alt="Reviewer dashboard" style="display:block;width:100%;height:400px;object-fit:cover;object-position:0 0"></div>
+<figcaption style="margin-top:10px;font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">Reviewer dashboard &#183; retrieval and safety scores against the external corpus</figcaption>
+</figure>
+</div>
+
+<div style="padding:56px 144px 72px">
+<div style="display:grid;grid-template-columns:680px 352px;gap:120px;align-items:start">
+
+<div>
+<h2 style="margin:0 0 14px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">What I built</h2>
+<p style="margin:0 0 16px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">A release-readiness gate for AI-agent changes, published as a pip-installable package. Before a changed agent, prompt, model, or tool policy ships, it replays known incidents, applies policy-as-code gates, and produces a single ship / warn / block decision with the evidence behind it.</p>
+<div style="margin:0 0 16px;padding:16px 18px;background:#f0f1f3;border:1px solid #e2e3e7;border-radius:6px;font:400 12.5px/1.7 'Geist Mono',monospace;color:#3f434a">pip install agent-release-gates<br><span style="color:#5c6068"># two exit codes: 0 ships, 2 blocks CI</span><br><span style="color:#3d5a73">agent-safety</span> release-gate --policy config/incident_release_policy.yaml</div>
+<p style="margin:0 0 40px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">The core install is lean: just <span style="font-family:'Geist Mono',monospace;font-size:14px">pydantic</span>. The FastAPI evidence service and Streamlit reviewer dashboard are opt-in extras. The incident-replay suite also runs as a UK AI Security Institute Inspect eval.</p>
+
+<h2 style="margin:0 0 14px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">Evaluate your own agent</h2>
+<p style="margin:0 0 40px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">It isn't tied to my synthetic agent. Export a real agent's results &#8212; generic logs, LangChain or LangSmith traces, OpenAI Agents SDK run results, or LangGraph final states &#8212; and score them against the gates, or drive the replay against any OpenAI-compatible endpoint. The project ships candidate-results exporters and schemas so an external agent can be gated the same way.</p>
+
+<h2 style="margin:0 0 14px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">How it works</h2>
+<div style="margin:0 0 40px;padding:18px;background:#f0f1f3;border:1px solid #e2e3e7;border-radius:6px;font:400 12.5px/1.9 'Geist Mono',monospace;color:#3f434a">incidents &#8594; replay matrix &#8594; policy gates &#8594; ship / warn / block<br><span style="color:#5c6068">(synthetic)&#160;&#160;(deterministic)&#160;&#160;(policy as code)&#160;&#160;(CI exit code)</span></div>
+
+<h2 style="margin:0 0 14px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">Incident replay, the first gate</h2>
+<p style="margin:0 0 40px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">The first module turns redacted synthetic incidents into regression fixtures. Eight seeded incidents are replayed on every change, with a 100% closure rate and zero replay must-not violations, each producing a release-gate decision and an incident memo.</p>
+
+<h2 style="margin:0 0 14px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">How the benchmark broke</h2>
+<p style="margin:0 0 16px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">The synthetic benchmark scored the retriever at 99.31%, and for a while that was the headline. It shouldn't have been. The generator templates each query from the same variables as the gold answer, so the query is a projection of the thing it is meant to find. Two of the four retrievers score a flat 100% on it, which is the tell.</p>
+<p style="margin:0 0 16px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">Run the same retriever against public data it did not generate and it scores <span style="font-weight:500;color:#1c1e22">79.92% hit@3 over 640 cases and 510 documents</span> &#8212; TechQA 480 cases at 80.73%, WixQA 160 at 77.50%, with 69.61% top-1 citation and a 40.47% case failure rate. The largest single failure mode: 85 impossible questions answered instead of abstained.</p>
+<p style="margin:0 0 20px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">That roughly twenty-point drop is the useful result, so the external number is the one reported, and every synthetic figure is labelled in-corpus wherever it appears.</p>
+<div style="margin:0 0 40px;padding:16px 18px;border-left:2px solid #3d5a73;background:#f0f1f3;font:400 14.5px/1.7 Geist,sans-serif;color:#3f434a">The repo holds the full self-audit &#8212; six findings against my own work, in dependency order, including that three reported metrics were mathematically one measurement, that the improved retriever was an alias dictionary fitted to the eval strings, and that the safety classifier whitelists eval cases by name. A seventh problem was found the same way: a committed verdict had declared an input file that did not exist. A test now fails the build on any machine-local path under <span style="font-family:'Geist Mono',monospace;font-size:13px">reports/</span>.</div>
+
+<h2 style="margin:0 0 14px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">What the benchmark still does</h2>
+<p style="margin:0 0 16px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">It remains a regression fixture, which is a real job. It covers 358 golden cases, 60 red-team cases, 24 runbook sections and 180 synthetic tickets, and it catches behavioural drift between releases. On top of it sit six baseline-vs-intervention safety studies &#8212; instruction hierarchy, action-risk gates, safety-classifier review policy, RAG grounding, memory/context pollution, and goal conflict &#8212; plus judge-calibration runs across three providers.</p>
+<p style="margin:0 0 40px;font:400 16px/1.68 Geist,sans-serif;color:#3f434a;text-wrap:pretty">The in-corpus safety-classifier recall of 80.91% is deliberately not quoted as a headline here. It was measured with thirteen benign signals live, four of which match single eval cases by name; the recall expects it to fail once those are removed, and re-measuring it is an open item.</p>
+
+<h2 style="margin:0 0 14px;font:600 22px/1.3 'Space Grotesk',sans-serif;letter-spacing:-.01em;color:#1c1e22">Delivery</h2>
+<ul style="margin:0 0 44px;padding:0;list-style:none;display:grid;gap:12px">
+<li style="display:grid;grid-template-columns:16px 1fr;gap:12px;font:400 15.5px/1.62 Geist,sans-serif;color:#3f434a"><span style="color:#3d5a73;font-family:'Geist Mono',monospace">&#8212;</span><span>pip-installable package plus an <span style="font-family:'Geist Mono',monospace;font-size:13.5px">agent-safety</span> CLI with CI-friendly exit codes</span></li>
+<li style="display:grid;grid-template-columns:16px 1fr;gap:12px;font:400 15.5px/1.62 Geist,sans-serif;color:#3f434a"><span style="color:#3d5a73;font-family:'Geist Mono',monospace">&#8212;</span><span>UK AISI Inspect eval for the incident-replay suite</span></li>
+<li style="display:grid;grid-template-columns:16px 1fr;gap:12px;font:400 15.5px/1.62 Geist,sans-serif;color:#3f434a"><span style="color:#3d5a73;font-family:'Geist Mono',monospace">&#8212;</span><span>Candidate-results exporters for generic logs, LangChain/LangSmith traces, OpenAI Agents SDK run results and LangGraph final states</span></li>
+<li style="display:grid;grid-template-columns:16px 1fr;gap:12px;font:400 15.5px/1.62 Geist,sans-serif;color:#3f434a"><span style="color:#3d5a73;font-family:'Geist Mono',monospace">&#8212;</span><span>GitHub Pages report, PDF, Docker/Compose, CI running lint, tests, deterministic report regeneration, and an OpenTelemetry smoke test</span></li>
+</ul>
+
+<div id="limits" style="border:1px solid #cdd0d6;border-radius:6px;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:#f0f1f3;border-bottom:1px solid #e2e3e7">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#1c1e22">HONEST LIMITS</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">6 DOCUMENTED</span>
+</div>
+<div style="padding:6px 22px 10px">
+<div style="display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid #e2e3e7"><span style="font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">01</span><span style="font:400 14.5px/1.62 Geist,sans-serif;color:#3f434a">The synthetic benchmark is circular by construction and is not retrieval evidence. It is a regression fixture, and every figure drawn from it is labelled in-corpus.</span></div>
+<div style="display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid #e2e3e7"><span style="font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">02</span><span style="font:400 14.5px/1.62 Geist,sans-serif;color:#3f434a">The public TechQA and WixQA sets are samples, not the full datasets.</span></div>
+<div style="display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid #e2e3e7"><span style="font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">03</span><span style="font:400 14.5px/1.62 Geist,sans-serif;color:#3f434a">Safety-classifier recall was measured with case-matching signals still live and should be expected to fall when they are removed.</span></div>
+<div style="display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid #e2e3e7"><span style="font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">04</span><span style="font:400 14.5px/1.62 Geist,sans-serif;color:#3f434a">The incident-replay suite is eight authored samples: a conformance smoke check, not a benchmark that can rank models.</span></div>
+<div style="display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid #e2e3e7"><span style="font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">05</span><span style="font:400 14.5px/1.62 Geist,sans-serif;color:#3f434a">Human-review labels are simulated workflow labels. Independent reviewer labels are prepared but not published, and the hosted-model evidence is judge-calibration, not a broad multi-model agent comparison.</span></div>
+<div style="display:grid;grid-template-columns:34px 1fr;gap:14px;padding:16px 0"><span style="font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">06</span><span style="font:400 14.5px/1.62 Geist,sans-serif;color:#3f434a">The <span style="font-family:'Geist Mono',monospace;font-size:13px">repo --strict</span> gate covers the twelve modules where a typo could corrupt a published number, not the other sixty-one. That limit is documented in the repo rather than presented as a production claim.</span></div>
+</div>
+</div>
+</div>
+
+<div style="position:sticky;top:32px;display:flex;flex-direction:column;gap:36px">
+
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;padding-bottom:12px;border-bottom:1px solid #cdd0d6">READING TRACK</div>
+<div style="display:flex;flex-direction:column">
+<span style="padding:9px 0;font:400 13.5px/1.4 Geist,sans-serif;color:#5c6068">What I built</span>
+<span style="padding:9px 0;font:400 13.5px/1.4 Geist,sans-serif;color:#5c6068">Evaluate your own agent</span>
+<span style="padding:9px 0;font:400 13.5px/1.4 Geist,sans-serif;color:#5c6068">How it works</span>
+<span style="padding:9px 0;font:400 13.5px/1.4 Geist,sans-serif;color:#5c6068">Incident replay, the first gate</span>
+<span style="padding:9px 0 9px 12px;margin-left:-13px;border-left:1px solid #3d5a73;font:500 13.5px/1.4 Geist,sans-serif;color:#1c1e22">How the benchmark broke</span>
+<span style="padding:9px 0;font:400 13.5px/1.4 Geist,sans-serif;color:#5c6068">What the benchmark still does</span>
+<span style="padding:9px 0;font:400 13.5px/1.4 Geist,sans-serif;color:#5c6068">Delivery</span>
+<span style="padding:9px 0;font:400 13.5px/1.4 Geist,sans-serif;color:#5c6068">Honest limits</span>
+</div>
+</div>
+
+<div style="border:1px solid #cdd0d6;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">REPORTED</div>
+<div style="display:flex;align-items:baseline;gap:10px;margin-top:12px">
+<span style="font:500 15px/1 'Geist Mono',monospace;color:#5c6068;text-decoration:line-through">99.31%</span>
+<span style="font:700 30px/1 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#1c1e22">79.92%</span>
+</div>
+<div style="margin-top:10px;font:400 12px/1.6 'Geist Mono',monospace;color:#5c6068">external retrieval hit@3<br>640 cases &#183; 510 documents</div>
+</div>
+
+<div style="border:1px dashed #cdd0d6;border-radius:6px;padding:16px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068">HONEST LIMITS</div>
+<div style="margin-top:10px;font:400 14.5px/1.5 Geist,sans-serif;color:#1c1e22">Six documented <span style="color:#3d5a73">&#8594;</span></div>
+</div>
+
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;padding-bottom:12px;border-bottom:1px solid #cdd0d6">ALSO ON THE BENCH</div>
+<div style="display:grid;grid-template-columns:1fr;gap:1px;background:#e2e3e7;border:1px solid #e2e3e7;border-top:none;border-radius:0 0 6px 6px;overflow:hidden">
+<div style="background:#fafafb;padding:14px 16px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">04</span><span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">PREVIOUS</span></div>
+<div style="font:600 14.5px/1.3 'Space Grotesk',sans-serif;color:#1c1e22;margin-bottom:8px">Aerospace Prognostics</div>
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:500 13px/1 'Geist Mono',monospace;color:#5c6068;text-decoration:line-through">0.24</span><span style="font:700 17px/1 'Space Grotesk',sans-serif;color:#1c1e22">0.42</span></div>
+<div style="margin-top:5px;font:400 12px/1.4 'Geist Mono',monospace;color:#5c6068">event-wise recall</div>
+</div>
+<div style="background:#fafafb;padding:14px 16px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">06</span><span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">NEXT</span></div>
+<div style="font:600 14.5px/1.3 'Space Grotesk',sans-serif;color:#1c1e22;margin-bottom:8px">redteam-foundry</div>
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:700 17px/1 'Space Grotesk',sans-serif;color:#1c1e22">0&#8211;4%</span><span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068">vs 80%</span></div>
+<div style="margin-top:5px;font:400 12px/1.4 'Geist Mono',monospace;color:#5c6068">attack success</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+</div>
+
+<div style="margin-top:16px;max-width:1440px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+<div style="background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">FIXES 01</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a">Cross-references become the narrow instrument variant — mark, label, title, metric, stacked, no stack list and no arrow column. One anatomy, two densities. The same variant carries the two-up bench on the home page.</div>
+</div>
+<div style="background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">FIXES 03</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a">Prose holds 680; the rail takes 352 of the 1152 that was margin. Track, reported metric, limits pointer and cross-references all leave the column, so the page stops being the mobile layout with more air.</div>
+</div>
+<div style="background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">FIXES 10</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a">The finding takes the BAND rung once, above the demo: corrected pair at 68px, one sentence of what changed. "Key finding" as a separate late section goes — it was saying the same thing quietly, twice.</div>
+</div>
+</div>
+</div>
+
+<div id="15b">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+<span style="display:inline-flex;align-items:center;padding:5px 11px;border-radius:5px;background:#3d5a73;color:#fafafb;font:500 12px/1 'Geist Mono',monospace;letter-spacing:.1em">15b</span>
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;text-transform:uppercase">What changes at 390</span>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:22px;width:430px">
+
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">01 &#183; THE BAND STAYS THE SCALE BREAK</div>
+<div style="width:390px;background:#f0f1f3;border-top:1px solid #cdd0d6;border-bottom:1px solid #cdd0d6;padding:24px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:14px">THE FINDING</div>
+<div style="display:flex;align-items:baseline;gap:12px">
+<span style="font:500 20px/1 'Geist Mono',monospace;color:#5c6068;text-decoration:line-through">99.31%</span>
+<span style="font:700 40px/1 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#1c1e22">79.92%</span>
+</div>
+<div style="margin-top:10px;font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">external retrieval hit@3 &#183; 640 cases</div>
+<p style="margin:16px 0 0;font:400 14.5px/1.6 Geist,sans-serif;color:#3f434a">My own benchmark was marking its own homework. The synthetic fixture was circular by construction; the external number is the one reported.</p>
+</div>
+<div style="margin-top:8px;font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">Figures drop to 40px, rules stay full-bleed &#183; ~180px, not 430</div>
+</div>
+
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">02 &#183; THE RAIL BECOMES ONE DISCLOSURE</div>
+<div style="width:390px;background:#fafafb;border:1px solid #cdd0d6;border-radius:6px;padding:14px 18px">
+<div style="display:flex;align-items:center;justify-content:space-between">
+<span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#1c1e22">READING TRACK &#183; 8</span>
+<span style="font:400 13px/1 'Geist Mono',monospace;color:#3d5a73">[ + ]</span>
+</div>
+<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e3e7;font:500 13.5px/1.4 Geist,sans-serif;color:#1c1e22">How the benchmark broke</div>
+</div>
+<div style="margin-top:8px;font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">Collapsed, showing the section being read &#183; native details, disclose 220ms</div>
+</div>
+
+<div>
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#5c6068;margin-bottom:8px">03 &#183; THE NARROW VARIANT, WHICH IS WHERE 01 BROKE</div>
+<div style="width:390px;display:grid;gap:1px;background:#e2e3e7;border:1px solid #e2e3e7;border-radius:6px;overflow:hidden">
+<div style="background:#fafafb;padding:14px 16px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">04</span><span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">PREVIOUS</span></div>
+<div style="font:600 15px/1.3 'Space Grotesk',sans-serif;color:#1c1e22;margin-bottom:8px">Aerospace Prognostics</div>
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:500 13px/1 'Geist Mono',monospace;color:#5c6068;text-decoration:line-through">0.24</span><span style="font:700 18px/1 'Space Grotesk',sans-serif;color:#1c1e22">0.42</span></div>
+<div style="margin-top:5px;font:400 12px/1.4 'Geist Mono',monospace;color:#5c6068">event-wise recall</div>
+</div>
+<div style="background:#fafafb;padding:14px 16px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font:400 12px/1 'Geist Mono',monospace;color:#5c6068">06</span><span style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#5c6068">NEXT</span></div>
+<div style="font:600 15px/1.3 'Space Grotesk',sans-serif;color:#1c1e22;margin-bottom:8px">redteam-foundry</div>
+<div style="display:flex;align-items:baseline;gap:8px"><span style="font:700 18px/1 'Space Grotesk',sans-serif;color:#1c1e22">0&#8211;4%</span><span style="font:400 13px/1 'Geist Mono',monospace;color:#5c6068">vs 80%</span></div>
+<div style="margin-top:5px;font:400 12px/1.4 'Geist Mono',monospace;color:#5c6068">attack success</div>
+</div>
+</div>
+<div style="margin-top:8px;font:400 12px/1.5 'Geist Mono',monospace;color:#5c6068">Identical at 390 and inside the 352px rail &#183; declared minimum 280px</div>
+</div>
+
+<div style="background:#fafafb;border:1px solid #e2e3e7;border-radius:6px;padding:18px 20px">
+<div style="font:400 12px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#3d5a73;margin-bottom:8px">THE GATE THIS NEEDS</div>
+<div style="font:400 14px/1.55 Geist,sans-serif;color:#3f434a">One rendered-page assertion, on every route and width already swept: no two children of an instrument row have intersecting bounding boxes. That is the gate that would have caught finding 01, and it is cheap where the sweep already exists.</div>
+</div>
+
+</div>
+</div>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { lens: { a: 'all', b: 'all', c: 'all' }, open: {}, prov: { a: null, b: null, c: null } };
+
+  projects = [
+    { idx: '01', name: 'London Cycle-Hire Analytics Platform', stack: 'PySpark · dbt · DuckDB', fig: '41.4M', unit: 'journeys', struck: '', st: 'shipped', lens: 'data',
+      showed: 'Rebuilt a 41.4M-row pipeline so a full refresh runs in 9 minutes on one machine.' },
+    { idx: '03', name: 'Community Energy Flex', stack: 'FastAPI · Pydantic', fig: 'Jul 2026', unit: 'stopped', struck: '', st: 'stopped', lens: 'data',
+      showed: 'Stopped at the pilot: the tariff data I needed was never going to be published.' },
+    { idx: '05', name: 'Agent Release Safety Gates', stack: 'uv · Inspect AI', fig: '79.92%', unit: 'hit@3', struck: '99.31', st: 'shipped', lens: 'eval',
+      showed: 'The first 99.31% was the generator marking its own homework. The honest number is 79.92%.' },
+    { idx: '06', name: 'redteam-foundry', stack: 'Claude · pytest', fig: '0–4%', unit: 'jailbreak rate', struck: '', st: 'shipped', lens: 'eval',
+      showed: 'Four attack families across seven models; the spread is 0–4%, and I say why that is low.' }
+  ];
+
+  figures = [
+    { k: 'rows', big: '41.4M', cap: 'rows processed', prov: 'TfL cycle-hire journeys, Jan 2022 – Mar 2026, deduplicated on trip id.' },
+    { k: 'facts', big: '61', cap: 'facts checked at build', prov: 'Counted from the content registry on every deploy. The build fails on drift.' },
+    { k: 'limits', big: '4', cap: 'projects with stated limits', prov: 'Every project page carries a Limits section. No exceptions, including the one that stopped.' }
+  ];
+
+  lensOptions = [{ k: 'all', label: 'All work' }, { k: 'eval', label: 'Evaluation' }, { k: 'data', label: 'Data engineering' }];
+
+  setLens(v, k) { this.setState(s => ({ lens: { ...s.lens, [v]: k } })); }
+  toggleRow(v, idx) { const key = v + idx; this.setState(s => ({ open: { ...s.open, [key]: !s.open[key] } })); }
+  setProv(v, k) { this.setState(s => ({ prov: { ...s.prov, [v]: k } })); }
+
+  rows(v) {
+    const lens = this.state.lens[v];
+    return this.projects.filter(p => lens === 'all' || p.lens === lens).map(p => {
+      const key = v + p.idx;
+      const open = !!this.state.open[key];
+      return { ...p, hasStruck: !!p.struck, open, shut: !open, toggle: () => this.toggleRow(v, p.idx) };
+    });
+  }
+
+  chips(v) {
+    return this.lensOptions.map(o => ({
+      label: o.label, active: this.state.lens[v] === o.k, idle: this.state.lens[v] !== o.k,
+      on: () => this.setLens(v, o.k)
+    }));
+  }
+
+  figs(v) {
+    return this.figures.map(f => ({ ...f, on: () => this.setProv(v, f.k) }));
+  }
+
+  provLine(v) {
+    const k = this.state.prov[v];
+    const f = this.figures.find(x => x.k === k);
+    return f ? f.prov : 'Hover or focus a figure for the source it is counted from.';
+  }
+
+  countLine(v) {
+    const n = this.rows(v).length;
+    const lens = this.state.lens[v];
+    return '/?lens=' + lens + ' · ' + n + ' of 4 shown';
+  }
+
+  renderVals() {
+    const v = {};
+    ['a', 'b', 'c'].forEach(k => {
+      v['rows' + k.toUpperCase()] = this.rows(k);
+      v['chips' + k.toUpperCase()] = this.chips(k);
+      v['figs' + k.toUpperCase()] = this.figs(k);
+      v['prov' + k.toUpperCase()] = this.provLine(k);
+      v['count' + k.toUpperCase()] = this.countLine(k);
+    });
+    return v;
+  }
+}
+</script>
+</body>
+</html>
