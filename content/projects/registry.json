@@ -183,14 +183,14 @@
       "demo": "https://agent-release-gates.streamlit.app/",
       "tracks": ["ai"],
       "status": "shipped",
-      "release": "v0.1.2",
+      "release": "v0.1.4",
       "metrics": {
         "external retrieval hit@3": "79.92%",
         "public RAG cases": "640",
-        "tests": "309"
+        "gate mutation adequacy": "47.4%"
       },
       "banned": ["100% retrieval", "160 TechQA", "80 WixQA"],
-      "_metrics": "Pinned on the EXTERNAL result, not the in-corpus one. The repo's own README carries an [!IMPORTANT] block saying the synthetic benchmark is circular by construction and is not retrieval evidence, and the live dashboard leads with the same warning. The previous pins (safety recall 90.91%, side-effect block 100%) are both still numerically true, but the repo now records that the recall figure was measured with case-matching signals live and 'should not be read as a generalization estimate' — and a metric chip has nowhere to carry that caveat.",
+      "_metrics": "Pinned on the EXTERNAL result, not the in-corpus one. The repo's own README carries an [!IMPORTANT] block saying the synthetic benchmark is circular by construction and is not retrieval evidence, and the live dashboard leads with the same warning. The previous pins (safety recall 90.91%, side-effect block 100%) are both still numerically true, but the repo now records that the recall figure was measured with case-matching signals live and 'should not be read as a generalization estimate' — and a metric chip has nowhere to carry that caveat. THE TEST COUNT WAS DROPPED, NOT CORRECTED (Ross, 3 Aug 2026). It has been wrong at every single check — 305, 309, 309, 312, 317, the last two inside the same hour. A figure that decays faster than the page is edited is a liability rather than a fact, and the same count was removed from the upstream repository and from the CV for the same reason. It is replaced by gate mutation adequacy, which is a RESULT: 47.4% (9 of 19), 95% Wilson 27.3%-68.3%, 0 false positives over 4 benign controls. 47.4% AND NOT 52.6%: repairing the design defect the probe exposed moved the rate to 52.6% (10 of 19), but that is one discordant mutant at exact two-sided McNemar p = 1.0, and docs/finding_gate_mutation_adequacy.md states plainly that it 'is not distinguishable from noise and is not claimed as an improvement in the rate'. The site pins the number its source stands behind.",
       "mark": 5,
       "headline": {
         "metric": "external retrieval hit@3",
