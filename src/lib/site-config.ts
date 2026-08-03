@@ -33,6 +33,24 @@ export const siteConfig = {
   email: "rosscyking@gmail.com",
   location: "Sheffield, United Kingdom",
   availability: "Available for full-time roles from Oct 2026",
+
+  /**
+   * The right-hand half of /contact's availability band (design pass, 16a):
+   * "the visa fact right-aligned as a 12px mono label".
+   *
+   * SELECTED FROM content/about.mdx, NOT WRITTEN. Ross's sentence there is "I'm
+   * available from October 2026 and have a UK Graduate Visa route, so I don't
+   * need sponsorship for two years after graduating." This is the same two
+   * facts at label length — the route and the consequence — and the consequence
+   * is the half a hiring reader is actually screening on.
+   *
+   * It lives here rather than being read from the MDX because a band label is
+   * not prose: pulling a clause out of a paragraph at build time would mean the
+   * label changes shape whenever the paragraph is edited. FLAGGED for Ross —
+   * this is his fact in his words, shortened, and shortening published copy is
+   * his call.
+   */
+  visa: "UK Graduate Visa · no sponsorship for two years",
   links: {
     github: "https://github.com/rosscyking1115",
     linkedin: "https://www.linkedin.com/in/rosscyking",

@@ -109,6 +109,22 @@ test.describe("contact page — UI", () => {
       /^RK-\d{6}-\d{4}$/,
     );
 
+    // WHAT WAS ACTUALLY SENT, which screen 16b names first and the first
+    // version of this receipt did not have. It confirmed the transaction — a
+    // time and a reference — and not the content, which is a receipt for an
+    // unknown amount. `reset()` runs immediately after a successful send, so
+    // this is the only place the sender can still check what left.
+    const sent = receipt.locator("[data-receipt-sent]");
+    await expect(sent).toContainText("Playwright Test");
+    await expect(sent).toContainText("test@example.com");
+    await expect(sent).toContainText("automated end-to-end test");
+
+    // "By when" is a MARKED SLOT, not a guess — open item 06. It moved here
+    // from the availability block that screen 16a deletes, because it is what
+    // the person who has just written is asking. Asserted as marked so it
+    // cannot be quietly filled with something plausible.
+    await expect(receipt.locator("[data-open-slot]")).toHaveText(/not stated yet/);
+
     // AND IT DOES NOT CLAIM WHAT THE ACTION DOES NOT DO. src/actions/index.ts
     // sends one email, to Ross, with replyTo set to the sender — no copy goes
     // to the visitor. The spec's mock says "a copy has gone to your address";
@@ -227,6 +243,23 @@ test.describe("contact page — chrome and styling", () => {
     await expect(main.locator(".bg-state-live")).toBeVisible();
     await expect(main.getByText(/Available for full-time roles/)).toBeVisible();
 
+    // IT IS THE ROUTE'S BAND NOW (R9, screen 16a): "one ruled line, a 6px
+    // #3f9a5f dot, the availability sentence, and the visa fact right-aligned
+    // as a 12px mono label. The three-cell availability block is gone."
+    const band = main.locator("[data-availability-band]");
+    await expect(band).toHaveCount(1);
+    const fullBleed = await band.evaluate(
+      (el) => Math.round(el.getBoundingClientRect().width) >= window.innerWidth - 1,
+    );
+    expect(fullBleed, "the availability band is not full-bleed").toBe(true);
+    await expect(band).toContainText("UK Graduate Visa");
+
+    // The two dashed cells went WITH the block. Open item 06 is closed by
+    // deletion on this surface — "seeking" is the standfirst's job and the
+    // reply time moved to the receipt — so a dashed slot reappearing here means
+    // the three-cell block came back.
+    await expect(band.locator("[data-open-slot]")).toHaveCount(0);
+
     for (const label of ["Email", "GitHub", "LinkedIn", "Download CV"]) {
       const link = main.locator(".divide-y > a").filter({ hasText: label });
       await expect(link, `${label} link is missing`).toBeVisible();
@@ -234,6 +267,48 @@ test.describe("contact page — chrome and styling", () => {
       // or lucide import was dropped.
       await expect(link.locator("svg").first(), `${label} has no icon`).toBeVisible();
     }
+  });
+
+  test("the form takes the route's MAJOR, and says so exactly once", async ({ page }) => {
+    // The form carried its own <h2>Send a message</h2> at 20px. R9 makes the
+    // form this route's MAJOR, so the heading moved to the section head above
+    // the island — and for one commit both existed, 60px apart, with identical
+    // text. Two identical headings read as a heading and a subtitle, so nobody
+    // sees it; the R9 gate counted it.
+    await page.goto("/contact");
+    await expect(page.getByRole("heading", { name: "Send a message" })).toHaveCount(1);
+    await expect(page.getByRole("heading", { name: "Send a message" })).toHaveCSS(
+      "font-size",
+      "32px",
+    );
+  });
+
+  test("the form is the primary column, and the direct routes are the rail", async ({
+    page,
+  }) => {
+    // 680 + 120 + 352 = 1152, the same grid as the write-up. The FORM is the
+    // primary column, which is a swap: it used to sit in the right-hand column
+    // behind the intro and the link list, so the page led with three ways not
+    // to use the thing it is for.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/contact");
+
+    const box = await page.evaluate(() => {
+      const form = document.querySelector("form")!.closest("div")!.parentElement!;
+      const rail = document
+        .querySelector('aside[aria-label="Direct routes"]')!
+        .getBoundingClientRect();
+      const primary = form.getBoundingClientRect();
+      return {
+        primary: Math.round(primary.width),
+        rail: Math.round(rail.width),
+        formIsLeft: primary.left < rail.left,
+      };
+    });
+
+    expect(box.primary).toBe(680);
+    expect(box.rail).toBe(352);
+    expect(box.formIsLeft, "the form is not the primary column").toBe(true);
   });
 
   test("the form controls use the design-system primitives", async ({ page }) => {
