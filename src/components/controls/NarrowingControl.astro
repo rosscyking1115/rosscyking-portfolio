@@ -72,8 +72,20 @@ const { name, label, groupLabel, options, defaultValue, class: className } = Ast
           data-narrow-value={option.value}
           aria-pressed={option.value === defaultValue ? "true" : "false"}
           class={cn(
-            "focus-visible:ring-ring border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground cursor-pointer rounded-full border px-3 py-1 font-mono text-xs whitespace-nowrap focus-visible:ring-2 focus-visible:outline-none",
-            "aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-primary aria-pressed:font-medium",
+            // THE CHIP, to the spec README's own values. Rest: 1px #cdd0d6,
+            // transparent. Hover: #f0f1f3. Selected: SOLID #3d5a73 with
+            // #fafafb text and no border.
+            //
+            // The selected state is the correction that matters. This shipped
+            // as a 10% accent tint with the label in primary — carried over
+            // from the lens switcher it replaced, with a comment claiming the
+            // tint was "the better of the two". It was not a choice to make:
+            // the spec draws a solid fill, and a filter's active state is the
+            // one thing on the page that has to be unmissable.
+            "border-instrument-reading-border text-muted-foreground rounded-pill text-label cursor-pointer border bg-transparent px-3 py-1.5 font-mono whitespace-nowrap",
+            "hover:bg-muted hover:text-foreground",
+            "aria-pressed:bg-primary aria-pressed:text-primary-foreground aria-pressed:border-transparent",
+            "focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none",
             "ease-instrument transition-colors duration-[var(--motion-state)]",
           )}
         >

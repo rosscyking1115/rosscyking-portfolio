@@ -36,6 +36,19 @@ export function ContactForm() {
     formState: { errors },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
+    /**
+     * ON BLUR, never on keystroke. The spec is explicit — "form validation on
+     * blur, never on keystroke" — and the mock gives the reason: "nothing
+     * should tell you that you are wrong while you are still typing."
+     *
+     * react-hook-form's default is `onSubmit`, then `onChange` once a field has
+     * errored. So the first message arrived on submit and every one after it
+     * arrived per keypress — precisely the behaviour the rule forbids, reached
+     * by doing nothing. `reValidateMode` matters as much as `mode`: set one and
+     * not the other and the second keystroke starts talking again.
+     */
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     defaultValues: { name: "", email: "", company: "", message: "" },
   });
 
@@ -68,7 +81,7 @@ export function ContactForm() {
    * What is left is true: the time it was received, and Ross's own existing
    * sentence about when he replies — selected from the page above, not written.
    */
-  const [receipt, setReceipt] = useState<string | null>(null);
+  const [receipt, setReceipt] = useState<{ at: string; reference: string } | null>(null);
 
   /**
    * Turnstile's widget size, chosen by how much room the form actually has.
@@ -136,16 +149,33 @@ export function ContactForm() {
         // surfaced as the whole island unmounting into React's error boundary
         // and the receipt never appearing. Caught by running the submission,
         // not by types: both spellings type-check.
-        setReceipt(
-          new Intl.DateTimeFormat("en-GB", {
+        const sentAt = new Date();
+        const pad = (value: number) => String(value).padStart(2, "0");
+        setReceipt({
+          at: new Intl.DateTimeFormat("en-GB", {
             day: "numeric",
             month: "short",
             year: "numeric",
             hour: "2-digit",
             minute: "2-digit",
             timeZoneName: "short",
-          }).format(new Date()),
-        );
+          }).format(sentAt),
+          /**
+           * THE REFERENCE, which the spec asks for and which I argued against
+           * before the spec README arrived: "success returns a receipt with a
+           * reference, in place".
+           *
+           * Derived from the moment of sending — RK-YYMMDD-HHMM in the
+           * visitor's own clock — and NOT from anything the server returns,
+           * because the action returns no id. That is said on the page rather
+           * than hidden: it is the time you sent it, which is enough to find
+           * one message in one inbox, and it is not dressed up as a ticket
+           * number issued by a system that does not exist.
+           */
+          reference: `RK-${pad(sentAt.getFullYear() % 100)}${pad(
+            sentAt.getMonth() + 1,
+          )}${pad(sentAt.getDate())}-${pad(sentAt.getHours())}${pad(sentAt.getMinutes())}`,
+        });
         reset();
         return;
       }
@@ -174,12 +204,28 @@ export function ContactForm() {
           <span className="bg-state-live mr-2 inline-block size-1.5 rounded-full" />
           Received
         </p>
-        <p className="mt-3 font-mono text-sm" data-receipt-time>
-          {receipt}
-        </p>
-        <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
+        <dl className="mt-3 flex flex-col gap-1.5">
+          <div className="flex gap-3">
+            <dt className="text-muted-foreground text-label w-24 shrink-0 font-mono tracking-wider uppercase">
+              Reference
+            </dt>
+            <dd className="font-mono text-sm" data-receipt-reference>
+              {receipt.reference}
+            </dd>
+          </div>
+          <div className="flex gap-3">
+            <dt className="text-muted-foreground text-label w-24 shrink-0 font-mono tracking-wider uppercase">
+              Received
+            </dt>
+            <dd className="font-mono text-sm" data-receipt-time>
+              {receipt.at}
+            </dd>
+          </div>
+        </dl>
+        <p className="text-body mt-4 text-sm leading-relaxed">
           Your message is with me. I reply within a day or two — if it is urgent, email is
-          still the fastest route.
+          still the fastest route. The reference is the time you sent it; quote it back if
+          you need to.
         </p>
         <button
           type="button"

@@ -18,6 +18,10 @@ import { cn } from "../../lib/utils";
  * There is no fourth mode. R5: "Never fabricate a correction to fill the slot."
  * A project with nothing true to say here has no headline at all, and renders
  * the designed empty cell in MetricReadout.astro.
+ *
+ * PILL GEOMETRY, per the spec README: 99px radius, not the 4px rectangle this
+ * shipped as when it was built from the mock alone. Size is 12px rather than
+ * the spec's 10px — see the conflict note in global.css.
  */
 interface Props {
   mode: MetricMode;
@@ -42,7 +46,7 @@ const DESCRIPTION: Record<MetricMode, string> = {
 
 <span
   class={cn(
-    "inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-xs tracking-wider whitespace-nowrap uppercase",
+    "rounded-pill inline-flex items-center border px-3 py-0.5 font-mono text-label tracking-wider whitespace-nowrap uppercase",
     STYLES[mode],
     className,
   )}

@@ -185,7 +185,7 @@ const updated = new Date().toLocaleDateString("en-GB", {
     <h1 class="font-display mt-4 text-4xl font-bold tracking-tight sm:text-5xl">
       Privacy
     </h1>
-    <p class="text-muted-foreground mt-4 text-lg leading-relaxed text-pretty">
+    <p class="text-body mt-4 text-lg leading-relaxed text-pretty">
       Grouped by what you did, rather than by what I could collect. Opening a page is the
       only row that applies to everyone — the other {onlyIfYouAct} need you to act first. I
       am the data controller: {siteConfig.name}, Sheffield, United Kingdom, at <a
@@ -207,9 +207,7 @@ const updated = new Date().toLocaleDateString("en-GB", {
                 <div class="grid gap-2 py-4 sm:grid-cols-[1.4fr_1fr] sm:gap-6">
                   <div>
                     <p class="text-sm leading-relaxed font-medium">{flow.what}</p>
-                    <p class="text-muted-foreground mt-1 text-sm leading-relaxed">
-                      {flow.why}
-                    </p>
+                    <p class="text-body mt-1 text-sm leading-relaxed">{flow.why}</p>
                   </div>
                   <dl class="flex flex-col gap-2 sm:items-end sm:text-right">
                     <div>
@@ -250,7 +248,7 @@ const updated = new Date().toLocaleDateString("en-GB", {
 
     <section class="mt-14" data-not-collected>
       <IndexMark mark="05" label="Not collected" />
-      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+      <p class="text-body mt-3 text-sm leading-relaxed">
         Each of these was checked against the code that would have to do it, and against
         the live site on 2&nbsp;August&nbsp;2026 — not assumed.
       </p>
@@ -271,7 +269,7 @@ const updated = new Date().toLocaleDateString("en-GB", {
 
     <section class="mt-14">
       <IndexMark mark="06" label="Your rights" />
-      <p class="text-muted-foreground mt-3 text-sm leading-relaxed">
+      <p class="text-body mt-3 text-sm leading-relaxed">
         Under the UK GDPR you can, at any time:
       </p>
       <ul class="mt-4 flex flex-col gap-2.5">
@@ -287,7 +285,7 @@ const updated = new Date().toLocaleDateString("en-GB", {
           ))
         }
       </ul>
-      <p class="text-muted-foreground mt-5 text-sm leading-relaxed">
+      <p class="text-body mt-5 text-sm leading-relaxed">
         Email <a href={`mailto:${siteConfig.email}`} class="prose-link"
           >{siteConfig.email}</a
         > and I will do it. The ICO's own guidance is at <a

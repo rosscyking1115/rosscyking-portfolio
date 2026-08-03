@@ -44,7 +44,12 @@ interface RegistryProject {
   mark?: number;
   status?: string;
   demo?: string | null;
-  headline?: { metric: string; mode: MetricMode; withdrawn?: string } | null;
+  headline?: {
+    metric: string;
+    mode: MetricMode;
+    withdrawn?: string;
+    control?: string;
+  } | null;
 }
 
 /** The registry's project table, typed once so every reader below shares it. */
@@ -120,6 +125,15 @@ export interface Headline {
    * been written about before it can be displayed.
    */
   withdrawn?: string;
+  /**
+   * The control this result is measured against, present only when mode is
+   * CONTROLLED, and rendered beside it. The spec renders that mode as "result
+   * vs control, side by side", and redteam-foundry's own write-up says why: "a
+   * negative result only means something if the pipeline can detect a
+   * positive." A 0–4% attack success with no 80% beside it is the unsupported
+   * null the project exists to argue against.
+   */
+  control?: { value: string; label: string };
 }
 
 /**
@@ -148,11 +162,22 @@ export function projectHeadline(entry: Project): Headline | null {
         `validate-projects.mjs gates this — run \`npm run validate:projects\`.`,
     );
   }
+  const control = spec.control
+    ? entry.data.metrics?.find((m) => m.label === spec.control)
+    : undefined;
+  if (spec.control && !control) {
+    throw new Error(
+      `"${entry.id}" pins control metric "${spec.control}", which its MDX does not publish. ` +
+        `validate-projects.mjs gates this — run \`npm run validate:projects\`.`,
+    );
+  }
+
   return {
     value: metric.value,
     label: metric.label,
     mode: spec.mode,
     ...(spec.withdrawn ? { withdrawn: spec.withdrawn } : {}),
+    ...(control ? { control: { value: control.value, label: control.label } } : {}),
   };
 }
 

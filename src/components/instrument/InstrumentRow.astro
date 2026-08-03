@@ -142,11 +142,21 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
         at ten different x positions — 41.4M, 7,264, 0.24 0.42, 0–4% — and the
         one page built for comparing projects made the eye travel to find each
         number. A comparison surface needs a ruled column even when there is no
-        <table>. The widths are MEASURED, not guessed. The longest label,
-        "holdout precision (corrected)", renders at 209px in Geist Mono 12px;
-        13rem is 208px, so it wrapped and left two of the ten rows 96px tall
-        against everyone else's 81px. 14rem clears it with 15px to spare, and
-        11rem holds CORRECTED beside RUN LOG.
+        <table>. The widths are MEASURED, not guessed, and both have been
+        measured twice.
+
+        The readout is 14rem because the longest label, "holdout precision
+        (corrected)", renders at 209px in Geist Mono 12px; 13rem is 208px, so it
+        wrapped and left two of the ten rows 96px tall against everyone else's
+        81px.
+
+        The token column was 11rem and is now 13rem. The status tokens became
+        the spec's pills — 99px radius, 12px, 12px of horizontal padding each
+        side — and the widest pair, CONTROLLED (104px) beside RUN LOG (81px),
+        needs 193px against the 176px it had. Two rows wrapped and grew to 92px.
+        Measured across all ten: the largest requirement is 193px, so 13rem
+        (208px) clears every pair with room for a longer token than any that
+        exists.
 
         Below sm the two stack rather than sharing a wrapped flex line. Wrapped,
         the chips landed BETWEEN a value and its own label — so "41.4M" and
@@ -156,7 +166,7 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
     }
     <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
       <MetricReadout headline={headline} class="sm:w-56" />
-      <div class="flex flex-wrap items-center gap-2 sm:w-44 sm:pt-0.5">
+      <div class="flex flex-wrap items-center gap-2 sm:w-[13rem] sm:pt-0.5">
         {headline && <MetricMode mode={headline.mode} />}
         <ContentState state={state} />
       </div>

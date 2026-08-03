@@ -66,6 +66,23 @@ const WITHDRAWN_SIZE = size === "lead" ? "text-lg" : "text-sm";
         >
           {headline.value}
         </span>
+        {headline.control && (
+          /*
+            CONTROLLED renders "result vs control, side by side" — the spec's
+            words. Built the first time as the result alone with a CONTROLLED
+            pill beside it, which is the shape the mode exists to reject:
+            redteam-foundry's write-up states it outright, "a negative result
+            only means something if the pipeline can detect a positive." The
+            0–4% and the 80% belong in the same eyeline or the pill is a label
+            for something the reader cannot see.
+          */
+          <span class={cn("text-muted-foreground font-mono", WITHDRAWN_SIZE)}>
+            <span class="sr-only"> measured against a control of </span>
+            <span aria-hidden="true">vs </span>
+            {headline.control.value}
+            <span class="sr-only"> {headline.control.label}</span>
+          </span>
+        )}
       </div>
       <span
         class="text-muted-foreground font-mono text-xs leading-tight"
