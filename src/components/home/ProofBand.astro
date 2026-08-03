@@ -38,19 +38,39 @@ import { proofStats } from "../../lib/registry-stats";
  * number to animate towards without parsing "7,264" back out of the markup.
  * The rendered text is still the FINAL value — see the note on the span below.
  */
+/**
+ * `source` is what R8 asks these numbers to be able to answer — "numbers are
+ * counted, not typed" — and the design pass gives it an interaction: hovering
+ * or focusing a figure writes its source into a fixed slot beneath the band.
+ *
+ * Each string names the QUERY, not the answer. "Counted from the registry" is
+ * what the footer already said and is true of all three; what a reader cannot
+ * otherwise find out is which rows were counted and on what test.
+ */
 const items = [
   {
     value: String(proofStats.shipped),
     count: proofStats.shipped,
     label: "projects shipped",
+    source: "Projects in registry.json whose status is “shipped”.",
   },
   {
     value: proofStats.tests.toLocaleString("en-GB"),
     count: proofStats.tests,
     label: "tests across them",
+    source:
+      "Every registry metric on a shipped project whose label contains “test”, summed.",
   },
-  { value: String(proofStats.demos), count: proofStats.demos, label: "live demos" },
+  {
+    value: String(proofStats.demos),
+    count: proofStats.demos,
+    label: "live demos",
+    source: "Shipped projects carrying a demo URL in the registry.",
+  },
 ];
+
+/** The slot's resting text. Always present, always occupied — see below. */
+const PROVENANCE_DEFAULT = "Hover or focus a figure for the source it is counted from.";
 
 const counted = new Date().toLocaleDateString("en-GB", {
   day: "numeric",
@@ -59,7 +79,7 @@ const counted = new Date().toLocaleDateString("en-GB", {
 });
 ---
 
-<section aria-label="Proof" class="border-border border-y">
+<section aria-label="Proof" class="bg-muted border-border border-y">
   {
     /*
       No Container, and no max-width. That is the measure change; wrapping this
@@ -70,43 +90,50 @@ const counted = new Date().toLocaleDateString("en-GB", {
       than as three boxes that happen to be adjacent.
     */
   }
-  <dl
-    class="divide-border grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0"
-    data-proof-strip
-  >
+  <dl class="divide-border grid grid-cols-3 divide-x" data-proof-strip>
     {
       items.map((item) => (
-        <div class="px-6 py-6 sm:px-8 sm:py-10">
+        <div class="px-4 py-8 first:pl-6 last:pr-6 sm:px-8 sm:py-10 sm:first:pl-8 sm:last:pr-8">
           <dt class="sr-only">{item.label}</dt>
           <dd>
             {/*
-              92px is the spec's number and it is a CEILING, not a fixed size.
-              At 320px three digits of Geist Mono at 92px is 166px against a
-              268px column, which leaves the label nowhere to go — so it steps
-              down twice. `tabular-nums` keeps the three cells' digits on the
-              same rhythm even though the values have different widths.
+              A BUTTON, AND ON A PHONE THAT IS THE WHOLE POINT. The design pass
+              specifies "hovering or focusing a band figure writes its source
+              into a fixed slot beneath the band" — and hover does not exist on
+              a touch screen, while focus arrives there only via a tap. Built as
+              a hover rule on a <span> this interaction would have been
+              desktop-only on a site whose traffic is mostly phones, and it
+              would have looked finished.
 
-              THE FINAL VALUE IS WHAT SHIPS. `data-count-to` is the same number
-              again, and the script counts from zero UP to what is already
-              rendered — so no JavaScript, an observer that never fires, or a
-              reader who asked for less motion all get the right figure rather
-              than a zero that never moves. This is the "assert absence" habit
-              applied to a script: the page must be correct with it deleted.
+              So it is a real control: tap, click, or Tab to it, and the source
+              appears. `aria-describedby` points at the slot, so a screen reader
+              gets the provenance as part of the figure's description rather
+              than as a paragraph somewhere else on the page.
 
-              It cannot shift the layout either, and that is structural rather
-              than lucky: the label below is `block`, so it sits on its own line
-              and the figure's width reaches nothing. `tabular-nums` keeps every
-              intermediate frame on the same digit rhythm.
+              92px is R9's BAND figure and it is a CEILING. At 390px three
+              cells of it is impossible, so the mobile step is 40px — the
+              audit's own number, and its reasoning: "they are short and they
+              read fine small". What that fixes is finding 06, three quarters of
+              the phone home page being one shape: the figures used to STACK,
+              spending roughly 430px on eleven characters.
             */}
-            <span
-              class="font-mono text-5xl leading-none font-medium tracking-tight tabular-nums sm:text-7xl lg:text-[92px]"
-              data-count-to={item.count}
+            <button
+              type="button"
+              class="reticle-cursor block w-full cursor-pointer text-left"
+              data-figure
+              data-source={item.source}
+              aria-describedby="proof-provenance"
             >
-              {item.value}
-            </span>{" "}
-            <span class="text-muted-foreground mt-2 block font-mono text-xs tracking-wider uppercase sm:mt-4">
-              {item.label}
-            </span>
+              <span
+                class="text-foreground block font-mono text-[40px] leading-none font-medium tracking-[-0.03em] tabular-nums sm:text-7xl lg:text-[92px]"
+                data-count-to={item.count}
+              >
+                {item.value}
+              </span>{" "}
+              <span class="text-muted-foreground mt-3 block font-mono text-[13px] tracking-[0.06em] uppercase sm:mt-4">
+                {item.label}
+              </span>
+            </button>
           </dd>
         </div>
       ))
@@ -139,11 +166,70 @@ const counted = new Date().toLocaleDateString("en-GB", {
     }
   </script>
 
+  {
+    /*
+      THE PROVENANCE SLOT (design pass, home interactions).
+
+      "The slot is always present and always occupied — default text 'Hover or
+      focus a figure for the source it is counted from.' — so nothing shifts."
+
+      Both halves of that are the design. ALWAYS PRESENT, because a slot that
+      appears on hover pushes the whole page down at the moment the reader's
+      pointer is somewhere specific, which is the worst possible time. ALWAYS
+      OCCUPIED, because an empty reserved strip reads as a rendering fault.
+
+      `min-h` rather than a fixed height: the longest source wraps to two lines
+      at 390px, and clipping a sentence to protect a layout is the wrong way
+      round. It is measured from the resting state, so nothing shifts on the
+      widths where it fits — and where it does not, it grows once, on the page
+      the reader is already looking at.
+
+      `aria-live="polite"` so the source is announced when a figure takes focus
+      rather than only being reachable by hunting for it.
+    */
+  }
   <p
-    class="text-muted-foreground border-border border-t px-6 py-3 font-mono text-xs sm:px-8"
+    id="proof-provenance"
+    data-provenance
+    aria-live="polite"
+    class="text-muted-foreground border-border ease-instrument flex min-h-5 items-center border-t px-6 py-3 font-mono text-xs transition-[color] duration-[var(--motion-state)] sm:px-8"
+  >
+    {PROVENANCE_DEFAULT}
+  </p>
+
+  <p
+    class="text-muted-foreground border-border border-t px-6 py-2.5 font-mono text-xs sm:px-8"
   >
     Counted from the project registry, which gates every published number &middot; {
       counted
     }
   </p>
+
+  <script is:inline>
+    (() => {
+      try {
+        const slot = document.querySelector("[data-provenance]");
+        const figures = document.querySelectorAll("[data-figure]");
+        if (!slot || !figures.length) return;
+
+        const resting = slot.textContent;
+        const show = (event) => {
+          slot.textContent = event.currentTarget.getAttribute("data-source") || resting;
+        };
+        const rest = () => {
+          slot.textContent = resting;
+        };
+
+        for (const figure of figures) {
+          figure.addEventListener("pointerenter", show);
+          figure.addEventListener("focus", show);
+          figure.addEventListener("click", show);
+          figure.addEventListener("pointerleave", rest);
+          figure.addEventListener("blur", rest);
+        }
+      } catch {
+        // The slot keeps its resting sentence, which is true either way.
+      }
+    })();
+  </script>
 </section>

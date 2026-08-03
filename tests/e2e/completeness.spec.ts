@@ -198,7 +198,13 @@ test.describe("completeness — now building (finding #6)", () => {
 
     const strip = page.getByRole("complementary", { name: "Now building" });
     await expect(strip).toBeVisible();
-    await expect(strip.getByText("[ // ]")).toBeVisible();
+    // R9 DEMOTED THIS TO QUIET, so the bracketed mark is gone by design — the
+    // allocation table's "Currently → QUIET" for the home route. A strip of
+    // private work-in-progress used to open with the same mark and tick rule as
+    // the featured work, which is finding 05's flatness in one line. What is
+    // asserted instead is that the section still ANNOUNCES ITSELF: a QUIET rung
+    // is a quieter label, not a missing one.
+    await expect(strip.getByText("Now building")).toBeVisible();
     await expect(strip.getByText("fixture-project-one")).toBeVisible();
     await expect(strip.getByText("fixture-project-two")).toBeVisible();
     await expect(strip.getByText(/Private repos while in progress/)).toBeVisible();

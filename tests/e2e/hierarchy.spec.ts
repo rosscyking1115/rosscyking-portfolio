@@ -31,7 +31,6 @@ import { ROUTES } from "./routes";
  * design pass has an allocation for and this repository has not applied yet.
  */
 const PENDING: Record<string, string> = {
-  "/": "blocked on open item 10 — Ross has not chosen 18a, 18b or 18c",
   // The rail and the BAND landed with build-order step 4; what is left is the
   // .doc heading scale. R9 gives this route MAJOR = "Method", and marking ONE
   // authored <h2> as the major rung needs authored data — the same argument
@@ -65,6 +64,7 @@ test.describe("R9 — the section ladder", () => {
           .trim();
         const bands: string[] = [];
         for (const el of document.querySelectorAll("main *")) {
+          if (!el.checkVisibility()) continue;
           const box = el.getBoundingClientRect();
           if (box.width < window.innerWidth - 1) continue;
           if (box.height < 40) continue;
@@ -98,7 +98,19 @@ test.describe("R9 — the section ladder", () => {
         // The first run of this gate omitted all three and reported the row
         // titles on /projects, /about and /404 as ladder violations at 16px —
         // three failures that were entirely the selector's fault.
+        // VISIBLE ONLY, and this is a fourth exclusion with a fourth reason.
+        // The home page prerenders one panel per lens and shows the chosen one
+        // with CSS, so the document carries three MAJOR headings and the reader
+        // sees one. R9 is a quota on what is on the SCREEN — a rule about
+        // hierarchy cannot be enforced against markup nobody is looking at.
+        //
+        // `checkVisibility()` with its defaults excludes `display: none` and
+        // keeps opacity-0 elements, which is the right way round here too: a
+        // heading held at zero opacity by an arrival is still a heading on the
+        // page, and hiding it from the count would let a route smuggle a second
+        // MAJOR in behind an entrance.
         const sections = [...document.querySelectorAll("main h2, main h3")]
+          .filter((el) => el.checkVisibility())
           .filter((el) => !el.closest("li, article, .doc"))
           .map((el) => ({
             el: describe(el),
