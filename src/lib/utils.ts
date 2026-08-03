@@ -30,6 +30,8 @@ const twMerge = extendTailwindMerge({
         {
           text: [
             "band",
+            "major",
+            "minor",
             "step",
             "bio",
             "body",

@@ -1,6 +1,7 @@
 ---
 import Container from "../components/layout/Container.astro";
 import IndexMark from "../components/layout/IndexMark.astro";
+import SectionHead from "../components/layout/SectionHead.astro";
 import Base from "../layouts/Base.astro";
 import { colophonStats, stack } from "../lib/colophon-stats";
 import { proofStats } from "../lib/registry-stats";
@@ -133,7 +134,22 @@ const numbers = [
       figures sit on the same left edge as every other line.
     */
   }
-  <section aria-label="Site numbers" class="border-border border-y">
+  {
+    /*
+      THE ROUTE'S ONE BAND (R9). Full-bleed, filled `--muted` (#f0f1f3 light,
+      #212327 dark), a 1px rule top and bottom. The fill is what makes it a
+      BAND rather than a ruled strip — before this it was two hairlines around
+      the page background, which reads as a divider, and a divider is not a
+      rung.
+
+      The home proof band is the other one on the site and is deliberately NOT
+      converted here: /` is blocked on open item 10, and filling it now would
+      commit the one BAND that route has before Ross has chosen whether the
+      band leads the page (18c), follows the hero (18b) or sits under the index
+      as evidence (18a).
+    */
+  }
+  <section aria-label="Site numbers" class="bg-muted border-border border-y">
     <Container size="sm" class="px-0">
       <dl
         class="divide-border grid grid-cols-1 divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0"
@@ -165,8 +181,19 @@ const numbers = [
   </section>
 
   <Container class="py-14" size="sm">
+    {
+      /*
+        R9's allocation table names this route's MAJOR as "How it is built".
+        No such section exists here — the page is a run log, a stack table and
+        a limits list — so the rung is mapped by INTENT rather than by string:
+        the run log is the page's thesis ("a project write-up pointed at the
+        site; it leads with what went wrong"), and the other two are reference.
+        Mapping a rung to the nearest heading name instead would have made the
+        stack table the loudest thing on a page about failure.
+      */
+    }
     <section data-run-log>
-      <IndexMark mark="01" label="The run log that fails" />
+      <SectionHead rung="major" mark="01" label="The run log that fails" class="mt-0" />
       <p class="text-body mt-3 text-sm leading-relaxed">
         Findings against my own work on this site, in the order they were made. Each one
         was caught by diffing, measuring or testing — none by looking at the page.
@@ -179,9 +206,16 @@ const numbers = [
                 {String(index + 1).padStart(2, "0")}
               </span>
               <div>
-                <h2 class="font-display text-base font-semibold tracking-tight">
+                {/*
+                  A <p>, not an <h2>. Five findings each carrying a heading put
+                  five entries in the document outline at the same weight as the
+                  three sections containing them — the outline said the page had
+                  eight equal parts. The entry title is still the first and
+                  boldest thing in its row; it is simply not a landmark.
+                */}
+                <p class="font-display text-base font-semibold tracking-tight">
                   {entry.found}
-                </h2>
+                </p>
                 <p class="text-body mt-1.5 text-sm leading-relaxed">{entry.detail}</p>
                 <p class="text-muted-foreground mt-2 border-l-2 border-current/20 pl-3 font-mono text-xs leading-relaxed">
                   {entry.cost}
@@ -193,8 +227,8 @@ const numbers = [
       </div>
     </section>
 
-    <section class="mt-14" data-stack-table>
-      <IndexMark mark="02" label="Stack" />
+    <section data-stack-table>
+      <SectionHead rung="minor" label="Stack" />
       <p class="text-body mt-3 text-sm leading-relaxed">
         The pieces that decide how the site behaves. Versions are read from package.json
         at build time, so a bump cannot leave this page claiming the old one.
@@ -213,8 +247,8 @@ const numbers = [
       </div>
     </section>
 
-    <section class="mt-14" data-limits>
-      <IndexMark mark="03" label="Honest limits" />
+    <section data-limits>
+      <SectionHead rung="minor" label="Honest limits" />
       <p class="text-body mt-3 text-sm leading-relaxed">
         Every one of these is read off something the repository already records — a config
         note, a gate, a marked slot — rather than inferred. If one is wrong, the record is

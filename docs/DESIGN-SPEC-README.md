@@ -318,8 +318,128 @@ Card summaries are cut to their first sentence on index surfaces — a selection
 
 ---
 
+# Second pass — execution audit and the R9 hierarchy
+
+Everything above is the original behaviour spec. What follows was produced afterwards, from an audit of **32 captures** of the implemented site (eight routes × three viewports × light and dark). It does not replace the spec; it corrects execution and adds one system-level rule.
+
+Reference file: `Execution Audit.dc.html` — thirteen findings, each with the evidence and the fix.
+
+## The two shipped defects — fix these first
+
+Both are bugs, not preferences. Neither is drawn in the mocks yet.
+
+1. **Prev/next rows at the foot of the write-up.** Text overprints itself and the row stacks to twelve lines. The row is a two-column grid whose columns are not constrained; give each side `min-width:0` and a `max-width` of half the measure, truncate the title to one line, and keep the direction label on its own line above it.
+2. **The 404 is 32% void.** The page reserves a full viewport for two lines of copy. Under R9 the 404 takes **no band and one MAJOR** — "Where to go instead" — and the apology line is body copy, not a heading. Content sits at 680, top-aligned under the header with 96px of air, not vertically centred in the viewport.
+
+## Findings that are composition, not bugs
+
+- **The write-up does not use its width at 1440.** The desktop layout is the mobile layout with margins. Fix: a two-column grid, `680px` prose + `352px` sticky rail, `gap:120px`, both columns fixed at those widths inside the `1152` measure. The rail holds, in order: the track (section list with current marked), the metrics, the honest limits, and the cross-references. The rail is `position:sticky; top:96px` and never scrolls independently.
+- **Three quarters of the phone home page is one shape.** The three proof figures stack vertically and spend roughly 430px on eleven characters. Fix: one row, three columns, figures at **40px** with 10px mono captions. They are short and read fine small. The band keeps its full-bleed rules.
+- **Tonal flatness.** Every section on every route opens identically — bracketed mark, tick rule, mono label, heading around 28px. Fix: R9, below.
+
+## R9 — one band and one major section per route
+
+Four rungs. A route may use BAND **at most once** and MAJOR **at most once**. Everything else is MINOR or QUIET. This is the one change that raises the whole site rather than one page.
+
+| Rung      | Specification                                                                                                                                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **BAND**  | Full-bleed, `#f0f1f3`, 1px `#cdd0d6` rules top and bottom, 40px vertical padding, figures at **92px** Space Grotesk 600 / `-.03em` desktop and **40px** mobile, 13px mono captions at `.06em`. Once per route, or not at all. |
+| **MAJOR** | 900 or 1152 wide, 32px Space Grotesk 600 heading at `-.02em`, 48px of air above, tick rule (`repeating-linear-gradient(to right,#d6d8dd 0 1px,transparent 1px 14px)`, 8px tall) above the bracketed mark. Once per route.     |
+| **MINOR** | 680 wide, 22px heading at `-.01em`, 32px above, **no** tick rule, no bracketed mark. Unlimited.                                                                                                                               |
+| **QUIET** | 680 wide, **no heading at all** — a 12px mono label at `.12em` in `#5c6068`, then the content at 14px in `#5c6068`. Unlimited.                                                                                                |
+
+**28px headings are abolished.** Anything that was 28px is now either 32px (the one MAJOR) or 22px (MINOR).
+
+### Allocation — one row per route
+
+| Route         | BAND ×1                     | MAJOR ×1                      | Demoted to reach it                                           |
+| ------------- | --------------------------- | ----------------------------- | ------------------------------------------------------------- |
+| `/`           | The three proof figures     | Selected work — the index     | Currently → QUIET. Toolbox → MINOR.                           |
+| `/projects`   | none                        | The index table itself        | Filter row loses its heading entirely.                        |
+| `/projects/…` | The finding, above the demo | Method                        | Result, Limits, Stack → MINOR. Provenance → QUIET.            |
+| `/about`      | none                        | The bench — what I do         | Two of the three current MAJORs step down; languages → QUIET. |
+| `/contact`    | The availability line       | The form                      | Direct routes sit in the rail, no heading rung at all.        |
+| `/colophon`   | The build numbers           | How it is built               | Two of three MAJORs step down; rights → QUIET.                |
+| `/privacy`    | none                        | What is collected — the table | Five of six MAJORs → MINOR. Contact-the-ICO → QUIET.          |
+| `/404`        | none                        | Where to go instead           | The apology line is body copy, not a heading.                 |
+
+Three routes take no band deliberately. A band on every route is the flatness the audit found, restated one rung louder. If `/writing` ships it takes MAJOR on the post list and no band.
+
+**Check before merge.** On each route count: exactly one `#f0f1f3` full-bleed block or zero; exactly one 32px heading; no 28px headings anywhere. Any route failing that count has not been converted.
+
+## Screens drawn in the second pass
+
+Reference file: `Design Pass.dc.html`. Anchor ids jump to each option: `#18a` `#18b` `#18c` (home), `#17a` (R9 reference sheet), `#16a` `#16b` (contact), `#15a` `#15b` (write-up).
+
+> **Palette caveat.** The site owner believes these later mocks drifted from the live site's real colours. Treat the token tables at the top of this README as authoritative and the second-pass mocks as authoritative for **layout, hierarchy and behaviour only**.
+
+### Write-up body — `15a`, `15b`
+
+`680 + 352` grid at 1440 inside a 1152 measure, `gap:120px`, sticky rail at `top:96px`. The finding takes the route's BAND once, above the demo: the corrected pair at 68px with the withdrawn value struck through in `#5c6068`, plus one sentence of what changed. "Key finding" is a mono label, not a heading.
+
+### Contact — `16a`, `16b`
+
+Same grid. The form is the primary column and takes MAJOR; direct routes sit in the rail with no heading rung. The availability line is the BAND: one ruled line, a 6px `#3f9a5f` dot, "Available for full-time roles from October 2026", and the visa fact right-aligned as a 12px mono label. The three-cell availability block is gone.
+
+`16b` is the **receipt state**: after submit the form is replaced in place by what was actually sent, what happens next, and by when — no toast, no redirect, no layout shift. Error styling in `16b` uses the pending error tokens (open item 01).
+
+### Home — `18a`, `18b`, `18c` — **a decision is required**
+
+Three structural options, all conforming to R9 (`BAND` = the three proof figures, `MAJOR` = selected work, Currently → QUIET, Toolbox → MINOR). **The site owner has not yet chosen one.** Do not build home until they do.
+
+- **`18a` index first** — compact hero, then the index at MAJOR, then the proof band below it as evidence. Bet: a hiring reader wants the list. Cost: figures below the fold at 1440.
+- **`18b` proof first** — hero, band, then the index. Closest to the current order. Cost: hero and band are two loud things in a row.
+- **`18c` the hero is the band** — no separate hero; the claim and the three figures are one full-bleed block, availability in the eyebrow. Cost: least conventional; only works if the figures are the strongest thing on the site.
+
+Each has a 390 companion showing the mobile fix — three figures in one row at 40px.
+
+### Home interactions (identical across all three options)
+
+| Interaction                                     | Behaviour                                                                                                                                                                                                                                                                                      |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Lens filter** (R3, the one narrowing control) | Three chips — All work / Evaluation / Data engineering. Filters the index live and updates a mono counter reading `/?lens=<k> · N of 4 shown`. URL state, back-button safe. Active chip is filled `#3d5a73` with `#fafafb` text; idle is a 1px `#cdd0d6` outline that goes `#3d5a73` on hover. |
+| **Row disclosure**                              | Each index row is a full-width `button`. Click expands one line of what the project showed, at 15px `#3f434a`, indented to the title column. No translate; the row below simply moves down.                                                                                                    |
+| **Figure provenance**                           | Hovering or focusing a band figure writes its source into a fixed 20px slot beneath the band. The slot is always present and always occupied — default text "Hover or focus a figure for the source it is counted from." — so nothing shifts.                                                  |
+| **Row hover / focus**                           | Background to `#f0f1f3` and a 2px `#3d5a73` left border appear; `140ms cubic-bezier(.2,0,0,1)`. Focus is the standard 2px accent outline at `-2px` offset. Nothing translates.                                                                                                                 |
+
+### Index data as drawn
+
+| #   | Project                              | Stack                  | Figure                | Unit           | State   | Lens |
+| --- | ------------------------------------ | ---------------------- | --------------------- | -------------- | ------- | ---- |
+| 01  | London Cycle-Hire Analytics Platform | PySpark · dbt · DuckDB | 41.4M                 | journeys       | shipped | data |
+| 03  | Community Energy Flex                | FastAPI · Pydantic     | Jul 2026              | stopped        | stopped | data |
+| 05  | Agent Release Safety Gates           | uv · Inspect AI        | 79.92% (99.31 struck) | hit@3          | shipped | eval |
+| 06  | redteam-foundry                      | Claude · pytest        | 0–4%                  | jailbreak rate | shipped | eval |
+
+The three home band figures as drawn: **41.4M** rows processed · **61** facts checked at build · **4** projects with stated limits. All three are R8 numbers — counted at build, not typed.
+
+---
+
+## Open items added by the second pass
+
+| #   | Item                                                                                                                 | Blocks             |
+| --- | -------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| 10  | **Choose the home direction** — `18a`, `18b` or `18c`                                                                | all of `/`         |
+| 11  | **`/writing` — ship it with two posts, or cut it from the spec.** It is designed and unbuilt; the footer links to it | `/writing`, footer |
+| 12  | **Confirm the live palette** against the token tables above before building the second-pass screens                  | second-pass mocks  |
+
+Open items 01 and 02 from the first pass are still open and now also block `16b` and the privacy conversion respectively.
+
+---
+
 ## Files in this bundle
 
-- `README.md` — this document. Self-sufficient; implement from it.
-- `Behaviour Redesign.dc.html` — the design reference. Thirteen turns of mocks, newest first. Open in a browser; anchor ids (`#3a`, `#9c`, `#12b`, `#13a`) jump to individual screens.
-- `support.js` — runtime required by the HTML file. Not part of the design; do not port it.
+- `README.md` — this document. Self-sufficient; implement from it. Where a mock and this README disagree, this README is right.
+- `Behaviour Redesign.dc.html` — first-pass design reference. Thirteen turns of mocks, newest first. Anchor ids (`#3a`, `#9c`, `#12b`, `#13a`) jump to individual screens.
+- `Execution Audit.dc.html` — the audit of the implemented site. Thirteen findings with evidence; section 05 sets out R9.
+- `Design Pass.dc.html` — second-pass mocks: home (`#18a` `#18b` `#18c`), the R9 reference sheet (`#17a`), contact (`#16a` `#16b`), write-up (`#15a` `#15b`). Interactive — the lens filter, row disclosure and figure provenance all work in the browser.
+- `support.js` — runtime required by the HTML files. Not part of the design; do not port it.
+
+## Suggested build order, revised
+
+1. The two shipped defects — prev/next rows, then the 404.
+2. R9 as a token/layout decision: define the four rungs, delete 28px.
+3. Convert routes to R9 in the allocation-table order, cheapest first: `/404`, `/privacy`, `/colophon`, `/about`, `/projects`.
+4. Write-up: the `680 + 352` grid and the sticky rail.
+5. Contact: the same grid, the form, the receipt state.
+6. Home — **only after open item 10 is closed**.

@@ -126,6 +126,32 @@ and surfaces only as a failed deploy.
 top-level property, and a `_comment` key cost a deploy once already. So the reasoning lives here
 and in the spec, never in the file.
 
+### `shadcn init` will overwrite the palette. Diff `global.css` after any shadcn command
+
+Run on 2 August 2026 against this repo, `npx shadcn@latest init --preset nova`
+reported success and did three things that nothing would have caught in review:
+
+1. **Replaced every colour token in both themes** with the preset's neutral
+   OKLCH ramp. `--primary` went from the design spec's `#3d5a73` to
+   `oklch(0.205 0 0)` — a near-black grey. The site built, typechecked, and
+   looked like a perfectly competent website with none of its own design left.
+2. **Reverted `src/lib/utils.ts`** to the stock `twMerge`, reintroducing the
+   silent class-dropping bug that file exists to document.
+3. **Added `tw-animate-css`** — a library of entrance and exit animations — to
+   a project whose motion contract enumerates every arrival it permits by name.
+
+Two gates do catch it, and both were confirmed by experiment rather than
+assumed: `tests/e2e/design-spec.spec.ts` asserts the spec's hex against the
+running site, and `tests/unit/design-tokens.test.ts` fails 3 of its 4 cases the
+moment `cn()` stops extending tailwind-merge. Neither is a substitute for
+reading the diff, because a green suite after a destructive command tells you
+the suite covered THAT command, not the next one.
+
+What is kept from the run: `components.json`, the `@/*` alias in
+`tsconfig.json`, and `@import "shadcn/tailwind.css"` for the `data-*` custom
+variants the primitives need. Everything else was restored from HEAD. The
+reasoning lives at the top of `src/styles/global.css`, next to the import.
+
 ## This repository specifically
 
 - **`content/` is the source of truth for prose and is edited deliberately.** `registry.json` is

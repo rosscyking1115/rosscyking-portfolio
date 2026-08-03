@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
 import { nowBuilding } from "../../src/lib/now-building";
+import { ROUTES as ALL_ROUTES } from "./routes";
 
 /**
  * Completeness gates.
@@ -122,37 +123,62 @@ test.describe("completeness — featured showcase (finding #5)", () => {
    * mode worth gating, so it is now asserted as a property of every surface at
    * once rather than as a property of this component's animation.
    */
-  test("no surface was skipped: cards are complete on arrival, everywhere", async ({
+  test("no surface was skipped: the arrival is on the rack and nowhere else", async ({
     page,
   }) => {
-    // Would have caught the original finding — the showcase differing from
-    // Hero and /projects after a site-wide motion change — and now also
-    // catches the inverse, a reveal surviving on one surface after removal.
-    for (const [route, selector] of [
-      ["/", '[data-lens-panel="all"] article'],
-      ["/projects", "[data-project] article"],
-    ] as const) {
-      await page.goto(route);
-      const cards = page.locator(selector);
-      await expect(cards, `${route} renders no cards at all`).not.toHaveCount(0);
+    // REWRITTEN A SECOND TIME, AND THE ASSERTION HAS NOW BEEN INVERTED TWICE.
+    //
+    //   v1  every card HAS an entrance   (the original finding: three <FadeIn>
+    //       wrappers dropped, one component skipped)
+    //   v2  no card has one              (§01 banned arrivals outright)
+    //   v3  the rack has one, and only the rack   (Ross, 2 Aug 2026)
+    //
+    // Recorded rather than tidied, because the churn is the lesson. The FINDING
+    // has been the same all three times — a change was made across the site and
+    // ONE surface was skipped — and each rewrite pinned the mechanism of the
+    // day instead of the property. So this version asserts the property: the
+    // arrival is present exactly where it is meant to be, and absent everywhere
+    // else, whatever it is implemented with.
+    //
+    // The v2 note is worth keeping too: left alone, v1 would not even have gone
+    // red. It queried `.reveal, .reveal-on-scroll`, which matched nothing, so
+    // the loop iterated zero times and passed vacuously. A dead green test is
+    // worse than a deleted one; it reports coverage that does not exist.
+    await page.goto("/");
 
-      const held = await cards.evaluateAll((els) =>
-        els
-          .map((el, i) => {
-            const style = getComputedStyle(el);
-            return {
-              i,
-              opacity: Number(style.opacity),
-              transform: style.transform,
-              animation: style.animationName,
-            };
-          })
-          .filter(
-            (card) =>
-              card.opacity < 1 || card.transform !== "none" || card.animation !== "none",
-          ),
+    // EVERY DIRECT CHILD OF THE RACK, not every <article> in it. The rack is a
+    // reading instrument and a list of rows, and the list arrives as one block
+    // — so an article-level check would demand the attribute on each row and
+    // fail against the correct implementation. Direct children is the shape
+    // that survives the layout changing again, which it has twice now.
+    const rack = page.locator('[data-lens-panel="all"] [data-rack] > *');
+    await expect(rack, "the rack renders nothing at all").not.toHaveCount(0);
+    for (const block of await rack.all()) {
+      await expect(block, "a rack block was skipped by the arrival").toHaveAttribute(
+        "data-enter",
+        "scroll",
       );
-      expect(held, `${route}: cards not fully present on arrival`).toEqual([]);
+    }
+
+    // And nowhere else. /projects is the comparison surface and must be
+    // complete the instant it loads — a filtered list whose rows fade in is the
+    // defect the previous entrance was removed for.
+    for (const route of ["/projects", "/about"]) {
+      await page.goto(route);
+      await expect(
+        page.locator("[data-enter]"),
+        `${route} has picked up an arrival it should not have`,
+      ).toHaveCount(0);
+
+      const held = await page.locator("main *").evaluateAll((els) =>
+        els
+          .map((el) => ({
+            el: el.tagName.toLowerCase() + "." + (el.getAttribute("class") ?? ""),
+            opacity: Number(getComputedStyle(el).opacity),
+          }))
+          .filter((entry) => entry.opacity < 1),
+      );
+      expect(held, `${route}: something is not fully present on arrival`).toEqual([]);
     }
   });
 });
@@ -172,7 +198,13 @@ test.describe("completeness — now building (finding #6)", () => {
 
     const strip = page.getByRole("complementary", { name: "Now building" });
     await expect(strip).toBeVisible();
-    await expect(strip.getByText("[ // ]")).toBeVisible();
+    // R9 DEMOTED THIS TO QUIET, so the bracketed mark is gone by design — the
+    // allocation table's "Currently → QUIET" for the home route. A strip of
+    // private work-in-progress used to open with the same mark and tick rule as
+    // the featured work, which is finding 05's flatness in one line. What is
+    // asserted instead is that the section still ANNOUNCES ITSELF: a QUIET rung
+    // is a quieter label, not a missing one.
+    await expect(strip.getByText("Now building")).toBeVisible();
     await expect(strip.getByText("fixture-project-one")).toBeVisible();
     await expect(strip.getByText("fixture-project-two")).toBeVisible();
     await expect(strip.getByText(/Private repos while in progress/)).toBeVisible();
@@ -234,5 +266,42 @@ test.describe("completeness — the narrowing control (finding #2)", () => {
       Number.parseFloat(getComputedStyle(el).borderTopLeftRadius),
     );
     expect(radius, "the chip is not a pill").toBeGreaterThanOrEqual(99);
+  });
+});
+
+test.describe("completeness — the site does not discuss visas (Ross, 3 Aug 2026)", () => {
+  test("no route mentions a visa or sponsorship", async ({ page }) => {
+    // AN ABSENCE ASSERTION, which is what this file is for. "Remove everything
+    // related to visa" is the kind of instruction that gets 90% done: the
+    // obvious label goes, and the clause survives in a bio paragraph, a meta
+    // description, or an og:description generated from one of them. Nothing
+    // 404s and nothing looks wrong, because a sentence that is still true is
+    // not a bug — it is just a sentence he asked not to publish.
+    //
+    // It came from three places at once (a site-config token, the /contact
+    // band, and content/about.mdx), which is exactly why this sweeps the
+    // rendered text of every derived route rather than the file it was removed
+    // from. The design spec's screen 16a still asks for the visa fact; this is
+    // the thing that stops it being re-added by someone following the spec.
+    //
+    // NOT ASSERTED, AND WORTH SAYING: public/cv.pdf. It is a binary and this
+    // gate cannot read it — if the CV names a visa route, the site links to a
+    // document that says what the site does not.
+    for (const route of ALL_ROUTES) {
+      await page.goto(route);
+      const text = (await page.locator("body").textContent()) ?? "";
+      expect(text, `${route} mentions a visa or sponsorship`).not.toMatch(
+        /visas?|sponsorship|sponsored/i,
+      );
+
+      const meta = await page
+        .locator('meta[name="description"], meta[property="og:description"]')
+        .evaluateAll((els) =>
+          els.map((el) => el.getAttribute("content") ?? "").join(" "),
+        );
+      expect(meta, `${route} metadata mentions a visa`).not.toMatch(
+        /visas?|sponsorship/i,
+      );
+    }
   });
 });

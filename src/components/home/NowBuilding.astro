@@ -1,6 +1,5 @@
 ---
 import { nowBuilding, type NowBuildingEntry } from "../../lib/now-building";
-import IndexMark from "../layout/IndexMark.astro";
 
 /**
  * "Now building" strip, ported from the aside at the foot of
@@ -28,7 +27,17 @@ const { entries = nowBuilding } = Astro.props;
       aria-label="Now building"
       class="border-border mt-10 border-t border-dashed pt-6"
     >
-      <IndexMark mark="//" label="Now building" />
+      {/*
+        QUIET (R9): "no heading at all — a 12px mono label, then the content at
+        14px in #5c6068". The allocation table calls this route's demotion
+        "Currently → QUIET", and this is that section. It used to open with the
+        same bracketed mark and tick rule as the featured work, which is the
+        flatness finding 05 named — a strip of private work-in-progress
+        announcing itself at the same volume as the projects that are finished.
+      */}
+      <p class="text-muted-foreground text-label font-mono tracking-[0.12em] uppercase">
+        Now building
+      </p>
       <ul class="mt-4 flex flex-col gap-2.5">
         {entries.map((entry) => (
           <li class="flex items-baseline gap-3 text-sm">

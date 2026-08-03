@@ -14,7 +14,7 @@ import NarrowingControl from "../controls/NarrowingControl.astro";
 import InstrumentRow from "../instrument/InstrumentRow.astro";
 import MetricReadout from "../instrument/MetricReadout.astro";
 import Container from "../layout/Container.astro";
-import IndexMark from "../layout/IndexMark.astro";
+import SectionHead from "../layout/SectionHead.astro";
 import Badge from "../ui/Badge.astro";
 import EvidenceFrame from "./EvidenceFrame.astro";
 import NowBuilding from "./NowBuilding.astro";
@@ -22,38 +22,58 @@ import NowBuilding from "./NowBuilding.astro";
 /**
  * The rack and the ledger (design spec §04, home route).
  *
- * ── THE RACK ─────────────────────────────────────────────────────────────────
+ * ── THE RACK, AND A ROUND TRIP WORTH RECORDING ───────────────────────────────
  *   "One instrument reads, siblings are hairline rows that keep their title and
  *    headline number at full legibility. Receding removes the frame, the
  *    screenshot and the elevation — never the readability. Only the reading
  *    instrument loads an image."
  *
- * Before this, every featured project was a card with its own evidence frame:
- * four screenshots per lens, twelve across the three prerendered panels, all
- * above or near the fold. §03 R7 allows exactly one, and the siblings become
- * InstrumentRows — the same component the projects log uses, so a project looks
- * like itself on both surfaces.
+ * That is §03 R7 and it is what this file does. It briefly did something else:
+ * on 2 August 2026 the rack was rebuilt as three open cards, one larger, each
+ * arriving on scroll — and then reverted the same day, by Ross, to this. The
+ * detour is recorded rather than deleted because both halves are useful:
  *
- * That is a real cut, not a rearrangement: three images per lens leave the page.
+ *   WHAT THE THREE CARDS COST. Ten evidence frames in the document instead of
+ *   three, and a 5,077px page at tablet width. The request count on first paint
+ *   never moved — nine of the ten were lazy and below the fold or inside a
+ *   display:none panel — so the cost was never bytes. It was that the page
+ *   stopped having a lead. Audit finding 08 was "eleven blocks arrive at the
+ *   same width off the same margin with roughly the same tonal weight", and
+ *   three cards of the same species walk back into it however differently they
+ *   are shaped. The rhythm here comes from the difference between a CARD and a
+ *   ROW, which is a bigger difference than any two cards can have.
  *
- * ── THE LEDGER ───────────────────────────────────────────────────────────────
+ *   WHAT SURVIVED THE REVERT. Everything that was not layout: the arrival, the
+ *   pointer response, the reticle, and the bench disclosure. Those were the
+ *   actual request; the three cards were one way of answering it, and not the
+ *   one that held up against the design.
+ *
+ * ── THE ARRIVAL ──────────────────────────────────────────────────────────────
+ * Two `data-enter="scroll"` carriers, not five: the reading instrument, then
+ * the sibling list as one block. See the note above the <ul> for why the rows
+ * do not arrive individually, ArrivalScript.astro for the observer, and the
+ * ARRIVAL block in global.css for the rules.
+ *
+ * SWITCHING LENS IS NOT AN ARRIVAL, and this is the trap the old entrance fell
+ * into three times. A hidden lens panel is `display: none`, so its cards have
+ * never been observed; when a panel is shown they arrive once, and switching
+ * back finds them already marked. The `:not([data-shown])` in the CSS and the
+ * `unobserve` in the script are both doing that work. A filter is not a
+ * navigation and the showcase must not flash on a click.
+ *
+ * ── THE LEDGER, WHICH NOW OPENS ──────────────────────────────────────────────
  *   "The rest is a table, not more cards. This is what stops the showcase and
  *    the index doing the same job twice: home shows work running, this shows
  *    the ledger, the index compares."
  *
- * Audit finding 04 was that the showcase and /projects were the same component
- * rendered twice. The answer is not to delete one — it is to give them
- * different jobs. Home leads with one instrument actually running; everything
- * else is a line in a ledger; the index is where you compare.
- *
- * ── SUMMARIES ARE CUT, NOT REWRITTEN ─────────────────────────────────────────
- * The flagship keeps its full summary. Nothing else on this page carries prose
- * at all, so §03 R2 — no summary paragraph on two index surfaces — holds by
- * construction rather than by discipline.
+ * A bench row is a line in a ledger until you ask it a question; the answer is
+ * a short preview, not a fourth card. See InstrumentPreview.astro for why it is
+ * not the rack card at a smaller size.
  *
  * Each lens still gets its own prerendered panel with CSS choosing the visible
  * one off `data-lens`, so the whole section ships as static HTML with no
- * hydration. The lens switcher itself is now the shared narrowing control.
+ * hydration — and, since the no-JS fix in the <style> block below, renders the
+ * default lens even when that CSS is the only thing that runs.
  */
 interface Props {
   allCount: number;
@@ -98,13 +118,27 @@ const allLabel = `All ${allCount} projects`;
         <div data-lens-panel={lens.key}>
           <div class="flex items-end justify-between gap-6">
             <div>
-              <IndexMark mark="01" label="Featured work" />
-              <h2
-                class="font-display mt-3 text-3xl font-semibold tracking-tight text-balance"
-                data-lens-headline
+              <SectionHead
+                rung="major"
+                mark="01"
+                label={`${countWord(featured.length)} projects, shown working`}
+                class="mt-0"
+                id={`lens-headline-${lens.key}`}
+              />
+              {/*
+                THE LENS COUNTER (design pass, home interactions): a mono
+                readout of the URL state and what it narrowed to. It is rendered
+                per panel rather than written by the switcher's script, because
+                each lens is already a prerendered panel — the count is a build
+                fact, and computing it in the browser would make a number the
+                site can state for itself depend on JavaScript running.
+              */}
+              <p
+                class="text-muted-foreground text-label mt-3 font-mono"
+                data-lens-counter
               >
-                {countWord(featured.length)} projects, shown working
-              </h2>
+                /?lens={lens.key} &middot; {featured.length} of {allCount} shown
+              </p>
             </div>
             <a
               href="/projects"
@@ -126,8 +160,9 @@ const allLabel = `All ${allCount} projects`;
           <div data-rack>
             {flagship && (
               <article
-                class="instrument linked-card group relative mt-6 grid gap-6 rounded-lg p-6 lg:grid-cols-5 lg:gap-8 lg:p-8"
+                class="instrument linked-card reticle-cursor group relative mt-6 grid gap-6 rounded-lg p-6 lg:grid-cols-5 lg:gap-8 lg:p-8"
                 data-reading
+                data-enter="scroll"
               >
                 <div class="flex min-w-0 flex-col lg:col-span-2">
                   <div class="text-muted-foreground flex items-center justify-between font-mono text-xs">
@@ -151,13 +186,13 @@ const allLabel = `All ${allCount} projects`;
                   </p>
 
                   {/*
-                  The headline number in the reading instrument's own voice,
-                  at `lead` size — the same MetricReadout the log renders,
-                  including the struck pair when the number is a correction.
-                  The old three-metric strip listed everything the project
-                  publishes; the spec's rack shows the ONE number the project
-                  turns on.
-                */}
+                    The headline number in the reading instrument's own voice,
+                    at `lead` size — the same MetricReadout the log renders,
+                    including the struck pair when the number is a correction.
+                    The old three-metric strip listed everything the project
+                    publishes; the spec's rack shows the ONE number the project
+                    turns on.
+                  */}
                   <MetricReadout
                     headline={projectHeadline(flagship)}
                     size="lead"
@@ -169,22 +204,25 @@ const allLabel = `All ${allCount} projects`;
                       <Badge variant="tag">{tech}</Badge>
                     ))}
                   </div>
-                  <span class="text-primary mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-medium">
+                  <span
+                    class="text-primary mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-medium"
+                    data-card-action
+                  >
                     Read the write-up
                     <ArrowRight class="size-3.5" aria-hidden="true" />
                   </span>
                 </div>
                 {/*
-                `order-first` below lg. Stacked, the source order put the
-                evidence frame AFTER "Read the write-up" — so on a phone the
-                screenshot arrived below the card's own call to action, while
-                every other row on the page leads with its number. At lg the
-                frame sits right of the text, where DOM order is already right.
+                  `order-first` below lg. Stacked, the source order put the
+                  evidence frame AFTER "Read the write-up" — so on a phone the
+                  screenshot arrived below the card's own call to action, while
+                  every other row on the page leads with its number. At lg the
+                  frame sits right of the text, where DOM order is already right.
 
-                THE ONLY IMAGE ON THIS PAGE (§03 R7). `eager` on the default
-                lens because it is the largest thing above the fold; the other
-                two panels are display:none until a lens is chosen.
-              */}
+                  THE ONLY IMAGE ON THIS PAGE (§03 R7). `eager` on the default
+                  lens because it is the largest thing above the fold; the other
+                  two panels are display:none until a lens is chosen.
+                */}
                 <div class="order-first min-w-0 lg:order-none lg:col-span-3">
                   <EvidenceFrame
                     caption={frameCaption(flagship)}
@@ -199,8 +237,36 @@ const allLabel = `All ${allCount} projects`;
               </article>
             )}
 
+            {/*
+              THE SIBLINGS ARRIVE AS ONE BLOCK, not one row at a time.
+
+              `data-enter` sits on the <ul> rather than on each <li>, and the
+              difference is not implementation detail: staggered row-by-row, a
+              list of hairline rows reads as a slot machine, and each row is
+              only 81px tall so the reader would trigger three arrivals inside
+              one thumb-flick. The rack is two arrivals — the instrument that
+              reads, then the list of the ones that do not.
+            */}
+            {/*
+              THE RACK'S SIBLINGS STAY LINKS, and the design pass's row
+              disclosure is on the BENCH below instead. Tried the other way for
+              one run and it broke two things at once:
+
+                R7. Each preview carries an evidence frame, so the rack went
+                from one framed instrument to three — the exact rule Ross
+                restored yesterday by reverting the three open cards.
+
+                THE ONE-CLICK ROUTE. A featured project's only link became the
+                "Read the write-up" inside a CLOSED <details>, so the three
+                projects the lens chose were two clicks away and invisible to a
+                link check. The gate caught it as "all should feature
+                redteam-foundry: hidden".
+
+              The bench is home's index and already opens; the rack is the
+              shortlist and should not need opening.
+            */}
             {siblings.length > 0 && (
-              <ul class="mt-2 flex flex-col gap-2">
+              <ul class="mt-2 flex flex-col gap-2" data-enter="scroll">
                 {siblings.map((project) => (
                   <li>
                     <InstrumentRow project={project} />
@@ -212,9 +278,10 @@ const allLabel = `All ${allCount} projects`;
 
           {bench.length > 0 && (
             <div class="mt-14" data-bench>
-              <IndexMark mark="02" label="The rest of the bench" />
+              <SectionHead rung="minor" label="The rest of the bench" class="mt-0" />
               <p class="text-body mt-3 max-w-prose text-sm leading-relaxed">
-                Not featured under this lens — the same rows, the same numbers.
+                Not featured under this lens — the same rows, the same numbers. Open one
+                for the short version.
                 <a
                   href="/projects"
                   class="text-primary ml-1 font-medium underline-offset-2 hover:underline"
@@ -225,7 +292,7 @@ const allLabel = `All ${allCount} projects`;
               <ul class="mt-5 flex flex-col gap-2">
                 {bench.map((project) => (
                   <li>
-                    <InstrumentRow project={project} />
+                    <InstrumentRow project={project} mode="disclosure" />
                   </li>
                 ))}
               </ul>
@@ -241,29 +308,55 @@ const allLabel = `All ${allCount} projects`;
 
 <style>
   /*
-    THE ENTRANCE IS GONE, and the lens switcher is the clearest argument for
-    why. See the MOTION CONTRACT in src/styles/global.css.
+    THE ENTRANCE IS BACK, AND THE HISTORY IS WHY IT LOOKS NOTHING LIKE THE ONE
+    THAT WAS REMOVED. See the ARRIVAL block in src/styles/global.css.
 
-    This showcase carried the reveal's whole history: a scoped keyframe, then
-    a shared `.reveal`, then `.reveal-on-scroll`. Each step fixed a real
-    problem the previous one had, and the switcher exposed the one that could
-    not be fixed from inside a reveal at all — a hidden lens panel is
+    This showcase carried the old reveal's whole history: a scoped keyframe,
+    then a shared `.reveal`, then `.reveal-on-scroll`. Each step fixed a real
+    problem the previous one had, and the lens switcher exposed the one that
+    could not be fixed from inside a reveal at all — a hidden lens panel is
     display:none, so its animation had never run, and switching lens REPLAYED
-    the entrance for every card. The view() timeline worked around it by
+    the entrance for every card. The `view()` timeline worked around it by
     putting an on-screen card at the end of its own range.
 
-    A filter is not a navigation, and the showcase should not flash on a click.
-    With no entrance there is nothing to replay, nothing to work around, and no
-    difference at all between a lens panel that was always visible and one
-    revealed by a button. The workaround and the problem left together.
+    The replacement does not need the workaround, because the thing that made
+    it necessary is gone: state now lives in an attribute the observer sets
+    once, not in an animation's position on a timeline. A card that has arrived
+    stays arrived — through a lens switch, through scrolling back up, through
+    anything short of a reload. That is the difference between "animate when
+    visible" and "arrive once", and only the second one is safe to put on a
+    filtered list.
   */
 
-  /* Only the panel matching <html data-lens> is shown. Hidden by default so
-     nothing flashes before the narrowing script runs. */
-  [data-lens-panel] {
+  /*
+    THE DEFAULT LENS IS VISIBLE WITHOUT JAVASCRIPT, and this was a real hole.
+
+    Every panel used to be `display: none` until NarrowingScript wrote
+    `data-lens` on <html>. The reasoning was sound — hide them all, reveal the
+    chosen one, and nothing flashes — but the failure mode was not: with no
+    JavaScript the attribute is never written, so NO panel matched and the
+    entire featured section, rack and bench alike, was absent from the page. It
+    had been that way since the narrowing control shipped, and it went
+    unnoticed because nothing 404s and nothing throws; the section simply is
+    not there.
+
+    Inverted, it costs nothing and fixes it: the default panel is shown by
+    default and hidden only once a DIFFERENT lens has been chosen. Same
+    no-flash property — `data-lens="all"` and no attribute at all render
+    identically — and the no-JavaScript page is now the default lens rather
+    than a gap between the proof band and the footer.
+
+    Same argument as the ARRIVAL block's `data-motion` gate: the state that
+    needs a script is the exception, not the baseline.
+  */
+  [data-lens-panel="ai"],
+  [data-lens-panel="data"] {
     display: none;
   }
-  :global(html[data-lens="all"]) [data-lens-panel="all"],
+  :global(html[data-lens="ai"]) [data-lens-panel="all"],
+  :global(html[data-lens="data"]) [data-lens-panel="all"] {
+    display: none;
+  }
   :global(html[data-lens="ai"]) [data-lens-panel="ai"],
   :global(html[data-lens="data"]) [data-lens-panel="data"] {
     display: block;

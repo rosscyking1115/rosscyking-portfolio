@@ -1,6 +1,7 @@
 ---
 import Container from "../components/layout/Container.astro";
 import IndexMark from "../components/layout/IndexMark.astro";
+import SectionHead from "../components/layout/SectionHead.astro";
 import Base from "../layouts/Base.astro";
 import { siteConfig } from "../lib/site-config";
 
@@ -194,13 +195,25 @@ const updated = new Date().toLocaleDateString("en-GB", {
       >.
     </p>
 
-    <div class="mt-12 flex flex-col gap-10">
+    {
+      /*
+        R9's MAJOR for this route is "What is collected — the table", and the
+        table is FOUR sections rather than one: the page is organised by what
+        the reader did, not by what the site stores. So the MAJOR wraps them and
+        each trigger steps down to MINOR — "five of six MAJORs → MINOR" in the
+        allocation table, which is what six equal marks had made of this page.
+      */
+    }
+    <SectionHead rung="major" mark="01" label="What is collected, and when" />
+    <div class="mt-8 flex flex-col gap-10">
       {
-        TRIGGERS.map((trigger, index) => (
+        TRIGGERS.map((trigger) => (
           <section data-flow-trigger={trigger.id}>
-            <IndexMark
-              mark={String(index + 1).padStart(2, "0")}
+            <SectionHead
+              rung="minor"
+              as="h3"
               label={trigger.always ? `${trigger.when} · always` : trigger.when}
+              class="mt-0"
             />
             <div class="border-border divide-border mt-4 flex flex-col divide-y border-y">
               {trigger.flows.map((flow) => (
@@ -246,8 +259,8 @@ const updated = new Date().toLocaleDateString("en-GB", {
       }
     </div>
 
-    <section class="mt-14" data-not-collected>
-      <IndexMark mark="05" label="Not collected" />
+    <section data-not-collected>
+      <SectionHead rung="minor" label="Not collected" />
       <p class="text-body mt-3 text-sm leading-relaxed">
         Each of these was checked against the code that would have to do it, and against
         the live site on 2&nbsp;August&nbsp;2026 — not assumed.
@@ -267,8 +280,8 @@ const updated = new Date().toLocaleDateString("en-GB", {
       </ul>
     </section>
 
-    <section class="mt-14">
-      <IndexMark mark="06" label="Your rights" />
+    <section class="mt-12">
+      <SectionHead rung="minor" label="Your rights" />
       <p class="text-body mt-3 text-sm leading-relaxed">
         Under the UK GDPR you can, at any time:
       </p>

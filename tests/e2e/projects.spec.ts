@@ -102,6 +102,25 @@ test.describe("the log (design spec §04)", () => {
     // read 617 tests while its own footer said 1,681, and only one of those can
     // be the source.
     await page.goto("/");
+
+    // WAIT FOR THE FIGURE TO STOP COUNTING, and this line is a finding rather
+    // than a precaution. The home totals animate to their values as the page
+    // loads (the amended motion contract, 2 Aug 2026), so a single
+    // `textContent()` read can land mid-count — this test read "500" off a
+    // counter on its way to 1,681 and reported a drift between two surfaces
+    // that agree perfectly. The fourth time in this suite that a synchronous
+    // read has caught a tween in flight.
+    //
+    // The condition covers both paths: no `data-motion` means the figures were
+    // never blanked and the served values stand.
+    await page.waitForFunction(
+      () =>
+        !document.documentElement.hasAttribute("data-motion") ||
+        [...document.querySelectorAll("[data-count-to]")].every((el) =>
+          el.hasAttribute("data-counted"),
+        ),
+    );
+
     const onHome = ((await page.locator("main").textContent()) ?? "").match(
       /([\d,]+)\s*TESTS/i,
     );

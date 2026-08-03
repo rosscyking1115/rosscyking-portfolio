@@ -1,7 +1,12 @@
 ---
-import Section from "../components/layout/Section.astro";
+import Container from "../components/layout/Container.astro";
+import InstrumentRow from "../components/instrument/InstrumentRow.astro";
+import IndexMark from "../components/layout/IndexMark.astro";
+import SectionHead from "../components/layout/SectionHead.astro";
 import Button from "../components/ui/Button.astro";
 import Base from "../layouts/Base.astro";
+import { DEFAULT_LENS } from "../lib/lenses";
+import { getLensFeaturedCards } from "../lib/projects";
 
 /**
  * The site-wide 404, ported from src/app/projects/[slug]/not-found.tsx.
@@ -27,7 +32,39 @@ import Base from "../layouts/Base.astro";
  * strictly more useful than what Next's default 404 gave. Astro emits this as
  * dist/404.html and Vercel serves it for any unmatched path with a 404 status.
  *   https://docs.astro.build/en/basics/astro-pages/#custom-404-error-page
+ *
+ * ── REBUILT AGAINST EXECUTION-AUDIT DEFECT 02 (3 Aug 2026) ───────────────────
+ * The audit measured this page at 900px tall on a 1440 screen, of which the
+ * answer — mark, heading, one sentence, two buttons — occupied 322px:
+ *
+ *     36% answer · 26% void · 28% footer
+ *
+ * And it named the tell rather than the symptom: "The ruler is the tell.
+ * Everywhere else it separates two things. Here it separates content from
+ * emptiness, which is decoration — and this system does not decorate."
+ *
+ * That is exactly right, and it is worth being precise about what was wrong.
+ * Nothing here was broken. `Section size="lg"` gives py-20/py-28, the ruler
+ * closed the block, and every one of those was a defensible local decision. The
+ * page was still two thirds furniture, because a page whose only job is to
+ * recover a lost reader had nothing on it to recover them WITH.
+ *
+ * So the void becomes the recovery, which is the audit's own fix: the three
+ * projects the home page features, as instrument rows, under the buttons. The
+ * ruler is gone. The measure narrows from 1152 to the reading width, because
+ * four lines of copy inside a 1152 frame is the same emptiness drawn one level
+ * up (audit finding 04). The page now ends where the content does.
+ *
+ * ── R9 (applied with the ladder pass, 3 Aug 2026) ───────────────────────────
+ * No BAND, one MAJOR: "Where to go instead". The recovery heading is therefore
+ * the largest section on the page, above the apology, which is the right way
+ * round for a page whose only job is to get a lost reader somewhere useful.
+ *
+ * The <h1> stays "Page not found" — it is the page's identity and its title,
+ * and R9 legislates the ladder BELOW the page name rather than replacing it.
+ * The apology is body copy, as the allocation table asks.
  */
+const featured = (await getLensFeaturedCards())[DEFAULT_LENS] ?? [];
 ---
 
 <Base
@@ -37,24 +74,58 @@ import Base from "../layouts/Base.astro";
 >
   {
     /*
-      `index` rather than `eyebrow`, so the mark renders as `[ 404 ]` through
-      IndexMark like every other page's does. This was the only route in the
-      site setting a bare uppercase eyebrow instead — and the one place where a
-      bracketed index is literally true rather than a stylistic flourish. The
-      word itself is unchanged.
+      `pt-24` — 96px of air under the header, top-aligned. Not centred in the
+      viewport: a taller screen would otherwise buy more void rather than more
+      page, which is precisely the 26% the audit measured.
+
+      `size="sm"` is the reading measure. `IndexMark` renders `[ 404 ]` the way
+      every other page's mark renders — and this is the one place on the site
+      where a bracketed index is literally true rather than a stylistic
+      flourish.
     */
   }
-  <Section
-    headingAs="h1"
-    size="lg"
-    index="404"
-    heading="Page not found"
-    description="The page you’re looking for doesn’t exist or has been moved."
-  >
-    <div class="flex flex-wrap items-center gap-3">
+  <Container class="pt-16 pb-16 sm:pt-24" size="sm">
+    <IndexMark mark="404" />
+    <h1 class="font-display mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+      Page not found
+    </h1>
+    <p class="text-body mt-4 text-lg leading-relaxed text-pretty">
+      The page you’re looking for doesn’t exist or has been moved.
+    </p>
+
+    <div class="mt-8 flex flex-wrap items-center gap-3">
       <Button href="/projects">Back to projects</Button>
       <Button href="/" variant="outline">Go home</Button>
     </div>
-    <div class="ruler mt-12" aria-hidden="true"></div>
-  </Section>
+
+    {
+      /*
+        THE RECOVERY, and it is the whole point of the rebuild. Two buttons tell
+        a lost reader where the site's front doors are; three rows tell them
+        what is behind one. They are the same three the home page features, from
+        the same source, so this page cannot recommend something the site no
+        longer leads with.
+
+        `density="narrow"` because this measure is 608px — the same slot that
+        broke the write-up's prev/next rows, and the reason that variant exists.
+      */
+    }
+    {
+      featured.length > 0 && (
+        <div>
+          <SectionHead rung="major" mark="01" label="Where to go instead" />
+          <p class="text-body mt-3 text-sm leading-relaxed">
+            The three projects the front page leads with.
+          </p>
+          <ul class="mt-5 flex flex-col gap-2">
+            {featured.map((project) => (
+              <li>
+                <InstrumentRow project={project} density="narrow" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+  </Container>
 </Base>

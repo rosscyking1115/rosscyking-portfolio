@@ -13,6 +13,8 @@
 //   3. links.demo  === registry.demo  (exact when demo set; catches broken/renamed).
 //   4. pinned metrics: the MDX metric with a pinned label has the pinned value
 //      (catches stale test counts / headline numbers).
+//   4b. the R9 MAJOR section: the heading the registry names still exists as an
+//      <h2> in the MDX (catches a renamed section silently demoting the rung).
 //   5. banned strings (global + per-project) absent from title/summary/metrics/body
 //      prose — links are exempt (accepted deploy hostnames live there).
 //   6. featured invariants: the set of `featured: true` MDX == registry lenses.all.featured,
@@ -102,6 +104,22 @@ for (const [slug, spec] of Object.entries(registry.projects)) {
       fail(
         slug,
         `metric "${label}" is "${metric.value}" — registry pins "${value}" (stale?)`,
+      );
+    }
+  }
+
+  // 4b. the MAJOR section (R9). The registry names WHICH authored <h2> carries
+  //     the project's argument, and this fails the build if that heading is
+  //     renamed, demoted to h3, or removed. Without it the write-up silently
+  //     loses its one MAJOR rung and reads as nine equal sections again —
+  //     which is exactly the flatness R9 exists to fix, arriving by way of a
+  //     content edit rather than a design one.
+  if (spec.major) {
+    const heading = `## ${spec.major}`;
+    if (!entry.content.includes(heading)) {
+      fail(
+        slug,
+        `registry names the MAJOR section "${spec.major}" — no "${heading}" in the MDX (renamed?)`,
       );
     }
   }

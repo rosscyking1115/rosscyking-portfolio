@@ -6,6 +6,7 @@ import { Content as Bio } from "../../content/about.mdx";
 import RecordRack from "../components/about/RecordRack.astro";
 import Container from "../components/layout/Container.astro";
 import IndexMark from "../components/layout/IndexMark.astro";
+import SectionHead from "../components/layout/SectionHead.astro";
 import Button from "../components/ui/Button.astro";
 import Base from "../layouts/Base.astro";
 import { languages } from "../lib/experience";
@@ -109,8 +110,8 @@ const evidenced = allTools.filter((item) => item.count > 0).length;
       </Button>
     </div>
 
-    <section class="mt-14">
-      <IndexMark mark="01" label="Record" />
+    <section>
+      <SectionHead rung="minor" label="Record" />
       <p class="text-body mt-3 max-w-prose text-sm leading-relaxed">
         Education, certification and training in one order, newest first. Every status is
         derived from the record itself — a course still running, a degree completed, a
@@ -119,11 +120,21 @@ const evidenced = allTools.filter((item) => item.count > 0).length;
       <RecordRack entries={record} />
     </section>
 
-    <section class="mt-14" data-toolbox>
-      <IndexMark mark="02" label="Toolbox" />
-      <h2 class="font-display mt-3 text-2xl font-semibold tracking-tight text-balance">
-        Every tool is counted, and every count is a link
-      </h2>
+    {
+      /*
+        THE ONE MAJOR. R9 gives this route "The bench — what I do", which is
+        what the toolbox is: the record is credentials and the languages list is
+        reference, but this is the section that answers the question the page
+        exists for. Its own heading is kept as the rung's label — it is Ross's
+        copy and it says something, where "Toolbox" is a filing category.
+      */
+    }
+    <section data-toolbox>
+      <SectionHead
+        rung="major"
+        mark="02"
+        label="Every tool is counted, and every count is a link"
+      />
       <p class="text-body mt-3 max-w-prose text-sm leading-relaxed">
         {evidenced} of {allTools.length} carry a project behind them, and the count opens the
         filtered index. The rest are practices rather than dependencies — they cannot appear
@@ -135,9 +146,21 @@ const evidenced = allTools.filter((item) => item.count > 0).length;
         {
           toolboxGroups.map((group) => (
             <div>
-              <h3 class="text-primary font-mono text-[11px] tracking-wider uppercase">
+              {/*
+                A <p>, not an <h3>, and the element was over-claiming before
+                R9 rather than after it: this is 11px mono uppercase — a label
+                by every visual measure — and it put four more entries in the
+                document outline at the same level as the page's real sections.
+                QUIET is the rung for exactly this: reference groupings a reader
+                scans rather than navigates by.
+
+                12px, not 11px: the accessibility contract's floor for a mono
+                label carrying meaning, which this does. Same resolution as the
+                status tokens and the chips.
+              */}
+              <p class="text-primary text-label font-mono tracking-[0.12em] uppercase">
                 {group.label}
-              </h3>
+              </p>
               <ul class="mt-3 flex flex-wrap gap-2">
                 {group.items.map((item) =>
                   item.count > 0 ? (
@@ -182,8 +205,9 @@ const evidenced = allTools.filter((item) => item.count > 0).length;
       </div>
     </section>
 
-    <section class="mt-14">
-      <IndexMark mark="03" label="Languages" />
+    {/* QUIET: reference material, and the allocation table says so by name. */}
+    <section class="mt-12">
+      <SectionHead rung="quiet" label="Languages" />
       <ul
         class="border-border divide-border mt-4 flex max-w-md flex-col divide-y border-y"
         data-languages

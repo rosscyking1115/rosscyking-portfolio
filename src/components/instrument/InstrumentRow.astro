@@ -1,17 +1,8 @@
 ---
-import { ArrowRight } from "@lucide/astro";
-
-import {
-  projectHeadline,
-  projectMarkLabel,
-  projectReadingTime,
-  projectState,
-  type Project,
-} from "../../lib/projects";
+import { projectState, type Project } from "../../lib/projects";
 import { cn } from "../../lib/utils";
-import ContentState from "./ContentState.astro";
-import MetricMode from "./MetricMode.astro";
-import MetricReadout from "./MetricReadout.astro";
+import InstrumentPreview from "./InstrumentPreview.astro";
+import InstrumentRowBody from "./InstrumentRowBody.astro";
 
 /**
  * THE INSTRUMENT — step 03 of the design spec's build order, and the one row
@@ -20,6 +11,10 @@ import MetricReadout from "./MetricReadout.astro";
  * "a fifth list pattern is a bug" — so this component is used by the projects
  * index, the home ledger, the write-up's cross-references and the about page's
  * record rack rather than each one growing its own row.
+ *
+ * The anatomy itself lives in InstrumentRowBody.astro, because there are now
+ * two wrappers that can carry it. This file owns the addressing and the choice
+ * of wrapper; that one owns the row.
  *
  * ── ADDRESSING (§02) ─────────────────────────────────────────────────────────
  * A row is either RECEDED or READING, and the difference is colour, border and
@@ -32,29 +27,21 @@ import MetricReadout from "./MetricReadout.astro";
  *      `border-color` and `background-color` only. The border is always
  *      present, at the same width, so even the resting state reserves it.
  *
+ *      A DISCLOSURE IS NOT AN EXCEPTION TO THIS, and the distinction is the
+ *      one the amended motion contract turns on. Addressing happens TO the
+ *      reader as they scroll, so it must never move the page under them.
+ *      Opening a row happens BECAUSE of the reader, on a row they are pointing
+ *      at, in response to a click they made. The layout shift is the answer to
+ *      the question, not an interruption of it.
+ *
  *   2. A RECEDED ROW IS TWO LEVELS, NOT ONE. The title recedes to
  *      --muted-foreground; the metric stays at --foreground. §02 spells out
  *      why: "a plain metric is foreground exactly like a corrected one.
  *      Corrections are distinguished by the struck pair and the accent pill,
  *      never by being the only legible number."
  *
- * ── WHAT IS NOT HERE YET ─────────────────────────────────────────────────────
- * §02 names three addressing inputs in priority order: pointer, keyboard focus,
- * and PROXIMITY TO THE READING LINE. The first two are implemented here. The
- * third is not, and it is the one that matters on a phone — the spec's own risk
- * note for this direction says "hover-driven emphasis has no touch equivalent,
- * and most of your traffic is a phone. Mobile needs a different rule, not a
- * fallback."
- *
- * It is deferred on purpose rather than forgotten. Implementing it means a
- * `view()` timeline animating colour only, which `tests/unit/motion-contract.test.ts`
- * currently bans outright — correctly for a reveal, too broadly for addressing.
- * Narrowing that gate (ban keyframes that touch opacity or transform; allow a
- * scroll timeline that only changes colour) is worth doing WITH the route that
- * needs it, in step 04, not speculatively against a component no page renders.
- *
- * Nothing ships to a reader in the meantime: this row is exercised by
- * src/pages/dev-fixtures/instrument.astro and by tests, and is not on a route.
+ * The third addressing input, proximity to the reading line, is implemented in
+ * global.css and is scoped to devices with no pointer — see the note there.
  */
 interface Props {
   project: Project;
@@ -64,17 +51,37 @@ interface Props {
    * instrument loads an image, so the list has to decide, not the row.
    */
   reading?: boolean;
+  /**
+   * `link` — the whole row is a stretched anchor to the write-up. The right
+   * behaviour on /projects, where the page's job is to compare and move on.
+   *
+   * `disclosure` — the row opens a short preview in place. Ross's call for the
+   * home bench (2 Aug 2026): "below project should all be able to toggle open a
+   * drop down, show a simple version of the feature card, and all interactive."
+   *
+   * The two cannot be combined, and the attempt is worth recording because it
+   * was the first cut: a stretched link over a <summary> swallows the toggle,
+   * so the row opens and then immediately navigates away from itself. One of
+   * them has to own the click. In disclosure mode the row owns it and the link
+   * out moves into the panel.
+   */
+  mode?: "link" | "disclosure";
+  /**
+   * `narrow` drops the meta line and the trailing glyph. See the note on the
+   * prop in InstrumentRowBody.astro — it exists because of a shipped defect.
+   */
+  density?: "full" | "narrow";
   class?: string;
 }
 
-const { project, reading = false, class: className } = Astro.props;
-
-const headline = projectHeadline(project);
+const {
+  project,
+  reading = false,
+  mode = "link",
+  density = "full",
+  class: className,
+} = Astro.props;
 const state = projectState(project.id);
-const mark = projectMarkLabel(project.id);
-
-/** Three stacks, then the reading time — the row's mono meta line. */
-const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].join(" · ");
 ---
 
 <article
@@ -87,95 +94,44 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
     // there. Repeating it as Tailwind variants here would put three copies of
     // the same intent on every consumer, which is how the four entrance
     // animations this codebase used to carry came about.
-    "instrument linked-card group relative rounded-lg",
+    // `@container`, AND THIS IS THE FIX FOR A SHIPPED DEFECT rather than a
+    // refactor. The row's ruled columns are 224px and 208px, and they used to
+    // be switched on by a VIEWPORT media query — so at the foot of a write-up,
+    // where the row sits in a 608px reading measure on a 1440px screen, `lg`
+    // was true, the two columns took 432px, and the title was left with
+    // THIRTY-SIX PIXELS. "redteam-foundry" broke to one character per line and
+    // "0–4% vs 80%" printed straight through it.
+    //
+    // A media query cannot see its container, so no breakpoint could have
+    // fixed this: the same row is correct at 1088px and broken at 608px on the
+    // same screen. Moving the switch to `@4xl` (56rem) makes it a property of
+    // the space the row is given, which is what it was always describing.
+    "instrument group relative rounded-lg @container",
+    mode === "link" && "linked-card",
     className,
   )}
 >
   {
-    /*
-      44px minimum and the WHOLE ROW is the target, not the arrow (§05 TOUCH).
-      The stretched link over the title gives the row one hit area and one
-      accessible name; `.linked-card` in global.css moves the focus ring onto
-      the row so the indicator and the hit area are the same shape.
+    mode === "disclosure" ? (
+      <details data-disclosure>
+        {/*
+          `list-none` and `block` on the summary, because a summary is
+          `display: list-item` by default and the marker box would otherwise
+          indent the mark column out of line with every other row on the page.
+          The webkit marker and `list-style` are both cleared in global.css.
 
-      `items-start` rather than centre: the title wraps to two lines at narrow
-      widths and the mark should stay level with its first line.
-    */
+          `reticle-cursor` here rather than on the <article>: the panel below
+          holds a link and body text, and a reticle over a paragraph you are
+          trying to select is the kind of flourish that makes a page feel worse
+          the second time you use it.
+        */}
+        <summary class="reticle-cursor block rounded-lg">
+          <InstrumentRowBody project={project} mode="disclosure" density={density} />
+        </summary>
+        <InstrumentPreview project={project} />
+      </details>
+    ) : (
+      <InstrumentRowBody project={project} mode="link" density={density} />
+    )
   }
-  <div class="flex min-h-11 flex-col gap-3 p-4 sm:flex-row sm:items-start sm:gap-5">
-    {
-      /*
-        `data-catalogue` is the hook the canonical-mark tests read on all three
-        surfaces (home, index, write-up), so they can compare the same project's
-        number across them. Keep it: without it those tests can still find A
-        mark, which is exactly the weakness that let the mark contradict itself
-        for as long as it did.
-
-        aria-hidden because the mark is repeated as "Project 01:" inside the
-        link below, where it belongs to the accessible name.
-      */
-    }
-    <span
-      class="text-primary shrink-0 font-mono text-xs tabular-nums sm:pt-1"
-      data-catalogue
-      aria-hidden="true">{mark}</span
-    >
-
-    <div class="min-w-0 flex-1">
-      <h3
-        class="font-display ease-instrument text-base font-semibold tracking-tight text-[color:var(--instrument-title)] transition-[color] duration-[var(--motion-address)]"
-      >
-        <a
-          href={`/projects/${project.id}`}
-          class="after:absolute after:inset-0 after:rounded-lg"
-        >
-          <span class="sr-only">Project {mark}: </span>{project.data.title}
-        </a>
-      </h3>
-      <p class="text-muted-foreground mt-1 font-mono text-xs">{meta}</p>
-    </div>
-
-    {
-      /*
-        FIXED WIDTHS, because this is a column and not a right-hand margin.
-        The first cut let both cells size to their content, so ten values landed
-        at ten different x positions — 41.4M, 7,264, 0.24 0.42, 0–4% — and the
-        one page built for comparing projects made the eye travel to find each
-        number. A comparison surface needs a ruled column even when there is no
-        <table>. The widths are MEASURED, not guessed, and both have been
-        measured twice.
-
-        The readout is 14rem because the longest label, "holdout precision
-        (corrected)", renders at 209px in Geist Mono 12px; 13rem is 208px, so it
-        wrapped and left two of the ten rows 96px tall against everyone else's
-        81px.
-
-        The token column was 11rem and is now 13rem. The status tokens became
-        the spec's pills — 99px radius, 12px, 12px of horizontal padding each
-        side — and the widest pair, CONTROLLED (104px) beside RUN LOG (81px),
-        needs 193px against the 176px it had. Two rows wrapped and grew to 92px.
-        Measured across all ten: the largest requirement is 193px, so 13rem
-        (208px) clears every pair with room for a longer token than any that
-        exists.
-
-        Below sm the two stack rather than sharing a wrapped flex line. Wrapped,
-        the chips landed BETWEEN a value and its own label — so "41.4M" and
-        "journeys unified" were split by two pills, which reads as three
-        unrelated facts instead of one measurement.
-      */
-    }
-    <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
-      <MetricReadout headline={headline} class="sm:w-56" />
-      <div class="flex flex-wrap items-center gap-2 sm:w-[13rem] sm:pt-0.5">
-        {headline && <MetricMode mode={headline.mode} />}
-        <ContentState state={state} />
-      </div>
-    </div>
-
-    {/* One action at the end (R4). Static — the motion contract bans the nudge. */}
-    <ArrowRight
-      class="text-muted-foreground hidden size-4 shrink-0 self-center sm:block"
-      aria-hidden="true"
-    />
-  </div>
 </article>

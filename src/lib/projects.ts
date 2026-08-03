@@ -41,6 +41,8 @@ export type MetricMode = "CORRECTED" | "CONTROLLED" | "LIMITS";
 export type ContentState = "LIVE" | "RUN LOG" | "ARCHIVED";
 
 interface RegistryProject {
+  /** The h2 that carries the project's argument — R9's MAJOR. See below. */
+  major?: string;
   mark?: number;
   status?: string;
   demo?: string | null;
@@ -190,6 +192,26 @@ export function projectHeadline(entry: Project): Headline | null {
  * log. This is why the home page's "6 live" and the index's state column cannot
  * disagree — they are the same function.
  */
+/**
+ * The heading that carries this project's argument — R9's MAJOR for the
+ * write-up route.
+ *
+ * R9's allocation table calls it "Method". No write-up has a heading called
+ * that: aerospace names it "The leakage audit — and the corrected number",
+ * redteam-foundry "Why ASR, not refusal rate", tfl "The headline is certified,
+ * not just published". Ten projects, ten names, one role — so the registry
+ * records WHICH one, exactly as it records which metric is the headline, and
+ * validate-projects.mjs fails the build if the heading is renamed away from
+ * underneath it.
+ *
+ * Returns undefined rather than throwing: a project with no `major` renders as
+ * all-MINOR, which is a page with no loudest section rather than a broken one.
+ * The R9 gate is what says that is wrong; this is not the place to crash.
+ */
+export function projectMajorHeading(slug: string): string | undefined {
+  return REGISTRY[slug]?.major;
+}
+
 export function projectState(slug: string): ContentState {
   const spec = REGISTRY[slug];
   if (spec?.status === "archived") return "ARCHIVED";

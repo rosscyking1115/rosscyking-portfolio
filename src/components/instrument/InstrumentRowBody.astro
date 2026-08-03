@@ -1,0 +1,228 @@
+---
+import { ArrowRight } from "@lucide/astro";
+
+import {
+  projectHeadline,
+  projectMarkLabel,
+  projectReadingTime,
+  projectState,
+  type Project,
+} from "../../lib/projects";
+import ContentState from "./ContentState.astro";
+import MetricMode from "./MetricMode.astro";
+import MetricReadout from "./MetricReadout.astro";
+
+/**
+ * The row anatomy itself — mono mark, title, value column, one action at the
+ * end (§03 R4).
+ *
+ * ── WHY IT IS SPLIT OUT OF InstrumentRow ─────────────────────────────────────
+ * Because there are now two things that can wrap it: a stretched link, or a
+ * <summary> that opens a preview. R4's rule is "a fifth list pattern is a bug",
+ * and the fastest way to grow one is to copy this markup into the second branch
+ * and let the two drift. There is one copy, and the branch above it chooses the
+ * wrapper — so a change to the value column lands on both surfaces or neither.
+ *
+ * The layout is identical in both modes down to the trailing glyph's cell,
+ * which is 32px wide in both — an arrow is 16px and needs the room round it
+ * anyway, and a bracketed [+] at 12px mono measures 29px. The first cut sized
+ * that cell to the arrow and rendered a bare "−", which is four pixels of grey
+ * line at the far right of a 1088px row: technically present, and not an
+ * affordance anyone would find.
+ */
+interface Props {
+  project: Project;
+  /**
+   * `link` gives the title a stretched anchor over the whole row. `disclosure`
+   * gives it no link at all — the row is a <summary> and the link out lives in
+   * the panel it opens.
+   */
+  mode: "link" | "disclosure";
+  /**
+   * `full` is the ruled comparison row. `narrow` is the same anatomy with the
+   * meta line and the trailing glyph removed — mark, title, metric — for a slot
+   * too narrow to rule a column in.
+   *
+   * It exists because of a SHIPPED DEFECT, and the defect is the argument for
+   * it. See the container-query note below: the row adapts to its container
+   * now, but at the write-up's 608px reading measure even the stacked layout is
+   * three lines of chrome for a "here is the next project" link. Narrow is a
+   * content decision, not a width one, and that is why it is a prop rather than
+   * another breakpoint.
+   */
+  density?: "full" | "narrow";
+}
+
+const { project, mode, density = "full" } = Astro.props;
+const narrow = density === "narrow";
+
+const headline = projectHeadline(project);
+const state = projectState(project.id);
+const mark = projectMarkLabel(project.id);
+
+/** Three stacks, then the reading time — the row's mono meta line. */
+const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].join(" · ");
+---
+
+{
+  /*
+    44px minimum and the WHOLE ROW is the target, not the arrow (§05 TOUCH).
+    In link mode the stretched anchor gives the row one hit area and one
+    accessible name; in disclosure mode the <summary> already is one.
+
+    `items-start` rather than centre: the title wraps to two lines at narrow
+    widths and the mark should stay level with its first line.
+  */
+}
+<div
+  class:list={[
+    "flex min-h-11 p-4",
+    // NARROW WRAPS RATHER THAN STACKS. The mark and title take the first line
+    // and the value block wraps under them only when it will not fit — which
+    // at the write-up's 608px measure it does not, and at 900px it does.
+    narrow
+      ? "flex-row flex-wrap items-baseline gap-x-4 gap-y-2"
+      : "flex-col gap-3 @4xl:flex-row @4xl:items-start @4xl:gap-5",
+  ]}
+>
+  {
+    /*
+      `data-catalogue` is the hook the canonical-mark tests read on all three
+      surfaces (home, index, write-up), so they can compare the same project's
+      number across them. Keep it: without it those tests can still find A
+      mark, which is exactly the weakness that let the mark contradict itself
+      for as long as it did.
+
+      aria-hidden because the mark is repeated as "Project 01:" inside the
+      link below, where it belongs to the accessible name.
+    */
+  }
+  <span
+    class:list={[
+      "text-primary shrink-0 font-mono text-xs tabular-nums",
+      !narrow && "@4xl:pt-1",
+    ]}
+    data-catalogue
+    aria-hidden={mode === "link" ? "true" : undefined}>{mark}</span
+  >
+
+  {
+    /*
+      `min-w-0` in the full row, so the title yields to the ruled columns and
+      wraps. In NARROW it is the opposite — the title needs a floor, or
+      `flex-wrap` never wraps: a `flex-1` child shrinks to whatever is left
+      after a `shrink-0` sibling has taken its content width, so at 390px the
+      title collapsed to 53px and painted 35px of "Prognostics" outside itself
+      while all three children technically "fitted" on one line.
+
+      192px is the floor that forces the value block onto its own line at 390
+      and leaves it beside the title at 608. Found by the geometry gate, on its
+      first run, on a fix that had already been eyeballed at three widths.
+    */
+  }
+  <div class:list={["flex-1", narrow ? "min-w-[12rem]" : "min-w-0"]}>
+    <h3
+      class="font-display ease-instrument text-base font-semibold tracking-tight text-[color:var(--instrument-title)] transition-[color] duration-[var(--motion-address)]"
+    >
+      {
+        mode === "link" ? (
+          <a
+            href={`/projects/${project.id}`}
+            class="after:absolute after:inset-0 after:rounded-lg"
+          >
+            <span class="sr-only">Project {mark}: </span>
+            {project.data.title}
+          </a>
+        ) : (
+          project.data.title
+        )
+      }
+    </h3>
+    {!narrow && <p class="text-muted-foreground mt-1 font-mono text-xs">{meta}</p>}
+  </div>
+
+  {
+    /*
+      FIXED WIDTHS, because this is a column and not a right-hand margin.
+      The first cut let both cells size to their content, so ten values landed
+      at ten different x positions — 41.4M, 7,264, 0.24 0.42, 0–4% — and the
+      one page built for comparing projects made the eye travel to find each
+      number. A comparison surface needs a ruled column even when there is no
+      <table>. The widths are MEASURED, not guessed, and both have been
+      measured twice.
+
+      The readout is 14rem because the longest label, "holdout precision
+      (corrected)", renders at 209px in Geist Mono 12px; 13rem is 208px, so it
+      wrapped and left two of the ten rows 96px tall against everyone else's
+      81px.
+
+      The token column was 11rem and is now 13rem. The status tokens became
+      the spec's pills — 99px radius, 12px, 12px of horizontal padding each
+      side — and the widest pair, CONTROLLED (104px) beside RUN LOG (81px),
+      needs 193px against the 176px it had. Two rows wrapped and grew to 92px.
+      Measured across all ten: the largest requirement is 193px, so 13rem
+      (208px) clears every pair with room for a longer token than any that
+      exists.
+
+      Below sm the two stack rather than sharing a wrapped flex line. Wrapped,
+      the chips landed BETWEEN a value and its own label — so "41.4M" and
+      "journeys unified" were split by two pills, which reads as three
+      unrelated facts instead of one measurement.
+
+      AND THE RULED COLUMN STARTS AT lg, NOT sm, WHICH IS A BUG FIX. Both
+      widths were measured against the 1152px container and then applied from
+      640px up. At 768px the row is 704px wide, the two cells take 432px of it,
+      and the title is left with about 150px — so "England & Wales Housing
+      Decision Support" wrapped to four lines beside a number sitting in
+      whitespace, on every tablet, on three surfaces. A measurement taken at one
+      width is a measurement AT that width; applying it two breakpoints early is
+      how a comparison column becomes a squeeze. Between sm and lg the value
+      block sits under the title on its own line instead.
+    */
+  }
+  <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+    <MetricReadout headline={headline} class={narrow ? undefined : "@4xl:w-56"} />
+    <div
+      class:list={[
+        "flex flex-wrap items-center gap-2",
+        !narrow && "@4xl:w-[13rem] @4xl:pt-0.5",
+      ]}
+    >
+      {headline && <MetricMode mode={headline.mode} />}
+      <ContentState state={state} />
+    </div>
+  </div>
+
+  {
+    /*
+      One action at the end (R4). Static in both modes — the motion contract
+      bans the nudge, and it bans the rotation a chevron would need, which is
+      why the disclosure marker is a mono [+] / [−] swapped on [open] rather
+      than one glyph turning over. It is also the site's own index-mark
+      language, so the affordance reads as part of the system instead of as a
+      widget borrowed from one.
+
+      THE TWO DIVERGE BELOW lg, AND ONLY ONE OF THEM MAY. The arrow is
+      decorative — the whole row is a link and the title says so — so it hides
+      on a phone. The [+] is the ONLY thing that says a row opens, and it was
+      `hidden sm:block` alongside the arrow, so on the device that carries most
+      of the traffic the disclosure had no affordance whatsoever. It is
+      absolutely positioned into the mark line's empty right-hand end below lg
+      and rejoins the row as a cell above it, rather than being rendered twice.
+    */
+  }
+  {
+    narrow ? null : mode === "link" ? (
+      <ArrowRight
+        class="text-muted-foreground hidden size-4 shrink-0 self-center @4xl:block"
+        aria-hidden="true"
+      />
+    ) : (
+      <span
+        class="text-primary absolute top-4 right-4 w-8 text-center font-mono text-xs @4xl:static @4xl:shrink-0 @4xl:self-center"
+        data-disclosure-marker
+        aria-hidden="true"
+      />
+    )
+  }
+</div>
