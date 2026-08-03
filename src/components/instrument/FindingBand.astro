@@ -18,8 +18,11 @@ import MetricReadout from "./MetricReadout.astro";
  * cells being ugly. The old band printed every metric a project publishes at
  * the same size, in the same box, with no indication which one the project
  * turns on or how it was arrived at. On agent-release-gates that meant 79.92%,
- * 640 and 309 side by side — a retrieval score, a corpus size and a test count,
- * presented as three facts of equal weight. Only one of them is the finding.
+ * 640 and a test count side by side — a retrieval score, a corpus size and a
+ * tally, presented as three facts of equal weight. Only one of them was the
+ * finding, and the tally has since been dropped outright: it was wrong at every
+ * check, twice inside the same hour, so it was replaced with a result rather
+ * than corrected again. See the _metrics note in registry.json.
  *
  * So this band carries exactly four things and no more:
  *
