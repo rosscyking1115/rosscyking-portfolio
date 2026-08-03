@@ -3,6 +3,7 @@ import NarrowingControl from "../../components/controls/NarrowingControl.astro";
 import InstrumentRow from "../../components/instrument/InstrumentRow.astro";
 import Container from "../../components/layout/Container.astro";
 import IndexMark from "../../components/layout/IndexMark.astro";
+import SectionHead from "../../components/layout/SectionHead.astro";
 import Base from "../../layouts/Base.astro";
 import {
   getAllProjects,
@@ -136,7 +137,22 @@ const readingSlug = projects.find((project) => ranks.get(project.id)?.order === 
         precomputed ranks and no JavaScript at all.
       */
     }
-    <ul class="mt-8 flex flex-col gap-2" data-projects-log>
+    {
+      /*
+        THE ONE MAJOR, and R9 names it "the index table itself" — this surface's
+        job is comparison, and the filter row above it is a control, not a
+        section, so it takes no rung at all ("filter row loses its heading
+        entirely").
+
+        THE LABEL IS THE SPEC'S OWN NAME FOR THE SURFACE, not new copy. The spec
+        calls it the index throughout ("the projects index compares") and the
+        page's mark already reads `[ Index ]`. Writing something more persuasive
+        here would be inventing copy, which content/ is the source of truth for
+        and Ross edits deliberately — FLAGGED for him rather than guessed at.
+      */
+    }
+    <SectionHead rung="major" mark="Log" label="The index" />
+    <ul class="mt-6 flex flex-col gap-2" data-projects-log>
       {
         projects.map((project) => (
           <li

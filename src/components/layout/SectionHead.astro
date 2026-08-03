@@ -1,0 +1,121 @@
+---
+import { cn } from "../../lib/utils";
+import IndexMark from "./IndexMark.astro";
+
+/**
+ * R9 — the section ladder. One component, four rungs, and a quota.
+ *
+ * ── THE FINDING IT ANSWERS ───────────────────────────────────────────────────
+ * Execution audit, finding 05, against 32 captures of the implemented site:
+ *
+ *   "Every section opens identically: bracketed mark, tick rule, mono label, a
+ *    heading around 28px, body at 14.5, then rows. Colophon runs that three
+ *    times. About runs it three times. Privacy runs it six. Nothing on those
+ *    pages can say that one section matters more than the next, so the reader
+ *    treats them all as reference and skims."
+ *
+ * And it named why the previous answer was not enough: "Your own audit finding
+ * 08 identified this and the answer was one band on one route. One band fixes
+ * one page. What is missing is a ladder — and a rule about how often each rung
+ * may be used."
+ *
+ * ── THE QUOTA IS THE RULE. THE SIZES ARE JUST HOW YOU READ IT ────────────────
+ * A route may use BAND at most once and MAJOR at most once. MINOR and QUIET are
+ * unlimited. Without the quota this is four heading sizes, which is a bigger
+ * problem than one heading size — so `tests/e2e/hierarchy.spec.ts` counts them
+ * per route and fails on the second of either. That gate is R9's own words:
+ *
+ *   "On each route count: exactly one #f0f1f3 full-bleed block or zero;
+ *    exactly one 32px heading; no 28px headings anywhere."
+ *
+ * ── THE RUNGS ────────────────────────────────────────────────────────────────
+ *   MAJOR   tick rule, bracketed mark, 32px at -.02em, 48px of air. Once.
+ *   MINOR   22px at -.01em, 32px of air. No rule, no mark. Unlimited.
+ *   QUIET   no heading at all — a 12px mono label, then the body one step down
+ *           and in the muted colour. Unlimited.
+ *
+ * BAND is not here. It is full-bleed and has to break its container, so it
+ * cannot be a heading component; it is a section wrapper, and there are two on
+ * the site (the home proof figures and the colophon build numbers).
+ *
+ * ── WHY THE MARK ONLY APPEARS ON MAJOR ───────────────────────────────────────
+ * Because it was the flatness. `[ 01 ] —— Label` opened three sections on
+ * colophon, three on about and six on privacy, which made the registration mark
+ * — the site's one signature — into wallpaper. Reserved for the one section
+ * that matters on a route, it means something again.
+ */
+interface Props {
+  rung: "major" | "minor" | "quiet";
+  /** The section's name. The heading on major/minor; the mono label on quiet. */
+  label: string;
+  /** The bracketed index. MAJOR only — passing it to another rung is a no-op. */
+  mark?: string;
+  /** Heading level. `h2` unless the section nests under one. */
+  as?: "h2" | "h3";
+  id?: string;
+  class?: string;
+}
+
+const { rung, label, mark, as = "h2", id, class: className } = Astro.props;
+---
+
+{
+  rung === "quiet" ? (
+    /*
+      No heading element at all, and that is deliberate rather than lazy: a
+      QUIET section is reference material the reader is not being asked to
+      navigate by, so putting it in the document outline would say the opposite
+      of what the rung says. Anything that genuinely belongs in the outline is
+      MINOR.
+    */
+    <p
+      class={cn(
+        "text-muted-foreground text-label font-mono tracking-[0.12em] uppercase",
+        className,
+      )}
+      id={id}
+    >
+      {label}
+    </p>
+  ) : rung === "major" ? (
+    <div class={cn("mt-12", className)}>
+      <div class="tick-rule" aria-hidden="true" />
+      <IndexMark mark={mark ?? "01"} class="mt-4" />
+      {as === "h2" ? (
+        <h2
+          class="font-display text-major mt-3 font-semibold tracking-[-0.02em] text-balance"
+          id={id}
+        >
+          {label}
+        </h2>
+      ) : (
+        <h3
+          class="font-display text-major mt-3 font-semibold tracking-[-0.02em] text-balance"
+          id={id}
+        >
+          {label}
+        </h3>
+      )}
+    </div>
+  ) : as === "h2" ? (
+    <h2
+      class={cn(
+        "font-display text-minor mt-8 font-semibold tracking-[-0.01em] text-balance",
+        className,
+      )}
+      id={id}
+    >
+      {label}
+    </h2>
+  ) : (
+    <h3
+      class={cn(
+        "font-display text-minor mt-8 font-semibold tracking-[-0.01em] text-balance",
+        className,
+      )}
+      id={id}
+    >
+      {label}
+    </h3>
+  )
+}

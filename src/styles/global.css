@@ -301,6 +301,26 @@
    * for any mono label carrying meaning" — a status token carries meaning, so
    * the contract wins and the conflict is recorded in the status component. */
   --text-band: 92px;
+
+  /* ---------- R9, the section ladder (design pass, 3 Aug 2026) ----------
+   * The audit's finding 05: "every section opens identically — bracketed mark,
+   * tick rule, mono label, a heading around 28px, body at 14.5, then rows.
+   * Colophon runs that three times. About runs it three times. Privacy runs it
+   * six. Nothing on those pages can say that one section matters more than the
+   * next, so the reader treats them all as reference and skims."
+   *
+   * R9 answers it with four rungs and a QUOTA — a route may use BAND at most
+   * once and MAJOR at most once. The quota is the rule; the sizes are just how
+   * you can tell which rung you are looking at.
+   *
+   * 28px IS ABOLISHED. Anything that was is now 32 (the one MAJOR) or 22
+   * (MINOR). `--text-minor` and `--text-step` carry the same 22px and are not
+   * the same token: step is the build-step numeral from the spec's type list,
+   * minor is a heading rung. A value shared today can diverge tomorrow, and a
+   * token named after what it MEANS is the only thing that survives that. */
+  --text-major: 32px;
+  --text-minor: 22px;
+
   --text-step: 22px;
   --text-bio: 20px;
   --text-body: 16px;
@@ -381,6 +401,36 @@
 
 .skip-to-content {
   @apply bg-foreground text-background sr-only absolute top-2 left-2 z-50 rounded-md px-3 py-2 text-sm focus:not-sr-only;
+}
+
+/* ---------- R9 rungs (design pass, 3 Aug 2026) ------------------------------
+ * The tick rule that marks a MAJOR section, and the QUIET rung's body.
+ * `.rung-major` and `.rung-minor` are pure type and live on the heading itself
+ * — see SectionHead.astro, which is the one place that decides which rung a
+ * section is on.
+ *
+ * THE TICK COLOUR IS `--instrument-reading-border`, NOT R9's LITERAL #d6d8dd,
+ * and the spec contradicts itself here rather than this being a liberty. Its
+ * own colour table names #cdd0d6 as "Ruler / reading border"; R9's rung table
+ * writes #d6d8dd for the same rule eight sections later. The README says the
+ * token tables are authoritative where the two disagree, so the token wins —
+ * and the alternative was a third near-identical grey with no dark counterpart,
+ * which is exactly the proliferation the token layer exists to stop. */
+.tick-rule {
+  height: 8px;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--instrument-reading-border) 0 1px,
+    transparent 1px 14px
+  );
+}
+
+/* QUIET has no heading at all: a mono label, then body at one step down and in
+   the muted colour. The rung is the whole block, so the body styling comes
+   with it rather than being remembered at each call site. */
+.rung-quiet {
+  color: var(--muted-foreground);
+  font-size: var(--text-body-xs);
 }
 
 /* Registration "ruler" divider — part of the index-mark signature. A row of

@@ -2,6 +2,7 @@
 import Container from "../components/layout/Container.astro";
 import InstrumentRow from "../components/instrument/InstrumentRow.astro";
 import IndexMark from "../components/layout/IndexMark.astro";
+import SectionHead from "../components/layout/SectionHead.astro";
 import Button from "../components/ui/Button.astro";
 import Base from "../layouts/Base.astro";
 import { DEFAULT_LENS } from "../lib/lenses";
@@ -54,13 +55,14 @@ import { getLensFeaturedCards } from "../lib/projects";
  * four lines of copy inside a 1152 frame is the same emptiness drawn one level
  * up (audit finding 04). The page now ends where the content does.
  *
- * WHAT IS DELIBERATELY NOT DONE HERE. R9 assigns this route no BAND and one
- * MAJOR — "Where to go instead" — which would put the recovery heading above
- * "Page not found" in the visual ladder. That is a system-wide rung conversion
- * with an allocation table covering eight routes, and doing it to one page
- * ahead of the others is how a ladder ends up with two different rungs called
- * the same name. It lands with the R9 pass; the h1 stays the page's identity
- * until then.
+ * ── R9 (applied with the ladder pass, 3 Aug 2026) ───────────────────────────
+ * No BAND, one MAJOR: "Where to go instead". The recovery heading is therefore
+ * the largest section on the page, above the apology, which is the right way
+ * round for a page whose only job is to get a lost reader somewhere useful.
+ *
+ * The <h1> stays "Page not found" — it is the page's identity and its title,
+ * and R9 legislates the ladder BELOW the page name rather than replacing it.
+ * The apology is body copy, as the allocation table asks.
  */
 const featured = (await getLensFeaturedCards())[DEFAULT_LENS] ?? [];
 ---
@@ -110,8 +112,8 @@ const featured = (await getLensFeaturedCards())[DEFAULT_LENS] ?? [];
     }
     {
       featured.length > 0 && (
-        <div class="mt-14">
-          <IndexMark mark="01" label="Where to go instead" />
+        <div>
+          <SectionHead rung="major" mark="01" label="Where to go instead" />
           <p class="text-body mt-3 text-sm leading-relaxed">
             The three projects the front page leads with.
           </p>
