@@ -53,6 +53,13 @@ interface Props {
    * brand last in <title>, og:title and twitter:title alike.
    */
   titleForm?: "template" | "default";
+  /**
+   * Footer density (execution audit, finding 13). `compact` on the two SHORT
+   * routes, where the full footer's 255px is a fifth of the page rather than
+   * furniture at the foot of it. Measured rather than named — see the note in
+   * Footer.astro and the gate in tests/e2e/footer.spec.ts.
+   */
+  footer?: "full" | "compact";
 }
 
 const {
@@ -62,6 +69,7 @@ const {
   ogImage = DEFAULT_OG_IMAGE,
   ogImageAlt = DEFAULT_OG_ALT,
   titleForm = "template",
+  footer = "full",
 } = Astro.props;
 
 const canonicalUrl = new URL(canonical, Astro.site);
@@ -151,7 +159,7 @@ const fullTitle =
     <main id="main" class="flex-1">
       <slot />
     </main>
-    <Footer />
+    <Footer density={footer} />
 
     {
       /*

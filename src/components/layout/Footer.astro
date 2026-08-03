@@ -9,13 +9,29 @@ import Container from "./Container.astro";
  * colophon said "Built with Next.js & Tailwind". It now says Astro, because it
  * is. Everything else — links, order, wording, layout — is unchanged.
  */
+interface Props {
+  /**
+   * `full` is the eight-link footer every route used to carry. `compact` is
+   * the short-route variant — brand line, five links, copyright, one rule.
+   *
+   * "Same component, one attribute" is the audit's own prescription, and it is
+   * the part worth keeping: two footer components would drift within a month,
+   * and the difference between them is which links a reader needs at the foot
+   * of a page they are LEAVING versus one they are finishing.
+   */
+  density?: "full" | "compact";
+}
+
+const { density = "full" } = Astro.props;
+const compact = density === "compact";
+
 const year = new Date().getFullYear();
 
 const links = [
-  { href: "/projects", label: "Projects" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-  { href: siteConfig.links.github, label: "GitHub", external: true },
+  { href: "/projects", label: "Projects", compact: true },
+  { href: "/about", label: "About", compact: true },
+  { href: "/contact", label: "Contact", compact: true },
+  { href: siteConfig.links.github, label: "GitHub", external: true, compact: true },
   { href: siteConfig.links.linkedin, label: "LinkedIn", external: true },
   { href: "/cv.pdf", label: "CV" },
   /*
@@ -25,8 +41,18 @@ const links = [
     one page that exists because it has to.
   */
   { href: "/colophon", label: "Colophon" },
-  { href: "/privacy", label: "Privacy" },
+  /*
+    PRIVACY IS IN THE COMPACT FIVE, AND THAT IS NOT A STYLE CHOICE. The two
+    routes that take the compact footer are /404 and /contact, and /contact is
+    the only page on the site that collects anything — with no privacy link
+    anywhere in the form or its small print, this footer is the sole route to
+    the notice from the page that most needs one. LinkedIn, the CV and the
+    colophon are all reachable from /about, which keeps the full footer.
+  */
+  { href: "/privacy", label: "Privacy", compact: true },
 ];
+
+const shown = compact ? links.filter((link) => link.compact) : links;
 ---
 
 {
@@ -38,8 +64,25 @@ const links = [
     which is generous without being a gap in the page.
   */
 }
-<footer class="border-border mt-8 border-t">
-  <Container class="py-12">
+{
+  /*
+    ── FINDING 13 ────────────────────────────────────────────────────────────
+    "One footer, 255px, eight times. Eleven links, a bio sentence, a rule, two
+     mono lines — identical on every route and at every width. On the write-up
+     it is 4% of the page. On /404 it is 28%, and on /contact it is 22%. A
+     footer that is a fifth of the page is no longer furniture; it is the page."
+
+    The share is the finding, not the height. 255px is right at the foot of a
+    5,000px write-up and wrong at the foot of a 1,100px 404, and no single
+    footer can be both — which is why this is a density rather than a redesign.
+
+    The compact variant drops the bio sentence, three links, the second mono
+    line and half the padding. It keeps the brand, five links, the copyright
+    and one rule, which is what the audit asked for.
+  */
+}
+<footer class:list={["border-border mt-8 border-t", compact && "mt-6"]}>
+  <Container class:list={[compact ? "py-6" : "py-12"]}>
     <div class="flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <a
@@ -48,11 +91,14 @@ const links = [
         >
           {siteConfig.shortName}
         </a>
-        <p class="text-muted-foreground mt-1.5 max-w-xs text-sm leading-relaxed">
-          AI evaluation and reliability, on a data engineering backbone. {
-            siteConfig.location
-          }.
-        </p>
+        {
+          !compact && (
+            <p class="text-muted-foreground mt-1.5 max-w-xs text-sm leading-relaxed">
+              AI evaluation and reliability, on a data engineering backbone.{" "}
+              {siteConfig.location}.
+            </p>
+          )
+        }
       </div>
       {
         /*
@@ -75,7 +121,7 @@ const links = [
         class="-my-1 grid grid-cols-3 gap-x-4 text-sm lg:flex lg:flex-wrap lg:gap-x-6"
       >
         {
-          links.map((link) => (
+          shown.map((link) => (
             <a
               href={link.href}
               {...(link.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
@@ -88,11 +134,21 @@ const links = [
       </nav>
     </div>
 
+    {
+      /*
+        ONE RULE, and in the compact footer the colophon line goes with it.
+        "Built with Astro & Tailwind" is a thing a reader might want to know
+        about the site; it is not a thing they want at the foot of a 404.
+      */
+    }
     <div
-      class="border-border text-muted-foreground mt-8 flex flex-col gap-1 border-t pt-6 font-mono text-xs sm:flex-row sm:items-center sm:justify-between"
+      class:list={[
+        "border-border text-muted-foreground flex flex-col gap-1 border-t font-mono text-xs sm:flex-row sm:items-center sm:justify-between",
+        compact ? "mt-5 pt-4" : "mt-8 pt-6",
+      ]}
     >
       <span>© {year} {siteConfig.name}</span>
-      <span>Built with Astro &amp; Tailwind</span>
+      {!compact && <span>Built with Astro &amp; Tailwind</span>}
     </div>
   </Container>
 </footer>
