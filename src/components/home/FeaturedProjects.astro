@@ -14,7 +14,7 @@ import NarrowingControl from "../controls/NarrowingControl.astro";
 import InstrumentRow from "../instrument/InstrumentRow.astro";
 import MetricReadout from "../instrument/MetricReadout.astro";
 import Container from "../layout/Container.astro";
-import IndexMark from "../layout/IndexMark.astro";
+import SectionHead from "../layout/SectionHead.astro";
 import Badge from "../ui/Badge.astro";
 import EvidenceFrame from "./EvidenceFrame.astro";
 import NowBuilding from "./NowBuilding.astro";
@@ -118,13 +118,27 @@ const allLabel = `All ${allCount} projects`;
         <div data-lens-panel={lens.key}>
           <div class="flex items-end justify-between gap-6">
             <div>
-              <IndexMark mark="01" label="Featured work" />
-              <h2
-                class="font-display mt-3 text-3xl font-semibold tracking-tight text-balance"
-                data-lens-headline
+              <SectionHead
+                rung="major"
+                mark="01"
+                label={`${countWord(featured.length)} projects, shown working`}
+                class="mt-0"
+                id={`lens-headline-${lens.key}`}
+              />
+              {/*
+                THE LENS COUNTER (design pass, home interactions): a mono
+                readout of the URL state and what it narrowed to. It is rendered
+                per panel rather than written by the switcher's script, because
+                each lens is already a prerendered panel — the count is a build
+                fact, and computing it in the browser would make a number the
+                site can state for itself depend on JavaScript running.
+              */}
+              <p
+                class="text-muted-foreground text-label mt-3 font-mono"
+                data-lens-counter
               >
-                {countWord(featured.length)} projects, shown working
-              </h2>
+                /?lens={lens.key} &middot; {featured.length} of {allCount} shown
+              </p>
             </div>
             <a
               href="/projects"
@@ -233,6 +247,24 @@ const allLabel = `All ${allCount} projects`;
               one thumb-flick. The rack is two arrivals — the instrument that
               reads, then the list of the ones that do not.
             */}
+            {/*
+              THE RACK'S SIBLINGS STAY LINKS, and the design pass's row
+              disclosure is on the BENCH below instead. Tried the other way for
+              one run and it broke two things at once:
+
+                R7. Each preview carries an evidence frame, so the rack went
+                from one framed instrument to three — the exact rule Ross
+                restored yesterday by reverting the three open cards.
+
+                THE ONE-CLICK ROUTE. A featured project's only link became the
+                "Read the write-up" inside a CLOSED <details>, so the three
+                projects the lens chose were two clicks away and invisible to a
+                link check. The gate caught it as "all should feature
+                redteam-foundry: hidden".
+
+              The bench is home's index and already opens; the rack is the
+              shortlist and should not need opening.
+            */}
             {siblings.length > 0 && (
               <ul class="mt-2 flex flex-col gap-2" data-enter="scroll">
                 {siblings.map((project) => (
@@ -246,7 +278,7 @@ const allLabel = `All ${allCount} projects`;
 
           {bench.length > 0 && (
             <div class="mt-14" data-bench>
-              <IndexMark mark="02" label="The rest of the bench" />
+              <SectionHead rung="minor" label="The rest of the bench" class="mt-0" />
               <p class="text-body mt-3 max-w-prose text-sm leading-relaxed">
                 Not featured under this lens — the same rows, the same numbers. Open one
                 for the short version.

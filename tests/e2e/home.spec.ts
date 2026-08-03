@@ -64,6 +64,94 @@ test.describe("hero", () => {
   });
 });
 
+test.describe("figure provenance (design pass, home interactions)", () => {
+  test("the slot is always present and always occupied", async ({ page }) => {
+    // "The slot is always present and always occupied — so nothing shifts."
+    // Both halves are the design. A slot that APPEARS on hover pushes the page
+    // down at the moment the reader's pointer is somewhere specific, which is
+    // the worst possible time; an empty reserved strip reads as a rendering
+    // fault. So it starts occupied and never empties.
+    await page.goto("/");
+    const slot = page.locator("[data-provenance]");
+    await expect(slot).toBeVisible();
+    await expect(slot).toHaveText(/Hover or focus a figure/);
+  });
+
+  test("each figure names where it is counted from, and it costs no layout", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    const slot = page.locator("[data-provenance]");
+    const figures = page.locator("[data-figure]");
+    await expect(figures).toHaveCount(3);
+
+    // Measured against the SECTION BELOW the band, because that is what a
+    // growing slot would push. R9's whole reason for a fixed slot is that this
+    // number does not move.
+    // The VISIBLE panel. `[data-lens-panel]` matches all three and the first
+    // two are display:none, so an unscoped locator measures a box that has no
+    // position and reports "nothing moved" whatever happens.
+    //
+    // DOCUMENT-RELATIVE, not viewport-relative. `boundingBox()` is measured
+    // from the viewport, and `hover()` scrolls its target into view — so the
+    // first version of this reported the rack moving 88px UP, which is the page
+    // scrolling and not the band growing. Fifth time in this suite that a
+    // measurement has caught the page mid-move.
+    const offsetTop = () =>
+      page
+        .locator('[data-lens-panel="all"] [data-rack]')
+        .evaluate((el) => Math.round(el.getBoundingClientRect().top + window.scrollY));
+    const before = await offsetTop();
+
+    for (let i = 0; i < 3; i++) {
+      await figures.nth(i).hover();
+      await expect(slot).not.toHaveText(/Hover or focus a figure/);
+      // Every source names the QUERY, not the answer — "counted from the
+      // registry" is true of all three and tells a reader nothing.
+      await expect(slot).toHaveText(/registry|shipped|metric/i);
+    }
+
+    expect(await offsetTop(), "the provenance slot moved the page").toBe(before);
+  });
+
+  test("a figure is a real control, because hover does not exist on a phone", async ({
+    page,
+  }) => {
+    // THE FAILURE THIS EXISTS FOR. Built as a hover rule on a <span>, this
+    // interaction would be desktop-only on a site whose traffic is mostly
+    // phones — and it would have looked finished. A button works on a tap, on
+    // Tab, and under a screen reader.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+
+    const figure = page.locator("[data-figure]").first();
+    await expect(figure).toHaveRole("button");
+    await expect(figure).toHaveAttribute("aria-describedby", "proof-provenance");
+
+    // `click`, not `tap`: Playwright's `tap` needs a context with `hasTouch`,
+    // and what is being asserted is that the affordance is a CONTROL rather
+    // than a hover rule — a control answers both.
+    await figure.click();
+    await expect(page.locator("[data-provenance]")).toHaveText(/shipped/i);
+  });
+
+  test("the figures are one row at 40px on a phone", async ({ page }) => {
+    // Execution audit, finding 06: the three figures used to STACK, spending
+    // roughly 430px on eleven characters, which made the band — the site's one
+    // scale break at 1440 — into the longest low-density passage on the site at
+    // 390. The audit's own fix, and its reasoning: "they are short and they
+    // read fine small."
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+
+    const columns = await page
+      .locator("[data-proof-strip]")
+      .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(" ").length);
+    expect(columns, "the proof figures are not one row on a phone").toBe(3);
+    await expect(page.locator("[data-count-to]").first()).toHaveCSS("font-size", "40px");
+  });
+});
+
 test.describe("featured showcase", () => {
   test("renders one panel per lens and shows only the default", async ({ page }) => {
     await page.goto("/");
@@ -88,8 +176,17 @@ test.describe("featured showcase", () => {
         ).toBeVisible();
       }
       // The heading counts what is actually shown, so a dropped card is loud.
-      await expect(panel.locator("[data-lens-headline]")).toContainText(
+      // Read off the MAJOR heading rather than a `data-lens-headline` hook: R9
+      // made this the route's one 32px heading, and a rung is a stronger anchor
+      // than an attribute nothing else uses.
+      await expect(panel.getByRole("heading", { level: 2 }).first()).toContainText(
         "projects, shown working",
+      );
+      // AND THE COUNTER AGREES WITH IT. Two numbers about the same set on the
+      // same screen is exactly the drift §03 R8 exists for; both are computed
+      // from the same prerendered panel, and this is what says so.
+      await expect(panel.locator("[data-lens-counter]")).toContainText(
+        `/?lens=${key} · ${lens.featured.length} of`,
       );
       // SCOPED TO THE RACK. Every InstrumentRow is an <article> too, so an
       // unscoped count now takes in the bench below and returns the whole

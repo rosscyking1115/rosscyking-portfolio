@@ -63,9 +63,17 @@ test.describe("shared ?lens= links land on the right set", () => {
    */
   test("each lens heading counts the projects it is showing", async ({ page }) => {
     await page.goto("/?lens=data");
-    await expect(
-      page.locator('[data-lens-panel="data"] [data-lens-headline]'),
-    ).toContainText("projects, shown working");
+    const panel = page.locator('[data-lens-panel="data"]');
+    // Read off the MAJOR heading rather than a `data-lens-headline` hook. R9
+    // made this the route's one 32px heading, and a rung is a stronger anchor
+    // than an attribute that exists only for a test.
+    await expect(panel.getByRole("heading", { level: 2 }).first()).toContainText(
+      "projects, shown working",
+    );
+    // The counter is the same count in the other voice, and the two are drawn
+    // from the same prerendered panel — so a lens whose heading and readout
+    // disagree fails here rather than shipping two numbers about one set.
+    await expect(panel.locator("[data-lens-counter]")).toContainText("/?lens=data ·");
   });
 });
 
