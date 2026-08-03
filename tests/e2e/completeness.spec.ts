@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
 import { nowBuilding } from "../../src/lib/now-building";
+import { ROUTES as ALL_ROUTES } from "./routes";
 
 /**
  * Completeness gates.
@@ -259,5 +260,42 @@ test.describe("completeness — the narrowing control (finding #2)", () => {
       Number.parseFloat(getComputedStyle(el).borderTopLeftRadius),
     );
     expect(radius, "the chip is not a pill").toBeGreaterThanOrEqual(99);
+  });
+});
+
+test.describe("completeness — the site does not discuss visas (Ross, 3 Aug 2026)", () => {
+  test("no route mentions a visa or sponsorship", async ({ page }) => {
+    // AN ABSENCE ASSERTION, which is what this file is for. "Remove everything
+    // related to visa" is the kind of instruction that gets 90% done: the
+    // obvious label goes, and the clause survives in a bio paragraph, a meta
+    // description, or an og:description generated from one of them. Nothing
+    // 404s and nothing looks wrong, because a sentence that is still true is
+    // not a bug — it is just a sentence he asked not to publish.
+    //
+    // It came from three places at once (a site-config token, the /contact
+    // band, and content/about.mdx), which is exactly why this sweeps the
+    // rendered text of every derived route rather than the file it was removed
+    // from. The design spec's screen 16a still asks for the visa fact; this is
+    // the thing that stops it being re-added by someone following the spec.
+    //
+    // NOT ASSERTED, AND WORTH SAYING: public/cv.pdf. It is a binary and this
+    // gate cannot read it — if the CV names a visa route, the site links to a
+    // document that says what the site does not.
+    for (const route of ALL_ROUTES) {
+      await page.goto(route);
+      const text = (await page.locator("body").textContent()) ?? "";
+      expect(text, `${route} mentions a visa or sponsorship`).not.toMatch(
+        /visas?|sponsorship|sponsored/i,
+      );
+
+      const meta = await page
+        .locator('meta[name="description"], meta[property="og:description"]')
+        .evaluateAll((els) =>
+          els.map((el) => el.getAttribute("content") ?? "").join(" "),
+        );
+      expect(meta, `${route} metadata mentions a visa`).not.toMatch(
+        /visas?|sponsorship/i,
+      );
+    }
   });
 });
