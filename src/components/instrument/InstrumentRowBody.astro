@@ -38,9 +38,23 @@ interface Props {
    * the panel it opens.
    */
   mode: "link" | "disclosure";
+  /**
+   * `full` is the ruled comparison row. `narrow` is the same anatomy with the
+   * meta line and the trailing glyph removed — mark, title, metric — for a slot
+   * too narrow to rule a column in.
+   *
+   * It exists because of a SHIPPED DEFECT, and the defect is the argument for
+   * it. See the container-query note below: the row adapts to its container
+   * now, but at the write-up's 608px reading measure even the stacked layout is
+   * three lines of chrome for a "here is the next project" link. Narrow is a
+   * content decision, not a width one, and that is why it is a prop rather than
+   * another breakpoint.
+   */
+  density?: "full" | "narrow";
 }
 
-const { project, mode } = Astro.props;
+const { project, mode, density = "full" } = Astro.props;
+const narrow = density === "narrow";
 
 const headline = projectHeadline(project);
 const state = projectState(project.id);
@@ -60,7 +74,17 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
     widths and the mark should stay level with its first line.
   */
 }
-<div class="flex min-h-11 flex-col gap-3 p-4 lg:flex-row lg:items-start lg:gap-5">
+<div
+  class:list={[
+    "flex min-h-11 p-4",
+    // NARROW WRAPS RATHER THAN STACKS. The mark and title take the first line
+    // and the value block wraps under them only when it will not fit — which
+    // at the write-up's 608px measure it does not, and at 900px it does.
+    narrow
+      ? "flex-row flex-wrap items-baseline gap-x-4 gap-y-2"
+      : "flex-col gap-3 @4xl:flex-row @4xl:items-start @4xl:gap-5",
+  ]}
+>
   {
     /*
       `data-catalogue` is the hook the canonical-mark tests read on all three
@@ -74,12 +98,29 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
     */
   }
   <span
-    class="text-primary shrink-0 font-mono text-xs tabular-nums lg:pt-1"
+    class:list={[
+      "text-primary shrink-0 font-mono text-xs tabular-nums",
+      !narrow && "@4xl:pt-1",
+    ]}
     data-catalogue
     aria-hidden={mode === "link" ? "true" : undefined}>{mark}</span
   >
 
-  <div class="min-w-0 flex-1">
+  {
+    /*
+      `min-w-0` in the full row, so the title yields to the ruled columns and
+      wraps. In NARROW it is the opposite — the title needs a floor, or
+      `flex-wrap` never wraps: a `flex-1` child shrinks to whatever is left
+      after a `shrink-0` sibling has taken its content width, so at 390px the
+      title collapsed to 53px and painted 35px of "Prognostics" outside itself
+      while all three children technically "fitted" on one line.
+
+      192px is the floor that forces the value block onto its own line at 390
+      and leaves it beside the title at 608. Found by the geometry gate, on its
+      first run, on a fix that had already been eyeballed at three widths.
+    */
+  }
+  <div class:list={["flex-1", narrow ? "min-w-[12rem]" : "min-w-0"]}>
     <h3
       class="font-display ease-instrument text-base font-semibold tracking-tight text-[color:var(--instrument-title)] transition-[color] duration-[var(--motion-address)]"
     >
@@ -97,7 +138,7 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
         )
       }
     </h3>
-    <p class="text-muted-foreground mt-1 font-mono text-xs">{meta}</p>
+    {!narrow && <p class="text-muted-foreground mt-1 font-mono text-xs">{meta}</p>}
   </div>
 
   {
@@ -139,9 +180,14 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
       block sits under the title on its own line instead.
     */
   }
-  <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4 lg:gap-4">
-    <MetricReadout headline={headline} class="lg:w-56" />
-    <div class="flex flex-wrap items-center gap-2 lg:w-[13rem] lg:pt-0.5">
+  <div class="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+    <MetricReadout headline={headline} class={narrow ? undefined : "@4xl:w-56"} />
+    <div
+      class:list={[
+        "flex flex-wrap items-center gap-2",
+        !narrow && "@4xl:w-[13rem] @4xl:pt-0.5",
+      ]}
+    >
       {headline && <MetricMode mode={headline.mode} />}
       <ContentState state={state} />
     </div>
@@ -166,14 +212,14 @@ const meta = [...project.data.stack.slice(0, 3), projectReadingTime(project)].jo
     */
   }
   {
-    mode === "link" ? (
+    narrow ? null : mode === "link" ? (
       <ArrowRight
-        class="text-muted-foreground hidden size-4 shrink-0 self-center lg:block"
+        class="text-muted-foreground hidden size-4 shrink-0 self-center @4xl:block"
         aria-hidden="true"
       />
     ) : (
       <span
-        class="text-primary absolute top-4 right-4 w-8 text-center font-mono text-xs lg:static lg:shrink-0 lg:self-center"
+        class="text-primary absolute top-4 right-4 w-8 text-center font-mono text-xs @4xl:static @4xl:shrink-0 @4xl:self-center"
         data-disclosure-marker
         aria-hidden="true"
       />
