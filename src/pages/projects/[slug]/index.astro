@@ -14,6 +14,7 @@ import {
   getAdjacentProjects,
   getAllProjects,
   projectHeadline,
+  projectMajorHeading,
   projectMarkLabel,
   projectReadingTime,
   toMetaDescription,
@@ -97,6 +98,38 @@ const headline = projectHeadline(project);
  * the tenth — which is correct, and better than a link to an anchor that does
  * not exist.
  */
+/**
+ * THE ROUTE'S ONE MAJOR (R9), promoted by a scoped rule on one heading's id.
+ *
+ * R9 gives this route MAJOR = "Method". No write-up has a heading called that —
+ * each names its own argument — so registry.json records which authored h2
+ * carries it and validate-projects.mjs fails the build if that heading is
+ * renamed. `headings` is the RENDERED outline, so the slug here is the id the
+ * heading actually got rather than one derived twice.
+ *
+ * ── WHY A SCOPED STYLE AND NOT AN ATTRIBUTE OR A SCRIPT ──────────────────────
+ * The heading is inside <Content />, so nothing outside the MDX can put a class
+ * or a data attribute on it without a rehype plugin, and the two alternatives
+ * are both worse:
+ *
+ *   A SCRIPT would set the attribute after paint, so the heading renders at
+ *   22px and jumps to 32px — a visible reflow on the site's most important
+ *   page, to apply a rule that has been knowable since build time.
+ *
+ *   A REHYPE PLUGIN would work, and would mean mirroring `major` into every
+ *   MDX frontmatter and gating registry-against-frontmatter as well as
+ *   frontmatter-against-body. Three places to keep in step for one selector.
+ *
+ * A rule keyed on the id is static, ships in the document, cannot flash, and is
+ * per-page in the same way the promotion itself is. The declarations live here,
+ * beside the code that emits them, rather than in global.css where they would
+ * be a rule with no selector that could ever match.
+ */
+const majorHeading = projectMajorHeading(project.id);
+const majorSlug = majorHeading
+  ? headings.find((heading) => heading.depth === 2 && heading.text === majorHeading)?.slug
+  : undefined;
+
 const limits = headings.find(
   (heading) => heading.depth === 2 && /limits/i.test(heading.text),
 );
@@ -138,6 +171,26 @@ const stackLine =
     ? `${stack.slice(0, 4).join(" · ")} · +${stack.length - 4}`
     : stack.join(" · ");
 ---
+
+{
+  /*
+    R9's MAJOR rung, for this page's one heading. The tick rule is PAINTED
+    rather than added: a MAJOR opens with an 8px rule above its mark, and this
+    heading already has a ::before — the auto-numbered counter that gives every
+    write-up section its `01`. An ::after would put the rule below the text and
+    a wrapper would mean touching rendered MDX, so it is a background-image in
+    the top padding, taking the theme's own border token like every other rule
+    on the site.
+  */
+}
+{
+  majorSlug && (
+    <style
+      is:inline
+      set:html={`#${majorSlug}{font-size:var(--text-major);letter-spacing:-.02em;margin-top:3rem;padding-top:1.5rem;background-image:repeating-linear-gradient(to right,var(--instrument-reading-border) 0 1px,transparent 1px 14px);background-size:100% 8px;background-repeat:no-repeat;background-position:top left}`}
+    />
+  )
+}
 
 <Base
   title={title}

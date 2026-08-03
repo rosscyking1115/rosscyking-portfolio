@@ -30,15 +30,7 @@ import { ROUTES } from "./routes";
  * is a pending list that becomes permanent. Every entry here is a route the
  * design pass has an allocation for and this repository has not applied yet.
  */
-const PENDING: Record<string, string> = {
-  // The rail and the BAND landed with build-order step 4; what is left is the
-  // .doc heading scale. R9 gives this route MAJOR = "Method", and marking ONE
-  // authored <h2> as the major rung needs authored data — the same argument
-  // recorded for the summary/full toggle. `.doc h2` is 25.6px on every write-up
-  // until then, which is off the ladder, which is why this stays here.
-  "/projects/agent-release-gates":
-    "the .doc heading scale — MAJOR is an authored h2 and needs registry data to name it",
-};
+const PENDING: Record<string, string> = {};
 
 /** The R9 rung sizes, in the px getComputedStyle reports. */
 const MAJOR = 32;
@@ -85,15 +77,25 @@ test.describe("R9 — the section ladder", () => {
         //   <h1>          The page's own title, not a rung. R9 legislates the
         //                 ladder BELOW the page name, and one h1 per page is
         //                 already asserted elsewhere.
-        //   li, article   A heading that titles a repeated ITEM is not a
-        //                 section heading. Every instrument row carries an h3
-        //                 with the project's name; ten rows are one section,
-        //                 not ten. Counting them would make the quota
-        //                 unsatisfiable on every list surface on the site.
-        //   .doc          The write-up body is a long-form document with its
-        //                 own numbered heading scale. R9 has an allocation for
-        //                 that route and it is applied with the sticky-rail
-        //                 pass; until then it is in PENDING above.
+        //   REPEATED       A heading that titles a repeated ITEM is not a
+        //   ITEMS          section heading. Every instrument row carries an h3
+        //                  with the project's name; ten rows are one section,
+        //                  not ten.
+        //
+        //                  Named by the hooks the items actually use, NOT by
+        //                  `article`. It was `li, article` for one run, and the
+        //                  write-up wraps its whole body in an <article> for
+        //                  semantic reasons — so the moment that route came off
+        //                  the pending list the gate reported it as having zero
+        //                  MAJOR headings while the page had exactly one, at
+        //                  32px, verifiably. A convenience selector that had
+        //                  been silently excluding an entire route since the
+        //                  day it was written.
+        //   .doc h3       A SUB-heading inside a long-form document, not a
+        //                 section. `.doc h2` IS counted — the write-up's ladder
+        //                 was the last route converted, and excluding the whole
+        //                 `.doc` would have left the one page with nine equal
+        //                 sections passing a gate about section hierarchy.
         //
         // The first run of this gate omitted all three and reported the row
         // titles on /projects, /about and /404 as ladder violations at 16px —
@@ -111,7 +113,8 @@ test.describe("R9 — the section ladder", () => {
         // MAJOR in behind an entrance.
         const sections = [...document.querySelectorAll("main h2, main h3")]
           .filter((el) => el.checkVisibility())
-          .filter((el) => !el.closest("li, article, .doc"))
+          .filter((el) => !el.closest("li, [data-instrument], [data-rack] article"))
+          .filter((el) => !(el.tagName === "H3" && el.closest(".doc")))
           .map((el) => ({
             el: describe(el),
             size: Math.round(Number.parseFloat(getComputedStyle(el).fontSize)),

@@ -28,12 +28,14 @@
       ]
     }
   },
+  "_major": "R9's allocation table gives this route MAJOR = 'Method'. No write-up has a heading called that — each names its own argument — so `major` records WHICH authored h2 carries it, per project, and validate-projects.mjs fails the build if that heading is renamed or removed. Same shape as headline.metric: name what the content already says, gate it, never duplicate it. SELECTED BY ME AND FLAGGED FOR ROSS — in every case it is the section where the project's claim is argued rather than described, which is a reading of his prose and therefore his to overrule.",
   "projects": {
     "tfl-data-engineering": {
       "repo": "https://github.com/rosscyking1115/tfl-data-engineering",
       "demo": "https://tfl-data-engineering.streamlit.app/",
       "tracks": ["data"],
       "status": "shipped",
+      "major": "The headline is certified, not just published",
       "release": "v0.2.0",
       "metrics": {
         "dbt data tests": "92"
@@ -59,6 +61,7 @@
       "demo": "https://uk-housing-decision-support.vercel.app",
       "tracks": ["data"],
       "status": "shipped",
+      "major": "Explainable scoring — readable top to bottom",
       "release": "v1.0.0",
       "metrics": {
         "MSOAs scored": "7,264",
@@ -77,6 +80,7 @@
       "demo": "https://responsible-neobank-growth.streamlit.app/",
       "tracks": ["data"],
       "status": "shipped",
+      "major": "What holds up",
       "release": "v1.0.0",
       "metrics": {
         "dbt tests (cloud run)": "217"
@@ -93,6 +97,7 @@
       "demo": "https://after-midnight-beta.vercel.app/",
       "tracks": ["data"],
       "status": "shipped",
+      "major": "It closes the loop — on scenarios, not on outcomes",
       "release": "v0.2.1",
       "metrics": {
         "tests passing": "206"
@@ -109,6 +114,7 @@
       "demo": null,
       "tracks": ["ai"],
       "status": "shipped",
+      "major": "The leakage audit — and the corrected number",
       "release": "v0.1.0",
       "metrics": {
         "tests passing": "462"
@@ -127,6 +133,7 @@
       "demo": null,
       "tracks": ["ai"],
       "status": "shipped",
+      "major": "Applied data science, done honestly",
       "release": "v0.1.0",
       "metrics": {
         "tests": "167"
@@ -143,6 +150,7 @@
       "demo": "https://cited-market-brief-agent.vercel.app",
       "tracks": ["ai"],
       "status": "shipped",
+      "major": "The gate that couldn't fail",
       "release": "v1.0.0",
       "metrics": {
         "regional editions": "4",
@@ -163,6 +171,7 @@
       "demo": null,
       "tracks": ["ai"],
       "status": "shipped",
+      "major": "Why ASR, not refusal rate",
       "release": "v0.3.0",
       "metrics": {
         "pinned adversarial prompts": "1,883",
@@ -183,6 +192,7 @@
       "demo": "https://agent-release-gates.streamlit.app/",
       "tracks": ["ai"],
       "status": "shipped",
+      "major": "The finding: my own benchmark was marking its own homework",
       "release": "v0.1.4",
       "metrics": {
         "external retrieval hit@3": "79.92%",
@@ -204,6 +214,7 @@
       "demo": null,
       "tracks": ["data"],
       "status": "archived",
+      "major": "Evaluation / evidence",
       "release": null,
       "note": "Archived — methodology absorbed into responsible-neobank-growth.",
       "metrics": {},

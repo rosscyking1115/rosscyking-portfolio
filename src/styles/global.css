@@ -951,16 +951,28 @@ details[data-disclosure] > summary:focus-visible {
 .doc > :first-child {
   margin-top: 0;
 }
+/* MINOR (R9). Was 1.6rem — 25.6px, the "around 28px" finding 05 named, run
+   five to nine times down a single page. Every section heading in a write-up
+   is a MINOR except the one the registry names as the argument, which is
+   promoted per page; see `.doc h2[data-rung="major"]` below. */
 .doc h2 {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1.6rem;
+  font-size: var(--text-minor);
   line-height: 1.25;
   letter-spacing: -0.01em;
   margin-top: 2.5em;
   scroll-margin-top: 5rem;
   counter-increment: doc-h2;
 }
+
+/* The write-up's ONE MAJOR (R9) is promoted per page, not here: R9 gives this
+   route MAJOR = "Method" and no write-up has a heading called that, so
+   registry.json names which authored h2 carries the argument and the page emits
+   a rule for that id. The declarations live beside the code that emits them in
+   src/pages/projects/[slug]/index.astro — see the note there for why this is a
+   scoped style rather than an attribute or a script. */
+
 .doc h2::before {
   content: counter(doc-h2, decimal-leading-zero);
   font-family: var(--font-mono);
